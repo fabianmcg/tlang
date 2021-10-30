@@ -1,0 +1,66 @@
+{% raw %}%option c++
+%option noyywrap
+%option yylineno
+%option yyclass="YFlexLexer"
+
+%top{
+#include <macros.hh>
+#include <toks.hh>
+#include <lexer.hh>
+#include <iostream>
+#include <memory>
+}
+
+%{
+#define YY_USER_ACTION                                                                                                 \
+  __yycolumn = __yybufpos;                                                                                             \
+  __yybufpos += yyleng;
+class YFlexLexer : public yyFlexLexer {
+public:
+  using yyFlexLexer::yyFlexLexer;
+  friend void comment(YFlexLexer &);
+  virtual int yylex();
+  inline int colno() const { return __yycolumn; }
+
+private:
+  int __yycolumn = 1;
+  int __yybufpos = 1;
+};
+inline YFlexLexer *get_lexer(std::any ylex) { return std::any_cast<std::shared_ptr<YFlexLexer>>(ylex).get(); }
+void comment(YFlexLexer &ylex);
+%}
+{% endraw %}
+{% for rule, value in definitions.items() -%}
+{{ "{: <30}{}".format(rule, value) }}
+{% endfor %}
+%%{% raw %}
+"/*"                          { comment(*this); }
+"//".*                        {}
+\n                            { __yybufpos = 1; }{% endraw %}
+{% for rule, value in rules.items() -%}
+{{ "{: <30}{{ return static_cast<int>(_lnp_::tk::{}); }}".format(rule, value) }}
+{% endfor %}{% raw %}.                             { throw(_lnp_::lexer_exception(_lnp_::token::create(YYText(), _lnp_::tk::UNKW, lineno(), colno()))); }
+
+%%
+bool _lnp_::Lexer::valid() const { return _lexer.has_value() && get_lexer(_lexer) && !_finished; }
+void _lnp_::Lexer::init() { this->_lexer = std::make_shared<YFlexLexer>(this->in, this->out); }
+_lnp_::token _lnp_::Lexer::consume_token() {
+  auto ylex = get_lexer(_lexer);
+  int tok = ylex->yylex();
+  return _lnp_::token::create(ylex->YYText(), static_cast<_lnp_::tk>(tok), ylex->lineno(), ylex->colno());
+}
+void comment(YFlexLexer &ylex) {
+  int c;
+  while ((c = ylex.yyinput()) != 0) {
+    ylex.__yybufpos = c == '\n' ? 1 : ylex.__yybufpos + 1;
+    if (c == '*') {
+      while (++ylex.__yybufpos, ((c = ylex.yyinput()) == '*'))
+        ;
+      if (c == '/')
+        return;
+      if (c == 0)
+        throw(_lnp_::lexer_exception(_lnp_::token::create(ylex.YYText(), _lnp_::tk::UNKW, ylex.lineno(), ylex.colno())));
+    }
+  }
+}
+{% endraw %}

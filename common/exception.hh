@@ -1,9 +1,10 @@
 #ifndef __EXCEPTION_HH__
 #define __EXCEPTION_HH__
 
+#include <macros.hh>
 #include <exception>
 
-namespace ttc {
+namespace __lang_np__ {
 struct compiler_exception: public std::exception {
   std::string message { "Compiler Exception" };
   using std::exception::exception;
@@ -14,5 +15,5 @@ struct compiler_exception: public std::exception {
     return message.data();
   }
 };
-}
+} // namespace __lang_np__
 #endif
