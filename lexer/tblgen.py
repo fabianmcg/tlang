@@ -8,6 +8,7 @@ Created on Sun Fri 29 08:35:00 2021
 
 import argparse
 import yaml
+import pathlib
 
 namespace = "ttc"
 definitions = """%option c++
@@ -72,12 +73,9 @@ void comment(CXXLexer &lex) {
     lex.__yybufpos = c == '\\n' ? 1 : lex.__yybufpos + 1;
     if (c == '*') {
       while (++lex.__yybufpos, ((c = lex.yyinput()) == '*'));
-      if (c == '/') {
-        ++lex.__yybufpos;
-        return;
-      }
+      if (c == '/') return;
       if (c == 0)
-        break;
+        throw(ttc::lexer_exception(ttc::token::create( lex.YYText(), ttc::tk::UNKW, lex.lineno(), lex.colno())));
     }
   }
 }
@@ -97,6 +95,13 @@ def parseArgs(argsString=""):
         default="toks.yml",
         help="input file name",
     )
+    parser.add_argument(
+        "-o",
+        metavar="<output dir>",
+        type=str,
+        default="./",
+        help="output dir name",
+    )
     if len(argsString) == 0:
         args = parser.parse_args()
     else:
@@ -114,7 +119,7 @@ def genEnum(r, v):
     return r, v
 
 
-def genTokens(rules):
+def genTokens(rules, dir):
     toks = ""
     switch = "  switch (kind) {\n"
     switch += '  case tk::UNKW:\n    return "unknown";\n'
@@ -124,7 +129,7 @@ def genTokens(rules):
         toks += "  {: <30}//  {}\n".format(kk + ",", vv)
         switch += '  case tk::{}:\n    return "{}";\n'.format(k, k if "value" not in v else v["value"])
     switch += '  default:\n    return "";\n  }\n'
-    with open("toks.hh", "w") as file:
+    with open(pathlib.Path(dir, "toks.hh"), "w") as file:
         print("#ifndef LEXER_TOKENS_HH_\n#define LEXER_TOKENS_HH_\n", file=file)
         print("#include <cstdint>\n#include <iostream>\n#include <string>\n", file=file)
         print(
@@ -142,7 +147,7 @@ def genTokens(rules):
         print("}\n#endif", file=file)
 
 
-def genLex(rules):
+def genLex(rules, dir):
     global definitions, lexRules
     for k, v in rules["defs"].items():
         definitions += "\n{: <20} {}".format(k, v)
@@ -153,9 +158,11 @@ def genLex(rules):
                 lexRules += "{: <30}{{ return static_cast<int>(ttc::tk::{}); }}\n".format(r, k)
         else:
             lexRules += "{: <30}{{ return static_cast<int>(ttc::tk::{}); }}\n".format('"' + v["rule"] + '"', k)
-    lexRules += "{: <30}{{}}\n{: <30}{{}}\n".format("{WS}+", ".")
+    lexRules += "{: <30}{{}}\n{: <30}{{ {}; }}\n".format(
+        "{WS}+", ".", "throw(ttc::lexer_exception(ttc::token::create( YYText(), ttc::tk::UNKW, lineno(), colno()) ));"
+    )
     lexRules += "{: <30}{{{}}}\n".format("\\n", " __yybufpos = 1; ")
-    with open("lex.yy", "w") as file:
+    with open(pathlib.Path(dir, "lex.yy"), "w") as file:
         print("{}\n%%{}\n%%{}".format(definitions, lexRules, code), file=file)
 
 
@@ -163,8 +170,8 @@ def main():
     args = parseArgs()
     with open(args.i, "r") as file:
         rules = yaml.safe_load(file)
-        genTokens(rules["rules"])
-        genLex(rules)
+        genTokens(rules["rules"], args.o)
+        genLex(rules, args.o)
 
 
 if __name__ == "__main__":

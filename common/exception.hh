@@ -4,9 +4,15 @@
 #include <exception>
 
 namespace ttc {
-struct exception : public std::exception {
+struct compiler_exception: public std::exception {
+  std::string message { "Compiler Exception" };
   using std::exception::exception;
-  virtual const char* what() const noexcept = 0;
+  compiler_exception(const std::string &message) :
+      message(message) {
+  }
+  virtual const char* what() const noexcept {
+    return message.data();
+  }
 };
 }
 #endif
