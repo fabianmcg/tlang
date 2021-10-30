@@ -1,15 +1,16 @@
-#ifndef LEXER_LEXER_HH_
-#define LEXER_LEXER_HH_
+#ifndef __LEXER_HH__
+#define __LEXER_HH__
 
 #include <any>
 #include <deque>
 #include <iostream>
-#include <memory>
-#include "toks.hh"
-#include "exception.hh"
-#include "extent.hh"
+#include <macros.hh>
+#include <toks.hh>
+#include <exception.hh>
+#include <extent.hh>
 
-namespace ttc {
+namespace __lang_np__ {
+namespace __lex_np__ {
 using tk = token_kind;
 struct token {
   std::string text { };
@@ -30,7 +31,8 @@ inline std::ostream& operator<<(std::ostream &ost, const token &tok) {
   return ost;
 }
 struct lexer_exception: public compiler_exception {
-  lexer_exception(const token &tok) : compiler_exception("Lexer exception: ") {
+  lexer_exception(const token &tok) :
+      compiler_exception("Lexer exception: ") {
     message += tok.to_tring();
   }
 };
@@ -52,6 +54,6 @@ public:
   }
   token consume_token();
 };
-}
-
+} // namespace __lex_np__
+} // namespace __lang_np__
 #endif

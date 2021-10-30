@@ -125,10 +125,10 @@ rules:
     rule: 'true'
   'False':
     rule: 'false'
-  Int_lit:
+  IntLiteral:
     rule:
     - '{NZ}{D}*'
-  Float_lit:
+  FloatLiteral:
     rule:
     - '{D}+{E}'
     - '{D}*"."{D}+{E}?'
@@ -205,7 +205,7 @@ rules:
   Colon:
     rule: ':'
     value: ':'
-  Semi:
+  Semicolon:
     rule: ';'
     value: ';'
   Ternary:

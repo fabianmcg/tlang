@@ -1,11 +1,12 @@
 #ifndef __EXTENT_HH__
 #define __EXTENT_HH__
 
+#include <macros.hh>
 #include <iostream>
 #include <string>
 #include <utility>
 
-namespace ttc {
+namespace __lang_np__ {
 struct location {
   int line { -1 };
   int column { -1 };
@@ -94,5 +95,5 @@ struct Extent {
     return "[" + begin.to_string() + " - " + end.to_string() + "]";
   }
 };
-}
+} // namespace __lang_np__
 #endif

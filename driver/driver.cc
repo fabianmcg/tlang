@@ -1,8 +1,9 @@
 #include <io.hh>
+#include <macros.hh>
 #include <lexer.hh>
 
 int main(int argc, char **argv) {
-  using namespace ttc;
+  using namespace _lnp_;
   auto fs = unique_fstream::open_istream("main.tt");
   Lexer lex(*fs);
   while(lex.valid()) {
