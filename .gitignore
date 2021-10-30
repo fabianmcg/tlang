@@ -1,0 +1,15 @@
+/build/
+*.graphml
+*.dot
+*project*
+*settings*
+*.out
+*.json
+*.exe
+*.o
+*.bc
+/results/
+*.dot
+/paper_results/
+*.yy
+toks.hh
