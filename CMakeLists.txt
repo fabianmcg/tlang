@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common) 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ast) 
 include(lexer/CMakeLists.txt)
 #include(driver/CMakeLists.txt)
 
