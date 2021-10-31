@@ -1,0 +1,99 @@
+################################################################################
+#
+#  Helpers
+#
+################################################################################
+helpers:
+  ArgumentList:
+    vars:
+      - arguments: {unique_ptr: Argument, vector: true}
+    return: arguments
+    rules:
+      - t::LParen && h::Argument{arguments.add} && (t::Comma && h::Argument{arguments.add})* && t::RParen
+      - t::LParen && t::RParen
+################################################################################
+#
+#  Nodes
+#
+################################################################################
+nodes:
+################################################################################
+#  Attributes
+################################################################################
+  Attr:
+    base: ASTNode
+  AttrList:
+    base: ASTNode
+    members:
+      - attrs: {unique_ptr: Attr, vector: true}
+################################################################################
+#  Types
+################################################################################
+  Type:
+    base: ASTNode
+################################################################################
+#  Declarations
+################################################################################
+  Decl:
+    base: ASTNode
+    methods: >
+      virtual bool hasAttrs() const {
+        return false;
+      }
+  DeclGroup:
+    base: ASTNode
+    members:
+      - children: {unique_ptr: Decl, vector: true}
+    rules:
+      - h::Decl{children.add}*
+  ModuleDecl:
+    base: [Decl, DeclGroup]
+    rules:
+      - h::DeclGroup{this}
+    parseHandlers: {parents: false}
+  Argument:
+    base: ASTNode
+    members:
+      - children:
+        - unique_ptr: Decl
+        - vector: true
+    rules:
+      - h::Decl*
+  FunctionDecl:
+    base: Decl
+    members:
+      - arguments: auto
+      - body: auto
+    rules:
+      - t::Function && H::ArgumentList{arguments} && h::CompoundStmt{body}
+  ################################################################################
+  #  Statements
+  ################################################################################
+  Stmt:
+    base: ASTNode
+    methods: >
+      virtual bool hasAttrs() const {
+        return false;
+      }
+  CompoundStmt:
+    base: Stmt
+    members:
+      - children: 
+        - unique_ptr: Stmt
+        - vector: true
+  Expr:
+    base: Stmt
+  ParenExpr:
+    base: Expr
+    rules:
+      - t::LParen && h::Expr && t::RParen
+  LiteralExpr:
+    base: Expr
+  IntegerExpr:
+    base: LiteralExpr
+    rules:
+      - t::IntLiteral
+  FloatExpr:
+    base: LiteralExpr
+    rules:
+      - t::FloatLiteral
