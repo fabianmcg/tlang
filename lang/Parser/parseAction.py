@@ -10,8 +10,9 @@ from enum import Enum
 
 ActionKind = Enum("ActionKind", ["none", "set", "append"])
 
+
 class ParseAction:
-    def __init__(self, kind = ActionKind.none) -> None:
+    def __init__(self, kind=ActionKind.none) -> None:
         self.kind = kind
 
     def genCodeQ(self):
@@ -19,6 +20,7 @@ class ParseAction:
 
     def genCode(self):
         return ""
+
 
 class SetAction(ParseAction):
     def __init__(self, variable) -> None:

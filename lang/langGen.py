@@ -5,5 +5,10 @@ Created on Oct Sun 31 11:09:00 2021
 
 @author: fabian
 """
+from Parser.rule import RTok
 
-from node import Node
+def main():
+    print(RTok.Task)
+
+if __name__ == "__main__":
+    main()

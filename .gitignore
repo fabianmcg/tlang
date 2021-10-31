@@ -13,3 +13,4 @@
 /paper_results/
 *.yy
 toks.hh
+*__pycache__*
