@@ -87,9 +87,13 @@ class Maybe(Rule):
     def __init__(self, rule):
         super().__init__(RuleKind.Maybe, rule)
 
-from lexTokens import LTok
+
+from Conf.toks import LTok
+
+
 class RToks:
     def __getattr__(self, attr):
         return TokenRule(LTok.__getattr__(attr))
+
 
 RTok = RToks()

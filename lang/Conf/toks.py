@@ -6,10 +6,20 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from token import Character, Definition, Keyword, Literal, Rule
+from Lexer.token import Character, Definition, Keyword, Literal, Rule
 
 lexerTokens = {}
 lexerDefinitions = {}
+
+
+class LexToks:
+    __dict__ = lexerTokens.keys
+
+    def __getattr__(self, attr):
+        return lexerTokens.get(attr)
+
+
+LTok = LexToks()
 
 
 def addToken(kind, identifier, *rules):
@@ -19,12 +29,6 @@ def addToken(kind, identifier, *rules):
 def addDefinition(identifier, *rules):
     lexerDefinitions[identifier] = Definition(identifier, *rules)
 
-class LexToks:
-    __dict__ = lexerTokens.keys
-    def __getattr__(self, attr):
-        return lexerTokens.get(attr)
-
-LTok = LexToks()
 
 # ******************************************************************************
 #
