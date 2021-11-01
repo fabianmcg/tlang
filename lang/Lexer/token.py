@@ -19,8 +19,8 @@ class Token:
 
 
 class Keyword(Token):
-    def __init__(self, identifier, keyword):
-        super().__init__(identifier, keyword)
+    def __init__(self, identifier, keyword = None):
+        super().__init__(identifier, keyword if keyword != None else keyword.lower())
 
 
 class Literal(Token):

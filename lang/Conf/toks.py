@@ -8,22 +8,22 @@ Created on Oct Sun 31 11:09:00 2021
 
 from Lexer.token import Character, Definition, Keyword, Literal, Rule
 
-lexerTokens = {}
 lexerDefinitions = {}
+lexerTokens = {}
 
 
-class LexToks:
+class LexerTokens:
     __dict__ = lexerTokens.keys
 
     def __getattr__(self, attr):
         return lexerTokens.get(attr)
 
 
-LTok = LexToks()
+LToks = LexerTokens()
 
 
 def addToken(kind, identifier, *rules):
-    lexerTokens[identifier] = kind(identifier, *rules)
+    lexerTokens[identifier] = kind(identifier, *rules if len(rules) > 0 else None)
 
 
 def addDefinition(identifier, *rules):
@@ -49,66 +49,66 @@ addDefinition("WS", r"[ \t\v\f]")
 # ******************************************************************************
 #   Parallel constructs
 # ******************************************************************************
-addToken(Keyword, "Task", "task")
-addToken(Keyword, "Policy", "policy")
-addToken(Keyword, "Arch", "arch")
-addToken(Keyword, "Parallel", "parallel")
-addToken(Keyword, "Sync", "sync")
-addToken(Keyword, "Async", "async")
-addToken(Keyword, "Wait", "wait")
-addToken(Keyword, "Atomic", "atomic")
+addToken(Keyword, "Task")
+addToken(Keyword, "Policy")
+addToken(Keyword, "Parallel")
+addToken(Keyword, "Sync")
+addToken(Keyword, "Async")
+addToken(Keyword, "Wait")
+addToken(Keyword, "Atomic")
 # ******************************************************************************
 #   Language constructs
 # ******************************************************************************
-addToken(Keyword, "Function", "function")
-addToken(Keyword, "Struct", "struct")
-addToken(Keyword, "Enum", "enum")
-addToken(Keyword, "Loop", "loop")
-addToken(Keyword, "For", "for")
-addToken(Keyword, "While", "while")
-addToken(Keyword, "Continue", "continue")
-addToken(Keyword, "If", "if")
-addToken(Keyword, "Else", "else")
-addToken(Keyword, "Switch", "switch")
-addToken(Keyword, "Case", "case")
-addToken(Keyword, "Break", "break")
-addToken(Keyword, "Default", "default")
-addToken(Keyword, "Import", "import")
-addToken(Keyword, "Const", "const")
-addToken(Keyword, "Inline", "inline")
-addToken(Keyword, "Using", "using")
-addToken(Keyword, "Return", "return")
-addToken(Keyword, "Ccall", "ccall")
-addToken(Keyword, "Constexpr", "constexpr")
-addToken(Keyword, "Alignment", "alignment")
-addToken(Keyword, "Auto", "auto")
+addToken(Keyword, "Function")
+addToken(Keyword, "Struct")
+addToken(Keyword, "Enum")
+addToken(Keyword, "Loop")
+addToken(Keyword, "For")
+addToken(Keyword, "While")
+addToken(Keyword, "Continue")
+addToken(Keyword, "If")
+addToken(Keyword, "Else")
+addToken(Keyword, "Switch")
+addToken(Keyword, "Case")
+addToken(Keyword, "Break")
+addToken(Keyword, "Default")
+addToken(Keyword, "Import")
+addToken(Keyword, "Const")
+addToken(Keyword, "Inline")
+addToken(Keyword, "Using")
+addToken(Keyword, "Return")
+addToken(Keyword, "Arch")
+addToken(Keyword, "Ccall")
+addToken(Keyword, "Constexpr")
+addToken(Keyword, "Alignment")
+addToken(Keyword, "Auto")
 # ******************************************************************************
 #   Memory Kinds
 # ******************************************************************************
-addToken(Keyword, "Global", "global")
-addToken(Keyword, "Shared", "shared")
-addToken(Keyword, "Local", "local")
-addToken(Keyword, "Constant", "constant")
+addToken(Keyword, "Global")
+addToken(Keyword, "Shared")
+addToken(Keyword, "Local")
+addToken(Keyword, "Constant")
 # ******************************************************************************
 #   Fundamental types
 # ******************************************************************************
-addToken(Keyword, "Void", "void")
-addToken(Keyword, "Bool", "bool")
-addToken(Keyword, "Int", "int")
-addToken(Keyword, "Float", "float")
-addToken(Keyword, "Complex", "complex")
-addToken(Keyword, "Array", "array")
-addToken(Keyword, "Vector", "vector")
-addToken(Keyword, "Matrix", "matrix")
-addToken(Keyword, "Tensor", "tensor")
-addToken(Keyword, "String", "string")
+addToken(Keyword, "Void")
+addToken(Keyword, "Bool")
+addToken(Keyword, "Int")
+addToken(Keyword, "Float")
+addToken(Keyword, "Complex")
+addToken(Keyword, "Array")
+addToken(Keyword, "Vector")
+addToken(Keyword, "Matrix")
+addToken(Keyword, "Tensor")
+addToken(Keyword, "String")
 # ******************************************************************************
 #
 #   Literals & Identifiers
 #
 # ******************************************************************************
-addToken(Keyword, "True", "true")
-addToken(Keyword, "False", "false")
+addToken(Keyword, "True")
+addToken(Keyword, "False")
 addToken(Rule, "IntLiteral", r"{NZ}{D}*")
 addToken(Rule, "FloatLiteral", r"{D}+{E}", r'{D}*"."{D}+{E}?')
 addToken(Rule, "Identifier" r"{L}{A}*")
