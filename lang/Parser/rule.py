@@ -9,7 +9,7 @@ Created on Oct Sun 31 11:09:00 2021
 from enum import Enum
 from collections.abc import Iterable
 
-RuleKind = Enum("RuleKind", ["Token", "Node", "ZeroOrMore", "OneOrMore", "And", "Or", "Maybe"])
+RuleKind = Enum("RuleKind", ["Parse", "ZeroOrMore", "OneOrMore", "Optional", "And", "Or"])
 
 
 class Rule:
@@ -30,6 +30,9 @@ class Rule:
     def atomicList(x):
         return Rule.makeList(x if x.atomic else x.rule)
 
+    def __invert__(self):
+        return Optional(self)
+
     def __add__(self, other):
         if self.kind == RuleKind.And or other.kind == RuleKind.And:
             return And(self.atomicList(self) + self.atomicList(other))
@@ -42,23 +45,15 @@ class Rule:
         else:
             return Or(self, other)
 
-    def __invert__(self):
-        return Maybe(self)
-
     def __str__(self) -> str:
         return "{" + str(self.kind) + ": " + str(self.rule) + "}"
 
     __repr__ = __str__
 
 
-class TokenRule(Rule):
-    def __init__(self, token):
-        super().__init__(RuleKind.Token, token)
-
-
-class NodeRule(Rule):
-    def __init__(self, node):
-        super().__init__(RuleKind.Node, node)
+class ParseRule(Rule):
+    def __init__(self, action):
+        super().__init__(RuleKind.Parse, action)
 
 
 class And(Rule):
@@ -83,17 +78,6 @@ class OneOrMore(Rule):
         super().__init__(RuleKind.OneOrMore, rule)
 
 
-class Maybe(Rule):
+class Optional(Rule):
     def __init__(self, rule):
-        super().__init__(RuleKind.Maybe, rule)
-
-
-from Conf.toks import LTok
-
-
-class RToks:
-    def __getattr__(self, attr):
-        return TokenRule(LTok.__getattr__(attr))
-
-
-RTok = RToks()
+        super().__init__(RuleKind.Optional, rule)
