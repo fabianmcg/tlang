@@ -6,20 +6,47 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from Parser.rule import TokenRule
-from Conf.toks import LToks
+from Lang.node import Node
+from Lang.rule import Match
+from Lang.db import addNode, astNodes, RTok
+from Lang.variable import variableDict as V
+
+ast = astNodes
+
+addNode(Node, "Attr")
+addNode(
+    Node,
+    "AttrList",
+    {
+        "members": [V.UV("Attr", "attrs")],
+    },
+)
+
+addNode(Node, "Decl")
+addNode(Node, "DeclGroup")
+addNode(Node, "ModuleDecl")
 
 
-astNodes = {}
+addNode(Node, "Stmt")
+addNode(
+    Node,
+    "CompoundStmt",
+    {
+        "parents": "Stmt",
+        "members": [
+            V.V("Stmt", "stmts"),
+        ],
+    },
+)
 
-
-class RToks:
-    def __getattr__(self, attr):
-        return TokenRule(LToks.__getattr__(attr))
-
-
-RTok = RToks()
-
-
-def addNode(kind, identifier, *rules):
-    astNodes[identifier] = kind(identifier, *rules)
+addNode(
+    Node,
+    "Function",
+    {
+        "parents": "Decl",
+        "members": [
+            V.A("arguments"),
+            V.V("CompoundStmt", "body"),
+        ],
+    },
+)
