@@ -15,6 +15,9 @@ class ParseAction:
     def __init__(self, kind=ActionKind.token):
         self.kind = kind
 
+    def action(self):
+        pass
+
 
 class TokenAction(ParseAction):
     def __init__(self):

@@ -5,10 +5,12 @@ Created on Oct Sun 31 11:09:00 2021
 
 @author: fabian
 """
-from Parser.rule import RTok
+
+import Conf.grammar 
+from Conf.nodes import ast
 
 def main():
-    print(RTok.Task)
+    print(ast.Function)
 
 if __name__ == "__main__":
     main()

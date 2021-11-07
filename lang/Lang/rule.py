@@ -9,7 +9,7 @@ Created on Oct Sun 31 11:09:00 2021
 from enum import Enum
 from collections.abc import Iterable
 
-RuleKind = Enum("RuleKind", ["Parse", "ZeroOrMore", "OneOrMore", "Optional", "And", "Or"])
+RuleKind = Enum("RuleKind", ["Match", "ZeroOrMore", "OneOrMore", "Optional", "And", "Or"])
 
 
 class Rule:
@@ -51,21 +51,9 @@ class Rule:
     __repr__ = __str__
 
 
-class ParseRule(Rule):
+class Match(Rule):
     def __init__(self, action):
-        super().__init__(RuleKind.Parse, action)
-
-
-class And(Rule):
-    def __init__(self, *rules):
-        super().__init__(RuleKind.And, Rule.makeVList(*rules))
-        self.atomic = False
-
-
-class Or(Rule):
-    def __init__(self, *rules):
-        super().__init__(RuleKind.Or, Rule.makeVList(*rules))
-        self.atomic = False
+        super().__init__(RuleKind.Match, action)
 
 
 class ZeroOrMore(Rule):
@@ -81,3 +69,15 @@ class OneOrMore(Rule):
 class Optional(Rule):
     def __init__(self, rule):
         super().__init__(RuleKind.Optional, rule)
+
+
+class And(Rule):
+    def __init__(self, *rules):
+        super().__init__(RuleKind.And, Rule.makeVList(*rules))
+        self.atomic = False
+
+
+class Or(Rule):
+    def __init__(self, *rules):
+        super().__init__(RuleKind.Or, Rule.makeVList(*rules))
+        self.atomic = False

@@ -5,30 +5,15 @@ Created on Oct Sun 31 11:09:00 2021
 
 @author: fabian
 """
+# ******************************************************************************
+#
+#   Header
+#
+# ******************************************************************************
+from Lexer.token import Character, Keyword, Literal, Rule
+from Lexer.db import lexerTokens, addDefinition, addToken
 
-from Lexer.token import Character, Definition, Keyword, Literal, Rule
-
-lexerDefinitions = {}
-lexerTokens = {}
-
-
-class LexerTokens:
-    __dict__ = lexerTokens.keys
-
-    def __getattr__(self, attr):
-        return lexerTokens.get(attr)
-
-
-LToks = LexerTokens()
-
-
-def addToken(kind, identifier, *rules):
-    lexerTokens[identifier] = kind(identifier, *rules if len(rules) > 0 else None)
-
-
-def addDefinition(identifier, *rules):
-    lexerDefinitions[identifier] = Definition(identifier, *rules)
-
+LToks = lexerTokens
 
 # ******************************************************************************
 #
@@ -111,7 +96,7 @@ addToken(Keyword, "True")
 addToken(Keyword, "False")
 addToken(Rule, "IntLiteral", r"{NZ}{D}*")
 addToken(Rule, "FloatLiteral", r"{D}+{E}", r'{D}*"."{D}+{E}?')
-addToken(Rule, "Identifier" r"{L}{A}*")
+addToken(Rule, "Identifier", r"{L}{A}*")
 # ******************************************************************************
 #
 #   Operands
