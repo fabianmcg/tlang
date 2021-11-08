@@ -6,34 +6,60 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from enum import Enum
-
-ActionKind = Enum("ActionKind", ["token", "value", "node", "helper"])
+from Lang.rule import Match
 
 
 class ParseAction:
-    def __init__(self, kind=ActionKind.token):
-        self.kind = kind
+    def __init__(self, data=None):
+        self.data = data
 
-    def action(self):
-        pass
+    def __add__(self, rhs):
+        return Match(AppendAction(self, rhs))
+
+    def __lshift__(self, rhs):
+        return Match(AssignAction(self, rhs))
+
+    def __str__(self) -> str:
+        return str(self.data)
+
+    __repr__ = __str__
+
+
+class VariableAction(ParseAction):
+    def __init__(self, node):
+        super().__init__(node)
 
 
 class TokenAction(ParseAction):
-    def __init__(self):
-        super().__init__(kind=ActionKind.token)
-
-
-class ValueAction(ParseAction):
-    def __init__(self):
-        super().__init__(kind=ActionKind.value)
+    def __init__(self, token):
+        super().__init__(token)
 
 
 class NodeAction(ParseAction):
-    def __init__(self):
-        super().__init__(kind=ActionKind.node)
+    def __init__(self, node):
+        super().__init__(node)
 
 
 class HelperAction(ParseAction):
-    def __init__(self):
-        super().__init__(kind=ActionKind.helper)
+    def __init__(self, helper):
+        super().__init__(helper)
+
+
+class BinaryAction(ParseAction):
+    def __init__(self, lhs, rhs):
+        super().__init__()
+        self.lhs = lhs
+        self.rhs = rhs.rule if isinstance(rhs, Match) else rhs
+
+    def __str__(self) -> str:
+        return str(self.lhs) + ":" + str(self.rhs)
+
+
+class AssignAction(BinaryAction):
+    def __init__(self, lhs, rhs):
+        super().__init__(lhs, rhs)
+
+
+class AppendAction(BinaryAction):
+    def __init__(self, lhs, rhs):
+        super().__init__(lhs, rhs)

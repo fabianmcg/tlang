@@ -45,13 +45,3 @@ class Node:
         )
 
     __repr__ = __str__
-
-
-class BaseNode(Node):
-    def __init__(self, parents="ASTNode"):
-        super().__init__(parents=parents)
-
-
-class ParsableNode(Node):
-    def __init__(self, parents="ASTNode", members={}, rules=[], methods={}):
-        super().__init__(parents=parents, members=members, rules=rules, methods=methods)

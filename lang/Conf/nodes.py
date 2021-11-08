@@ -7,11 +7,10 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Lang.node import Node
-from Lang.rule import Match
-from Lang.db import addNode, astNodes, RTok
+from Lang.db import addNode, astNodes
 from Lang.variable import variableDict as V
 
-ast = astNodes
+astNodes = astNodes
 
 addNode(Node, "Attr")
 addNode(
@@ -45,6 +44,7 @@ addNode(
     {
         "parents": "Decl",
         "members": [
+            V.A("identifier"),
             V.A("arguments"),
             V.V("CompoundStmt", "body"),
         ],

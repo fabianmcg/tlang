@@ -14,7 +14,7 @@ lexerTokens = DotDict()
 
 
 def addToken(kind, identifier, *rules):
-    lexerTokens[identifier] = kind(identifier, rules if len(rules) > 0 else None)
+    lexerTokens[identifier] = kind(identifier, *rules)
 
 
 def addDefinition(identifier, *rules):

@@ -9,7 +9,7 @@ Created on Oct Sun 31 11:09:00 2021
 from enum import Enum
 from collections.abc import Iterable
 
-RuleKind = Enum("RuleKind", ["Match", "ZeroOrMore", "OneOrMore", "Optional", "And", "Or"])
+RuleKind = Enum("RuleKind", ["Dummy", "Match", "ZeroOrMore", "OneOrMore", "Optional", "And", "Or"])
 
 
 class Rule:
@@ -51,6 +51,11 @@ class Rule:
     __repr__ = __str__
 
 
+class Dummy(Rule):
+    def __init__(self, action):
+        super().__init__(RuleKind.Dummy, action)
+
+
 class Match(Rule):
     def __init__(self, action):
         super().__init__(RuleKind.Match, action)
@@ -81,3 +86,18 @@ class Or(Rule):
     def __init__(self, *rules):
         super().__init__(RuleKind.Or, Rule.makeVList(*rules))
         self.atomic = False
+
+
+from Utility.dotDict import DotDict
+
+ruleDict = DotDict(
+    {
+        "D": Dummy,
+        "M": Match,
+        "O": Optional,
+        "ZM": ZeroOrMore,
+        "OM": OneOrMore,
+        "AD": And,
+        "OR": Or,
+    }
+)
