@@ -22,3 +22,15 @@ class ApplyDotDict(dict):
 
     def __getattr__(self, key):
         return self.function(self.__getitem__(key))
+
+
+class DotDictWrapper:
+    def __init__(self, Dict, action=lambda x: x):
+        self.Dict = Dict
+        self.function = action
+
+    def __getattr__(self, key):
+        return self.function(self.Dict.__getitem__(key))
+
+    def get(self):
+        return self.Dict

@@ -10,7 +10,7 @@ Created on Oct Sun 31 11:09:00 2021
 class Token:
     def __init__(self, identifier, *rules):
         self.identifier = identifier
-        self.rules = list(*rules)
+        self.rules = list(rules)
 
     def __str__(self) -> str:
         return self.identifier + ": " + (str(self.rules[0]) if len(self.rules) == 1 else str(self.rules))

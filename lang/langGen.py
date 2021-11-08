@@ -7,10 +7,11 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 import Conf.grammar 
-from Conf.nodes import ast
+from Conf.nodes import astNodes
+# import Conf.toks
 
 def main():
-    print(ast.Function)
+    print(astNodes.Function)
 
 if __name__ == "__main__":
     main()
