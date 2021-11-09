@@ -17,6 +17,9 @@ class Token:
 
     __repr__ = __str__
 
+    def shortRepr(self):
+        return self.identifier
+
 
 class Keyword(Token):
     def __init__(self, identifier, keyword=None):

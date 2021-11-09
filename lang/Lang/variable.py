@@ -19,6 +19,14 @@ class Variable:
 
     __repr__ = __str__
 
+    def shortRepr(self):
+        return self.identifier
+
+
+class NodeVariable(Variable):
+    def __init__(self, T, identifier):
+        super().__init__(Type.NodeType(T), identifier)
+
 
 class VectorVariable(Variable):
     def __init__(self, T, identifier):
@@ -46,6 +54,7 @@ variableDict = DotDict(
     {
         "V": Variable,
         "A": AutoVariable,
+        "N": NodeVariable,
         "VV": VectorVariable,
         "UP": UniquePtrVariable,
         "UV": UniquePtrVectorVariable,
