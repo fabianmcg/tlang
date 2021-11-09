@@ -16,6 +16,8 @@ class Type:
 
     __repr__ = __str__
 
+    shortRepr = __str__
+
     def isTemplate(self):
         return False
 
@@ -36,6 +38,11 @@ class TemplateType(Type):
 
     def underlying(self):
         return self.T
+
+
+class Pointer(TemplateType):
+    def __init__(self, T):
+        super().__init__("{}*", Type(T))
 
 
 class Vector(TemplateType):
@@ -73,6 +80,19 @@ class VoidType(Type):
         super().__init__("void")
 
 
+class StringType(Type):
+    def __init__(self):
+        super().__init__("std::string")
+
+
+class NodeType(Type):
+    def __init__(self, T):
+        super().__init__(T)
+
+    def __str__(self) -> str:
+        return self.T.identifier
+
+
 from Utility.dotDict import DotDict
 
 typeDict = DotDict(
@@ -83,6 +103,9 @@ typeDict = DotDict(
         "I": IntType,
         "F": FloatType,
         "V": VoidType,
+        "S": StringType,
+        "N": NodeType,
+        "P": Pointer,
         "TT": TemplateType,
         "VT": Vector,
         "UP": UniquePtr,

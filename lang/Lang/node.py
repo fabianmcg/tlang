@@ -7,6 +7,7 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from collections.abc import Iterable
+from Lang.rule import RuleList
 
 
 class Node:
@@ -18,18 +19,15 @@ class Node:
     def makeMembers(x):
         return {v.identifier: v for v in x}
 
-    def __init__(self, identifier, parents="ASTNode", members=[], rules=[], methods={}):
+    def __init__(self, identifier, parents="ASTNode", members=[], methods={}):
         self.identifier = identifier
         self.parents = Node.makeList(parents)
         self.members = Node.makeMembers(members)
-        self.rules = Node.makeList(rules)
+        self.rules = RuleList()
         self.methods = methods
 
     def __ilshift__(self, rule):
-        if isinstance(rule, list):
-            self.rules.extend(rule)
-        else:
-            self.rules.append(rule)
+        self.rules <<= rule
         return self
 
     def __getattr__(self, k):
@@ -41,7 +39,13 @@ class Node:
 
     def __str__(self) -> str:
         return "{}: {{\n\t{}\n\t{}\n\t{}\n}}".format(
-            self.identifier, str(self.parents), str(list(self.members.values())), str(self.rules)
+            self.identifier,
+            str(self.parents),
+            str(list(self.members.values())),
+            self.rules.shortRepr(),
         )
 
     __repr__ = __str__
+
+    def shortRepr(self):
+        return self.identifier
