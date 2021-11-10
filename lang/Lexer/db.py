@@ -6,16 +6,30 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from Utility.dotDict import DotDict
+from Utility.dotDict import DotDict, DotDictWrapper
 from Lexer.token import Definition
 
-lexerDefinitions = DotDict()
-lexerTokens = DotDict()
 
+class LexerDB:
+    def __init__(self):
+        self.definitions = DotDict()
+        self.tokens = DotDict()
 
-def addToken(kind, identifier, *rules):
-    lexerTokens[identifier] = kind(identifier, *rules)
+    def __getattr__(self, attr):
+        return self.tokens.__getattr__(attr)
 
+    def __str__(self) -> str:
+        return "Definitions:\n\t{}\nTokens:\n\t{}".format(
+            "\n\t".join(list(map(str, self.definitions.values()))), "\n\t".join(list(map(str, self.tokens.values())))
+        )
 
-def addDefinition(identifier, *rules):
-    lexerDefinitions[identifier] = Definition(identifier, *rules)
+    __repr__ = __str__
+
+    def addToken(self, kind, identifier, *rules):
+        self.tokens[identifier] = kind(identifier, *rules)
+
+    def addDefinition(self, identifier, *rules):
+        self.definitions[identifier] = Definition(identifier, *rules)
+
+    def getTokens(self, function=lambda x: x):
+        return DotDictWrapper(self.tokens, function)

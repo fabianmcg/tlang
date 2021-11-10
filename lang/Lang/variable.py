@@ -23,6 +23,11 @@ class Variable:
         return self.identifier
 
 
+class AutoVariable(Variable):
+    def __init__(self, identifier):
+        super().__init__(Type.AutoType(), identifier)
+
+
 class NodeVariable(Variable):
     def __init__(self, T, identifier):
         super().__init__(Type.NodeType(T), identifier)
@@ -41,11 +46,6 @@ class UniquePtrVariable(Variable):
 class UniquePtrVectorVariable(Variable):
     def __init__(self, T, identifier):
         super().__init__(Type.Vector(Type.UniquePtr(T)), identifier)
-
-
-class AutoVariable(Variable):
-    def __init__(self, identifier):
-        super().__init__(Type.AutoType(), identifier)
 
 
 from Utility.dotDict import DotDict
