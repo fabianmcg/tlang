@@ -25,34 +25,9 @@ class Type:
         return self.T
 
 
-class TemplateType(Type):
-    def __init__(self, TT, T):
-        super().__init__(Type(T))
-        self.TT = TT
-
-    def __str__(self) -> str:
-        return self.TT.format(str(self.T))
-
-    def isTemplate(self):
-        return True
-
-    def underlying(self):
-        return self.T
-
-
-class Pointer(TemplateType):
+class Pointer(Type):
     def __init__(self, T):
         super().__init__("{}*", Type(T))
-
-
-class Vector(TemplateType):
-    def __init__(self, T):
-        super().__init__("std::vector<{}>", Type(T))
-
-
-class UniquePtr(TemplateType):
-    def __init__(self, T):
-        super().__init__("std::unique_ptr<{}>", Type(T))
 
 
 class AutoType(Type):
@@ -91,6 +66,31 @@ class NodeType(Type):
 
     def __str__(self) -> str:
         return self.T.identifier
+
+
+class TemplateType(Type):
+    def __init__(self, TT, T):
+        super().__init__(Type(T))
+        self.TT = TT
+
+    def __str__(self) -> str:
+        return self.TT.format(str(self.T))
+
+    def isTemplate(self):
+        return True
+
+    def underlying(self):
+        return self.T
+
+
+class Vector(TemplateType):
+    def __init__(self, T):
+        super().__init__("std::vector<{}>", Type(T))
+
+
+class UniquePtr(TemplateType):
+    def __init__(self, T):
+        super().__init__("std::unique_ptr<{}>", Type(T))
 
 
 from Utility.dotDict import DotDict

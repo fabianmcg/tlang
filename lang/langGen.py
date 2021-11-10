@@ -6,12 +6,19 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-import Conf.grammar 
-from Conf.nodes import astNodes
-# import Conf.toks
+from Conf.toks import makeLexerDB
+from Lang.db import LangDB
+from Conf.nodes import langNodes
+from Conf.grammar import grammar
+
 
 def main():
-    print(astNodes.Function)
+    tokens = makeLexerDB()
+    lang = LangDB(tokens)
+    langNodes(lang)
+    grammar(lang)
+    print(lang)
+
 
 if __name__ == "__main__":
     main()

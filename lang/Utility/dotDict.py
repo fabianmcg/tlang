@@ -29,6 +29,11 @@ class DotDictWrapper:
         self.Dict = Dict
         self.function = action
 
+    def __str__(self) -> str:
+        return str(self.Dict)
+
+    __repr__ = __str__
+
     def __getattr__(self, key):
         return self.function(self.Dict.__getitem__(key))
 
