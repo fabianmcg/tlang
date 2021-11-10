@@ -98,12 +98,12 @@ from Utility.dotDict import DotDict
 typeDict = DotDict(
     {
         "T": Type,
-        "A": AutoType,
-        "B": BoolType,
-        "I": IntType,
-        "F": FloatType,
-        "V": VoidType,
-        "S": StringType,
+        "A": AutoType(),
+        "B": BoolType(),
+        "I": IntType(),
+        "F": FloatType(),
+        "V": VoidType(),
+        "S": StringType(),
         "N": NodeType,
         "P": Pointer,
         "TT": TemplateType,

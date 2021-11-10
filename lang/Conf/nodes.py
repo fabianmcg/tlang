@@ -8,51 +8,80 @@ Created on Oct Sun 31 11:09:00 2021
 
 from Lang.db import LangDB
 from Lang.variable import variableDict as V
+from Lang.type import typeDict as T
+
+
+def attrNodesI(addNode, N):
+    addNode("Attr")
+    addNode(
+        "AttrList",
+        {
+            "members": [V.UV(N.Attr, "attrs")],
+        },
+    )
+
+
+def TypeNodesI(addNode, N):
+    addNode(
+        "Type",
+        {
+            "members": [V.V(N.Attr, "attrs")],
+        },
+    )
+
+
+def declNodesI(addNode, N):
+    addNode("Decl")
+    addNode(
+        "ModuleDecl",
+        {
+            "parents": N.Decl,
+            "members": [
+                V.VV(N.Decl, "decls"),
+            ],
+        },
+    )
+    addNode(
+        "NamedDecl",
+        {
+            "parents": N.Decl,
+            "members": [
+                V.V(T.S, "identifier"),
+            ],
+        },
+    )
+
+
+def stmtNodesI(addNode, N):
+    addNode("Stmt")
+    addNode(
+        "CompoundStmt",
+        {
+            "parents": N.Stmt,
+            "members": [
+                V.VV(N.Stmt, "stmts"),
+            ],
+        },
+    )
+
+
+def declNodesII(addNode, N):
+    addNode(
+        "Function",
+        {
+            "parents": N.NamedDecl,
+            "members": [
+                V.A("arguments"),
+                V.V(N.CompoundStmt, "body"),
+            ],
+        },
+    )
 
 
 def langNodes(db: LangDB):
-    NT = db.getNodesTypes()
-    db.addNode("Attr")
-    db.addNode(
-        "AttrList",
-        {
-            "members": [V.UV(NT.Attr, "attrs")],
-        },
-    )
-    db.addNode("Decl")
-    db.addNode(
-        "DeclGroup",
-        {
-            "members": [V.UV(NT.Decl, "decls")],
-        },
-    )
-    db.addNode(
-        "ModuleDecl",
-        {
-            "parents": "Decl",
-            "members": [
-                V.V("Stmt", "stmts"),
-            ],
-        },
-    )
-    db.addNode("Stmt")
-    db.addNode(
-        "CompoundStmt",
-        {
-            "parents": "Stmt",
-            "members": [
-                V.V(NT.Stmt, "stmts"),
-            ],
-        },
-    )
-    db.addNode(
-        "Function",
-        {
-            "parents": "Decl",
-            "members": [
-                V.A("identifier"),
-                V.A("arguments"),
-                V.V(NT.CompoundStmt, "body"),
-            ],
-        },
-    )
+    N = db.getNodesIdentifiers()
+    addNode = db.addNode
+    attrNodesI(addNode, N)
+    declNodesI(addNode, N)
+    stmtNodesI(addNode, N)
+    declNodesII(addNode, N)

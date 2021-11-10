@@ -41,6 +41,9 @@ class LangDB:
     def getParseNodes(self):
         return DotDictWrapper(self.nodes, lambda x: Match(NodeAction(x)))
 
+    def getNodesIdentifiers(self):
+        return DotDictWrapper(self.nodes, lambda x: x.identifier)
+
 
 instructionDict = DotDict(
     {

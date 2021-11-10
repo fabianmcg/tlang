@@ -38,7 +38,7 @@ class Node:
         return None
 
     def __str__(self) -> str:
-        return "{}: {{\n  {}\n  {}\n  {}\n}}".format(
+        return "{}: {{\n Parents:\n  {}\n Members:\n  {}\n Rules:\n  {}\n}}".format(
             self.identifier,
             str(self.parents),
             str(list(self.members.values())),
