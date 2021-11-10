@@ -17,7 +17,7 @@ def grammar(db: LangDB):
     H = db.extraRules
     N = db.getParseNodes()
     T = db.getParseTokens()
-    print(T.Comma)
+
     H["ArgumentList"] = (
         I.VD(V.UV(A.Decl, "args")) + (I.VR("args") ** N.Decl) + R.ZM(T.Comma + (I.VR("args") ** N.Decl)) + I.RET("args")
     )
@@ -26,7 +26,7 @@ def grammar(db: LangDB):
         T.Function
         + (I.VR("identifier") << T.Identifier)
         + T.LParen
-        + ~(H.ArgumentList)
+        + ~(I.VR("arguments") << H.ArgumentList)
         + T.RParen
         + (I.VR("body") ** N.CompoundStmt)
     )
