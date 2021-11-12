@@ -6,7 +6,7 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-import Lang.type as Type
+import Utility.type as Type
 
 
 class Variable:

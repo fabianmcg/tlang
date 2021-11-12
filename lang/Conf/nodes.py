@@ -7,81 +7,46 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Lang.db import LangDB
-from Lang.variable import variableDict as V
-from Lang.type import typeDict as T
+from Utility.variable import variableDict as V
+from Utility.struct import ClassMembers as Members, ClassParents as Parents
 
 
-def attrNodesI(addNode, N):
+def attrNodesI(addNode, T):
     addNode("Attr")
-    addNode(
-        "AttrList",
-        {
-            "members": [V.UV(N.Attr, "attrs")],
-        },
-    )
+    with addNode("AttrList") as node:
+        node <<= Members(V.UV(T.Attr, "attrs"))
 
 
-def TypeNodesI(addNode, N):
-    addNode(
-        "Type",
-        {
-            "members": [V.V(N.Attr, "attrs")],
-        },
-    )
-
-
-def declNodesI(addNode, N):
+def declNodesI(addNode, T):
     addNode("Decl")
-    addNode(
-        "ModuleDecl",
-        {
-            "parents": N.Decl,
-            "members": [
-                V.VV(N.Decl, "decls"),
-            ],
-        },
-    )
-    addNode(
-        "NamedDecl",
-        {
-            "parents": N.Decl,
-            "members": [
-                V.V(T.S, "identifier"),
-            ],
-        },
-    )
+    with addNode("ModuleDecl") as node:
+        node <<= Parents(T.Decl)
+        node <<= Members(V.VV(T.Decl, "decls"))
+    with addNode("NamedDecl") as node:
+        node <<= Parents(T.Decl)
+        node <<= Members(V.V(T.String, "identifier"))
 
 
-def stmtNodesI(addNode, N):
+def stmtNodesI(addNode, T):
     addNode("Stmt")
-    addNode(
-        "CompoundStmt",
-        {
-            "parents": N.Stmt,
-            "members": [
-                V.VV(N.Stmt, "stmts"),
-            ],
-        },
-    )
+    with addNode("CompoundStmt") as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(V.VV(T.Stmt, "stmts"))
 
 
-def declNodesII(addNode, N):
-    addNode(
-        "Function",
-        {
-            "parents": N.NamedDecl,
-            "members": [
-                V.A("arguments"),
-                V.V(N.CompoundStmt, "body"),
-            ],
-        },
-    )
+def declNodesII(addNode, T):
+    with addNode("Function") as node:
+        node <<= Parents(T.NamedDecl)
+        node <<= Members(
+            V.A("arguments"),
+            V.V(T.CompoundStmt, "body"),
+        )
 
 
 def langNodes(db: LangDB):
-    N = db.getNodesIdentifiers()
+    T = db.types
     addNode = db.addNode
-    attrNodesI(addNode, N)
-    declNodesI(addNode, N)
-    stmtNodesI(addNode, N)
-    declNodesII(addNode, N)
+    attrNodesI(addNode, T)
+    declNodesI(addNode, T)
+    stmtNodesI(addNode, T)
+    declNodesII(addNode, T)

@@ -6,8 +6,8 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from Lang.type import typeDict as Type
-from Lang.variable import variableDict as V
+from Utility.type import typeDict as Type
+from Utility.variable import variableDict as V
 from Lang.rule import ruleDict as R
 from Lang.db import LangDB, instructionDict as I
 
@@ -22,11 +22,13 @@ def grammar(db: LangDB):
         I.VD(V.UV(A.Decl, "args")) + (I.VR("args") ** N.Decl) + R.ZM(T.Comma + (I.VR("args") ** N.Decl)) + I.RET("args")
     )
 
+    A.CompoundStmt <<= T.LBrace + R.ZM(I.VR("stmts") ** N.Stmt) + T.RBrace
+
     A.Function <<= (
         T.Function
         + (I.VR("identifier") << T.Identifier)
         + T.LParen
         + ~(I.VR("arguments") << H.ArgumentList)
         + T.RParen
-        + (I.VR("body") ** N.CompoundStmt)
+        + (I.VR("body") << N.CompoundStmt)
     )

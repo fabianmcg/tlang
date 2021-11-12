@@ -7,45 +7,40 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from collections.abc import Iterable
-from Lang.rule import RuleList
+from Utility.struct import Class
+from Lang.rule import RuleList, Rule
 
 
-class Node:
+class Node(Class):
     @staticmethod
     def makeList(x):
         return x if isinstance(x, list) else (list(x) if isinstance(x, Iterable) and not isinstance(x, str) else [x])
 
-    @staticmethod
-    def makeMembers(x):
-        return {v.identifier: v for v in x}
-
-    def __init__(self, identifier, parents="ASTNode", members=[], methods={}):
-        self.identifier = identifier
-        self.parents = Node.makeList(parents)
-        self.members = Node.makeMembers(members)
+    def __init__(self, typename):
+        super().__init__(typename)
         self.rules = RuleList()
-        self.methods = methods
 
-    def __ilshift__(self, rule):
-        self.rules <<= rule
+    def __ilshift__(self, x):
+        Class.__ilshift__(self, x)
+        if isinstance(x, Rule):
+            self.rules <<= x
         return self
 
-    def __getattr__(self, k):
-        if k in self.members:
-            return self.members[k]
-        elif k in self.methods:
-            return self.methods[k]
-        return None
+    def __iadd__(self, x):
+        Class.__iadd__(self, x)
+        if isinstance(x, Rule):
+            self.rules <<= x
+        return self
 
     def __str__(self) -> str:
         return "{}: {{\n Parents:\n  {}\n Members:\n  {}\n Rules:\n  {}\n}}".format(
-            self.identifier,
+            self.T,
             str(self.parents),
-            str(list(self.members.values())),
+            str(self.members),
             self.rules.shortRepr(),
         )
 
     __repr__ = __str__
 
     def shortRepr(self):
-        return self.identifier
+        return self.typename()

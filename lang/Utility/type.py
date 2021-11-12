@@ -24,6 +24,8 @@ class Type:
     def underlying(self):
         return self.T
 
+    typename = __str__
+
 
 class Pointer(Type):
     def __init__(self, T):
@@ -65,7 +67,7 @@ class NodeType(Type):
         super().__init__(T)
 
     def __str__(self) -> str:
-        return self.T.identifier
+        return self.T
 
 
 class TemplateType(Type):
