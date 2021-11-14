@@ -17,6 +17,10 @@ def attrNodesI(addNode, T):
         node <<= Members(V.UV(T.Attr, "attrs"))
 
 
+def typeNodes(addNode, T):
+    addNode("Type")
+
+
 def declNodesI(addNode, T):
     addNode("Decl")
     with addNode("ModuleDecl") as node:
@@ -47,6 +51,7 @@ def langNodes(db: LangDB):
     T = db.types
     addNode = db.addNode
     attrNodesI(addNode, T)
+    typeNodes(addNode, T)
     declNodesI(addNode, T)
     stmtNodesI(addNode, T)
     declNodesII(addNode, T)

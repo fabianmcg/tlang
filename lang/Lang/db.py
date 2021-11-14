@@ -7,9 +7,10 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Utility.dotDict import DotDict, DotDictWrapper
+from Utility.type import *
+from Utility.struct import Class
 from Lexer.db import LexerDB
 from Lang.node import Node
-from Utility.type import *
 from Lang.rule import Match, InstructionRule
 from Lang.action import TokenAction, NodeAction, InstructionAction
 from Lang.instruction import *
@@ -40,6 +41,10 @@ class LangDB:
         self.nodes[identifier] = Node(identifier)
         self.types[identifier] = NodeType(identifier)
         return self.nodes[identifier]
+
+    def addType(self, identifier, T=None):
+        self.types[identifier] = T or Class(identifier)
+        return self.types[identifier]
 
     def getNodes(self, function=lambda x: x):
         return DotDictWrapper(self.nodes, function)
