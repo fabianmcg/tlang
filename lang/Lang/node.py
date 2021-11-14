@@ -11,7 +11,7 @@ from Utility.struct import Class
 from Lang.rule import RuleList, Rule
 
 
-class Node(Class):
+class ParsableClass(Class):
     @staticmethod
     def makeList(x):
         return x if isinstance(x, list) else (list(x) if isinstance(x, Iterable) and not isinstance(x, str) else [x])
@@ -44,3 +44,7 @@ class Node(Class):
 
     def shortRepr(self):
         return self.typename()
+
+
+class Node(ParsableClass):
+    pass

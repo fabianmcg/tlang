@@ -18,6 +18,8 @@ def grammar(db: LangDB):
     N = db.getParseNodes()
     T = db.getParseTokens()
 
+    A.Type <<= T.Int | T.Float | T.Void | T.Identifier
+
     H["ArgumentList"] = (
         I.VD(V.UV(A.Decl, "args")) + (I.VR("args") ** N.Decl) + R.ZM(T.Comma + (I.VR("args") ** N.Decl)) + I.RET("args")
     )
