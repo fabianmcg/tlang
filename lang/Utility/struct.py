@@ -122,3 +122,6 @@ class Class(Type):
 
     def __exit__(self, exception_type, exception_value, traceback):
         pass
+
+    def shortRepr(self):
+        return self.typename()

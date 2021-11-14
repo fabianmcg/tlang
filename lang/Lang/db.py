@@ -11,16 +11,14 @@ from Utility.type import *
 from Utility.struct import Class
 from Lexer.db import LexerDB
 from Lang.node import Node
-from Lang.rule import Match, InstructionRule
-from Lang.action import TokenAction, NodeAction, InstructionAction
-from Lang.instruction import *
+from Grammar.db import GrammarDB
 
 
 class LangDB:
     def __init__(self, tokens: LexerDB):
         self.tokens = tokens
         self.nodes = DotDict()
-        self.extraRules = DotDict()
+        self.rules = DotDict()
         self.types = DotDict(
             {
                 "Auto": AutoType(),
@@ -31,15 +29,18 @@ class LangDB:
                 "String": StringType(),
             }
         )
+        self.grammar = GrammarDB(tokens)
 
     def __str__(self) -> str:
-        return "Nodes:\n{}".format("\n".join(list(map(str, self.nodes.values()))))
+        return "Nodes:\n{}\n{}".format("\n".join(list(map(str, self.nodes.values()))), str(self.grammar))
 
     __repr__ = __str__
 
-    def addNode(self, identifier):
+    def addNode(self, identifier, addRule=True):
         self.nodes[identifier] = Node(identifier)
         self.types[identifier] = NodeType(identifier)
+        if addRule:
+            self.grammar.addRule(identifier)
         return self.nodes[identifier]
 
     def addType(self, identifier, T=None):
@@ -49,18 +50,5 @@ class LangDB:
     def getNodes(self, function=lambda x: x):
         return DotDictWrapper(self.nodes, function)
 
-    def getParseTokens(self):
-        return self.tokens.getTokens(lambda x: Match(TokenAction(x)))
-
-    def getParseNodes(self):
-        return DotDictWrapper(self.nodes, lambda x: Match(NodeAction(x)))
-
-
-instructionDict = DotDict(
-    {
-        "I": lambda x: InstructionRule(InstructionAction(Instruction(x))),
-        "VD": lambda x: InstructionRule(InstructionAction(VariableDecl(x))),
-        "VR": lambda x: InstructionAction(VariableRef(x)),
-        "RET": lambda x: InstructionRule(InstructionAction(ReturnStmt(x))),
-    }
-)
+    def getGrammar(self):
+        return self.grammar.rules, self.grammar.nonTerminals, self.grammar.terminals
