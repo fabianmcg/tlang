@@ -215,10 +215,15 @@ class NonTerminal(Symbol):
         return "N." + getShort(self.identifier)
 
 
+from Utility.type import NodeType
+
+
 class Rule:
-    def __init__(self, identifier) -> None:
+    def __init__(self, identifier, isNode, returnType=None) -> None:
         self.identifier = identifier
         self.rules = []
+        self.isNode = isNode
+        self.returnType = returnType if not isNode else NodeType(identifier)
 
     def __enter__(self):
         return self

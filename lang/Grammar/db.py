@@ -22,7 +22,7 @@ class GrammarDB:
 
     __repr__ = __str__
 
-    def addRule(self, identifier):
-        self.rules[identifier] = Rule(identifier)
+    def addRule(self, identifier, isNode=True, returnType=None):
+        self.rules[identifier] = Rule(identifier, isNode, returnType)
         self.nonTerminals[identifier] = Match(NonTerminal(identifier))
         return self.rules[identifier]
