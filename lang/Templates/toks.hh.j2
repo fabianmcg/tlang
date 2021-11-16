@@ -15,15 +15,15 @@ enum class token_kind {
 {% for key, value in enum.items() -%}
 {{ "  {: <30}//  {}".format(key + ',', value) }}
 {% endfor %}};
-using tk = token_kind;
-inline std::string to_string(tk kind) {
+using tok_k = token_kind;
+inline std::string to_string(tok_k kind) {
   switch (kind) {
-  case tk::UNKW:
+  case tok_k::UNKW:
     return "unknown";
-  case tk::NONE:
+  case tok_k::NONE:
     return "none";
 {% for key, value in switch.items() -%}
-{{ "  case tk::{}:".format(key) }}
+{{ "  case tok_k::{}:".format(key) }}
     return "{{ value }}";
 {% endfor %}  default:
     return "";

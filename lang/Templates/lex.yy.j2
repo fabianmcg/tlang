@@ -38,8 +38,8 @@ void comment(YFlexLexer &ylex);
 "//".*                        {}
 \n                            { __yybufpos = 1; }{% endraw %}
 {% for rule, value in rules.items() -%}
-{{ "{: <30}{{ return static_cast<int>(_lnp_::tk::{}); }}".format(rule, value) }}
-{% endfor %}{% raw %}.                             { throw(_lnp_::lexer_exception(_lnp_::token::create(YYText(), _lnp_::tk::UNKW, lineno(), colno()))); }
+{{ "{: <30}{{ return static_cast<int>(_lnp_::tok_k::{}); }}".format(rule, value) }}
+{% endfor %}{% raw %}.                             { throw(_lnp_::lexer_exception(_lnp_::token::create(YYText(), _lnp_::tok_k::UNKW, lineno(), colno()))); }
 
 %%
 bool _lnp_::Lexer::valid() const { return _lexer.has_value() && get_lexer(_lexer) && !_finished; }
@@ -47,7 +47,7 @@ void _lnp_::Lexer::init() { this->_lexer = std::make_shared<YFlexLexer>(this->in
 _lnp_::token _lnp_::Lexer::consume_token() {
   auto ylex = get_lexer(_lexer);
   int tok = ylex->yylex();
-  return _lnp_::token::create(ylex->YYText(), static_cast<_lnp_::tk>(tok), ylex->lineno(), ylex->colno());
+  return _lnp_::token::create(ylex->YYText(), static_cast<_lnp_::tok_k>(tok), ylex->lineno(), ylex->colno());
 }
 void comment(YFlexLexer &ylex) {
   int c;
@@ -59,7 +59,7 @@ void comment(YFlexLexer &ylex) {
       if (c == '/')
         return;
       if (c == 0)
-        throw(_lnp_::lexer_exception(_lnp_::token::create(ylex.YYText(), _lnp_::tk::UNKW, ylex.lineno(), ylex.colno())));
+        throw(_lnp_::lexer_exception(_lnp_::token::create(ylex.YYText(), _lnp_::tok_k::UNKW, ylex.lineno(), ylex.colno())));
     }
   }
 }

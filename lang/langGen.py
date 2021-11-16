@@ -9,8 +9,8 @@ Created on Oct Sun 31 11:09:00 2021
 from Conf.toks import makeLexerDB
 from Lang.db import LangDB
 from Conf.nodes import langNodes
-
 from Conf.grammar import grammar
+from Lexer.generate import generateLexer
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     lang = LangDB(tokens)
     langNodes(lang)
     grammar(lang)
-    print(lang)
+    # generateLexer(tokens, "./")
 
 
 if __name__ == "__main__":
