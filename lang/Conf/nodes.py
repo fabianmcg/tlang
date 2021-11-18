@@ -36,6 +36,10 @@ def stmtNodesI(addNode, T):
     with addNode("CompoundStmt") as node:
         node <<= Parents(T.Stmt)
         node <<= Members(V.VV(T.Stmt, "stmts"))
+    with addNode("NullStmt") as node:
+        node <<= Parents(T.Stmt)
+    with addNode("ValueStmt") as node:
+        node <<= Parents(T.Stmt)
 
 
 def declNodesII(addNode, T):
@@ -43,7 +47,67 @@ def declNodesII(addNode, T):
         node <<= Parents(T.NamedDecl)
         node <<= Members(
             V.A("arguments"),
-            V.V(T.CompoundStmt, "body"),
+            V.UP(T.CompoundStmt, "body"),
+        )
+
+
+def exprNodesI(addNode, T):
+    with addNode("Expr") as node:
+        node <<= Parents(T.ValueStmt)
+    with addNode("DeclRefExpr") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "expr"),
+        )
+    with addNode("ThisExpr") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "expr"),
+        )
+    with addNode("UnaryOp") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "expr"),
+        )
+    with addNode("BinaryOp") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "lhs"),
+            V.UP(T.Expr, "rhs"),
+        )
+    with addNode("CallExpr") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "callee"),
+            V.UV(T.Expr, "args"),
+        )
+    with addNode("RangeExpr") as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "begin"),
+            V.UP(T.Expr, "step"),
+            V.UP(T.Expr, "end"),
+        )
+
+
+def stmtNodesII(addNode, T):
+    with addNode("LoopStmt") as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(
+            V.UV(T.RangeExpr, "range"),
+            V.UP(T.CompoundStmt, "body"),
+        )
+    with addNode("IfStmt") as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(
+            V.UP(T.Expr, "condition"),
+            V.UP(T.Stmt, "then"),
+            V.UP(T.Stmt, "else"),
+        )
+    with addNode("ReturnStmt") as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(
+            V.UP(T.Expr, "return"),
         )
 
 
@@ -55,3 +119,5 @@ def langNodes(db: LangDB):
     declNodesI(addNode, T)
     stmtNodesI(addNode, T)
     declNodesII(addNode, T)
+    exprNodesI(addNode, T)
+    stmtNodesII(addNode, T)

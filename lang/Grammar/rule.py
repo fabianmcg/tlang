@@ -16,12 +16,7 @@ class ParseException(Exception):
 class RuleNode:
     def __init__(self, data=None, instruction=None):
         self.data = data
-        self.atomic = True
         self.instruction = instruction
-
-    @staticmethod
-    def atomicList(x):
-        return makeList(x if x.atomic else x.data)
 
     @staticmethod
     def getRepr(x):
@@ -31,14 +26,22 @@ class RuleNode:
         return Optional(self)
 
     def __add__(self, other):
-        if isinstance(self, And) or isinstance(other, And):
-            return And(self.atomicList(self) + self.atomicList(other))
+        if isinstance(self, And) and isinstance(other, And):
+            return And(self.data.copy() + other.data.copy())
+        elif isinstance(self, And) and not isinstance(other, And):
+            return And(self.data.copy() + makeList(other))
+        elif not isinstance(self, And) and isinstance(other, And):
+            return And(makeList(self) + self.other.copy())
         else:
             return And(self, other)
 
     def __or__(self, other):
-        if isinstance(self, Or) or isinstance(other, Or):
-            return Or(self.atomicList(self) + self.atomicList(other))
+        if isinstance(self, Or) and isinstance(other, Or):
+            return Or(self.data.copy() + other.data.copy())
+        elif isinstance(self, Or) and not isinstance(other, Or):
+            return Or(self.data.copy() + makeList(other))
+        elif not isinstance(self, Or) and isinstance(other, Or):
+            return Or(makeList(self) + self.other.copy())
         else:
             return Or(self, other)
 
@@ -60,11 +63,21 @@ class RuleNode:
             + "}"
         )
 
+    def longRepr(self) -> str:
+        return (
+            "{"
+            + str(self.__class__.__name__)
+            + ": "
+            + (str(self.instruction) + " " if self.hasInstruction() else "")
+            + str(self.data)
+            + "}"
+        )
+
     def hasInstruction(self):
         return self.instruction != None
 
     def __str__(self) -> str:
-        return self.shortRepr()
+        return self.longRepr()
 
     __repr__ = __str__
 
@@ -104,7 +117,6 @@ class Optional(RuleNode):
 class And(RuleNode):
     def __init__(self, *rules):
         super().__init__(makeListVariadic(*rules))
-        self.atomic = False
 
     def shortRepr(self):
         return "(" + " & ".join([r.shortRepr() for r in self.data]) + ")"
@@ -113,7 +125,6 @@ class And(RuleNode):
 class Or(RuleNode):
     def __init__(self, *rules):
         super().__init__(makeListVariadic(*rules))
-        self.atomic = False
 
     def shortRepr(self):
         return "(" + " | ".join([r.shortRepr() for r in self.data]) + ")"
