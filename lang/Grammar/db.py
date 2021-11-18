@@ -8,12 +8,12 @@ Created on Oct Sun 31 11:09:00 2021
 
 from Lexer.db import LexerDB
 from Utility.dotDict import DotDict
-from Grammar.rule import Terminal, NonTerminal, Match, Rule
+from Grammar.rule import Terminal, NonTerminal, Rule
 
 
 class GrammarDB:
     def __init__(self, tokens: LexerDB):
-        self.terminals = tokens.getTokens(lambda x: Match(Terminal(x)))
+        self.terminals = tokens.getTokens(lambda x: Terminal(x))
         self.nonTerminals = DotDict()
         self.rules = DotDict()
 
@@ -24,5 +24,5 @@ class GrammarDB:
 
     def addRule(self, identifier, isNode=True, returnType=None):
         self.rules[identifier] = Rule(identifier, isNode, returnType)
-        self.nonTerminals[identifier] = Match(NonTerminal(identifier))
+        self.nonTerminals[identifier] = NonTerminal(identifier)
         return self.rules[identifier]
