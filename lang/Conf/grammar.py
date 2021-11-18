@@ -26,3 +26,5 @@ def grammar(db: LangDB):
     R.Function <<= (
         T.Function + (VarRef("identifier") << T.Identifier) + T.LParen + T.RParen + (VarRef("body") << N.CompoundStmt)
     )
+
+    R.IfStmt <<= T.If + T.LParen + N.Expr + T.RParen + (N.Stmt | (N.Stmt + T.Else + N.Stmt))
