@@ -6,194 +6,173 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from Utility.util import makeList, makeListVariadic, getShort
+from Utility.util import getShort
+from copy import deepcopy
 
 
-class ParseException(Exception):
-    pass
+class Metadata:
+    def __add__(self, other):
+        return Metadata()
+
+    def __str__(self) -> str:
+        return ""
+
+    __repr__ = __str__
+
 
 
 class RuleNode:
-    def __init__(self, data=None, instruction=None):
-        self.data = data
-        self.instruction = instruction
+    def __init__(self, metadata=None):
+        self.metadata = metadata or Metadata()
 
-    @staticmethod
-    def getRepr(x):
-        return getShort(x) if not isinstance(x, RuleNode) else x.shortRepr()
+    def clone(self):
+        return deepcopy(self)
+
+    def getNode(self):
+        return None
+
+    def hasMetadata(self):
+        return self.metadata != None
 
     def __invert__(self):
-        return Optional(self)
+        return Optional(self.clone())
 
     def __add__(self, other):
-        if isinstance(self, And) and isinstance(other, And):
-            return And(self.data.copy() + other.data.copy())
-        elif isinstance(self, And) and not isinstance(other, And):
-            return And(self.data.copy() + makeList(other))
-        elif not isinstance(self, And) and isinstance(other, And):
-            return And(makeList(self) + self.other.copy())
-        else:
-            return And(self, other)
+        return And(self.clone(), other.clone())
 
     def __or__(self, other):
-        if isinstance(self, Or) and isinstance(other, Or):
-            return Or(self.data.copy() + other.data.copy())
-        elif isinstance(self, Or) and not isinstance(other, Or):
-            return Or(self.data.copy() + makeList(other))
-        elif not isinstance(self, Or) and isinstance(other, Or):
-            return Or(makeList(self) + self.other.copy())
-        else:
-            return Or(self, other)
-
-    def __pow__(self, rhs):
-        rhs.instruction = AppendInstruction(self, rhs.data)
-        return rhs
-
-    def __lshift__(self, rhs):
-        rhs.instruction = AssignInstruction(self, rhs.data)
-        return rhs
-
-    def shortRepr(self) -> str:
-        return (
-            "{"
-            + str(self.__class__.__name__)
-            + ": "
-            + (str(self.instruction) + " " if self.hasInstruction() else "")
-            + str(self.data)
-            + "}"
-        )
+        return Or(self.clone(), other.clone())
 
     def longRepr(self) -> str:
         return (
             "{"
             + str(self.__class__.__name__)
             + ": "
-            + (str(self.instruction) + " " if self.hasInstruction() else "")
-            + str(self.data)
+            + (getShort(self.metadata) + " " if self.hasMetadata() else "")
+            + getShort(self.getNode())
             + "}"
         )
 
-    def hasInstruction(self):
-        return self.instruction != None
-
-    def __str__(self) -> str:
+    def shortRepr(self) -> str:
         return self.longRepr()
-
-    __repr__ = __str__
-
-
-class Match(RuleNode):
-    def __init__(self, rule, instruction=None):
-        super().__init__(rule, instruction)
-
-    def shortRepr(self):
-        return RuleNode.getRepr(self.data)
-
-
-class ZeroOrMore(RuleNode):
-    def __init__(self, rule):
-        super().__init__(rule)
-
-    def shortRepr(self):
-        return RuleNode.getRepr(self.data) + "*"
-
-
-class OneOrMore(RuleNode):
-    def __init__(self, rule):
-        super().__init__(rule)
-
-    def shortRepr(self):
-        return RuleNode.getRepr(self.data) + "+"
-
-
-class Optional(RuleNode):
-    def __init__(self, rule):
-        super().__init__(rule)
-
-    def shortRepr(self):
-        return RuleNode.getRepr(self.data) + "?"
-
-
-class And(RuleNode):
-    def __init__(self, *rules):
-        super().__init__(makeListVariadic(*rules))
-
-    def shortRepr(self):
-        return "(" + " & ".join([r.shortRepr() for r in self.data]) + ")"
-
-
-class Or(RuleNode):
-    def __init__(self, *rules):
-        super().__init__(makeListVariadic(*rules))
-
-    def shortRepr(self):
-        return "(" + " | ".join([r.shortRepr() for r in self.data]) + ")"
-
-
-class Instruction(RuleNode):
-    def __init__(self, instruction=None):
-        super().__init__(instruction=instruction)
 
     def __str__(self) -> str:
         return self.shortRepr()
 
-    def shortRepr(self):
-        return str(None) if self.instruction == None else "I:" + RuleNode.getRepr(self.instruction)
+    __repr__ = __str__
 
 
-class VariableDecl(Instruction):
-    def __init__(self, variable) -> None:
-        super().__init__(variable)
+class EmptyProduction(RuleNode):
+    def __init__(self, metadata=None):
+        super().__init__(metadata)
 
-    def shortRepr(self):
-        return "VD::" + self.instruction.shortRepr()
-
-
-class VariableRef(Instruction):
-    def __init__(self, variable) -> None:
-        super().__init__(variable)
+    def getNode(self):
+        return "\u03B5"
 
     def shortRepr(self):
-        return "VR::" + self.instruction
+        return "\u03B5"
 
 
-class ReturnStmt(Instruction):
+class Terminal(RuleNode):
+    def __init__(self, identifier, metadata=None):
+        super().__init__(metadata)
+        self.identifier = identifier
+
+    def getNode(self):
+        return self.identifier
+
     def shortRepr(self):
-        return "R::" + self.instruction
+        return getShort(self.identifier)
 
 
-class BinaryInstruction(Instruction):
-    def __init__(self, lhs, rhs):
-        super().__init__()
-        self.lhs = lhs
-        self.rhs = rhs
+class NonTerminal(RuleNode):
+    def __init__(self, identifier, metadata=None):
+        super().__init__(metadata)
+        self.identifier = identifier
 
-    def __str__(self) -> str:
-        return "<{} : {}>".format(str(self.lhs), str(self.rhs))
+    def getNode(self):
+        return self.identifier
 
-
-class AssignInstruction(BinaryInstruction):
-    def __init__(self, lhs, rhs):
-        super().__init__(lhs, rhs)
-
-    def __str__(self) -> str:
-        return "<{} = {}>".format(str(self.lhs), str(self.rhs))
+    def shortRepr(self):
+        return getShort(self.identifier)
 
 
-class AppendInstruction(BinaryInstruction):
-    def __init__(self, lhs, rhs):
-        super().__init__(lhs, rhs)
+class ZeroOrMore(RuleNode):
+    def __init__(self, node, metadata=None):
+        super().__init__(metadata)
+        self.node = node
 
-    def __str__(self) -> str:
-        return "<{} += {}>".format(str(self.lhs), str(self.rhs))
+    def getNode(self):
+        return self.node
+
+    def shortRepr(self):
+        return getShort(self.node) + "*"
+
+
+class OneOrMore(RuleNode):
+    def __init__(self, node, metadata=None):
+        super().__init__(metadata)
+        self.node = node
+
+    def getNode(self):
+        return self.node
+
+    def shortRepr(self):
+        return getShort(self.node) + "+"
+
+
+class Optional(RuleNode):
+    def __init__(self, node, metadata=None):
+        super().__init__(metadata)
+        self.node = node
+
+    def getNode(self):
+        return self.node
+
+    def shortRepr(self):
+        return getShort(self.node) + "?"
+
+def makeFlatNodeList(kind, x, y):
+    if isinstance(x, kind) and isinstance(y, kind):
+        return x.nodes + y.nodes
+    if isinstance(x, kind) and not isinstance(y, kind):
+        return x.nodes + [y]
+    elif not isinstance(x, kind) and isinstance(y, kind):
+        return [x] + y.nodes
+    else:
+        return [x, y]
+
+class And(RuleNode):
+    def __init__(self, x, y, metadata=None):
+        super().__init__(metadata)
+        self.nodes = makeFlatNodeList(And, x, y)
+
+    def getNode(self):
+        return self.nodes
+
+    def shortRepr(self):
+        return "(" + " & ".join([r.shortRepr() for r in self.nodes]) + ")"
+
+
+class Or(RuleNode):
+    def __init__(self, x, y, metadata=None):
+        super().__init__(metadata)
+        self.nodes = makeFlatNodeList(Or, x, y)
+
+    def getNode(self):
+        return self.nodes
+
+    def shortRepr(self):
+        return "(" + " | ".join([r.shortRepr() for r in self.nodes]) + ")"
 
 
 from Utility.dotDict import DotDict
 
 ruleDict = DotDict(
     {
-        "I": Instruction,
-        "M": Match,
+        "E": EmptyProduction,
+        "T": Terminal,
+        "N": NonTerminal,
         "O": Optional,
         "ZM": ZeroOrMore,
         "OM": OneOrMore,
@@ -203,29 +182,6 @@ ruleDict = DotDict(
 )
 
 
-class Symbol:
-    def __init__(self, identifier):
-        self.identifier = identifier
-
-    def __str__(self) -> str:
-        return getShort(self.identifier)
-
-    __repr__ = __str__
-
-    def shortRepr(self):
-        return str(self)
-
-
-class Terminal(Symbol):
-    def __str__(self) -> str:
-        return "T." + getShort(self.identifier)
-
-
-class NonTerminal(Symbol):
-    def __str__(self) -> str:
-        return "N." + getShort(self.identifier)
-
-
 from Utility.type import NodeType
 
 
@@ -233,7 +189,6 @@ class Rule:
     def __init__(self, identifier, isNode, returnType=None) -> None:
         self.identifier = identifier
         self.rules = []
-        self.isNode = isNode
         self.returnType = returnType if not isNode else NodeType(identifier)
 
     def __enter__(self):
