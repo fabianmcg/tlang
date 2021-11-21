@@ -20,7 +20,6 @@ class Metadata:
     __repr__ = __str__
 
 
-
 class RuleNode:
     def __init__(self, metadata=None):
         self.metadata = metadata or Metadata()
@@ -82,7 +81,7 @@ class Terminal(RuleNode):
         return self.identifier
 
     def shortRepr(self):
-        return getShort(self.identifier)
+        return "T." + getShort(self.identifier)
 
 
 class NonTerminal(RuleNode):
@@ -94,7 +93,7 @@ class NonTerminal(RuleNode):
         return self.identifier
 
     def shortRepr(self):
-        return getShort(self.identifier)
+        return "N." + getShort(self.identifier)
 
 
 class ZeroOrMore(RuleNode):
@@ -132,6 +131,7 @@ class Optional(RuleNode):
     def shortRepr(self):
         return getShort(self.node) + "?"
 
+
 def makeFlatNodeList(kind, x, y):
     if isinstance(x, kind) and isinstance(y, kind):
         return x.nodes + y.nodes
@@ -141,6 +141,7 @@ def makeFlatNodeList(kind, x, y):
         return [x] + y.nodes
     else:
         return [x, y]
+
 
 class And(RuleNode):
     def __init__(self, x, y, metadata=None):
@@ -182,14 +183,14 @@ ruleDict = DotDict(
 )
 
 
-from Utility.type import NodeType
+from Utility.type import NodeType, UniquePtr
 
 
 class Rule:
     def __init__(self, identifier, isNode, returnType=None) -> None:
         self.identifier = identifier
         self.rules = []
-        self.returnType = returnType if not isNode else NodeType(identifier)
+        self.returnType = returnType if not isNode else UniquePtr(NodeType(identifier))
 
     def __enter__(self):
         return self

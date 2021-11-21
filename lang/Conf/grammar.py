@@ -18,8 +18,28 @@ def grammar(db: LangDB):
 
     # A.Type <<= T.Int | T.Float | T.Void | T.Identifier
 
-    R.CompoundStmt <<= T.LBrace + ZM(VarRef("stmts") ** N.Stmt) + T.RBrace
-    R.Function <<= (
+    # ******************************************************************************
+    #
+    #   Declarations
+    #
+    # ******************************************************************************
+    R.FunctionDecl <<= (
         T.Function + (VarRef("identifier") << T.Identifier) + T.LParen + T.RParen + (VarRef("body") << N.CompoundStmt)
     )
+    # ******************************************************************************
+    #
+    #   Statements
+    #
+    # ******************************************************************************
+    R.CompoundStmt <<= T.LBrace + ZM(VarRef("stmts") ** N.Stmt) + T.RBrace
     R.IfStmt <<= T.If + T.LParen + N.Expr + T.RParen + N.Stmt + ((T.Else + N.Stmt) | Empty())
+
+    # ******************************************************************************
+    #
+    #   Expressions
+    #
+    # ******************************************************************************
+    R.Expr <<= N.BinaryOp | N.ParenExpr | N.ThisExpr | N.DeclRefExpr
+    R.BinaryOp <<= N.Expr + (T.Plus | T.Minus | T.Multiply | T.Divide) + N.Expr
+    R.ParenExpr <<= T.LParen + N.Expr + T.RParen
+    R.DeclRefExpr <<= T.Identifier

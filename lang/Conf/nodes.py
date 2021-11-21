@@ -11,77 +11,134 @@ from Utility.variable import variableDict as V
 from Utility.struct import ClassMembers as Members, ClassParents as Parents
 
 
-def attrNodesI(addNode, T):
+def declareNodes(addNode):
+    # ******************************************************************************
+    #   Attributes
+    # ******************************************************************************
     addNode("Attr")
-    with addNode("AttrList") as node:
-        node <<= Members(V.UV(T.Attr, "attrs"))
-
-
-def typeNodes(addNode, T):
+    addNode("AttrList")
+    # ******************************************************************************
+    #   Types
+    # ******************************************************************************
     addNode("Type")
-
-
-def declNodesI(addNode, T):
+    # ******************************************************************************
+    #   Declarations
+    # ******************************************************************************
     addNode("Decl")
-    with addNode("ModuleDecl") as node:
-        node <<= Parents(T.Decl)
-        node <<= Members(V.VV(T.Decl, "decls"))
-    with addNode("NamedDecl") as node:
+    addNode("DeclContext")
+    addNode("ModuleDecl")
+    addNode("NamedDecl")
+    addNode("FunctionDecl")
+    # ******************************************************************************
+    #   Statements
+    # ******************************************************************************
+    addNode("Stmt")
+    addNode("CompoundStmt")
+    addNode("NullStmt")
+    addNode("ValueStmt")
+    addNode("ReturnStmt")
+    addNode("LoopStmt")
+    addNode("IfStmt")
+    # ******************************************************************************
+    #   Expressions
+    # ******************************************************************************
+    addNode("Expr")
+    addNode("DeclRefExpr")
+    addNode("ThisExpr")
+    addNode("ParenExpr")
+    addNode("UnaryOp")
+    addNode("BinaryOp")
+    addNode("CallExpr")
+    addNode("RangeExpr")
+
+
+def defineNodes(N, T):
+    # ******************************************************************************
+    #   Attributes
+    # ******************************************************************************
+    with N.AttrList as node:
+        node <<= Members(V.UV(T.Attr, "attrs"))
+    # ******************************************************************************
+    #   Declarations
+    # ******************************************************************************
+    with N.ModuleDecl as node:
+        node <<= Parents(T.DeclContext)
+        node <<= Members(V.UV(T.Decl, "decls"))
+    with N.NamedDecl as node:
         node <<= Parents(T.Decl)
         node <<= Members(V.V(T.String, "identifier"))
-
-
-def stmtNodesI(addNode, T):
-    addNode("Stmt")
-    with addNode("CompoundStmt") as node:
-        node <<= Parents(T.Stmt)
-        node <<= Members(V.VV(T.Stmt, "stmts"))
-    with addNode("NullStmt") as node:
-        node <<= Parents(T.Stmt)
-    with addNode("ValueStmt") as node:
-        node <<= Parents(T.Stmt)
-
-
-def declNodesII(addNode, T):
-    with addNode("Function") as node:
+    with N.FunctionDecl as node:
         node <<= Parents(T.NamedDecl)
         node <<= Members(
             V.A("arguments"),
             V.UP(T.CompoundStmt, "body"),
         )
-
-
-def exprNodesI(addNode, T):
-    with addNode("Expr") as node:
+    # ******************************************************************************
+    #   Statements
+    # ******************************************************************************
+    with N.CompoundStmt as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(V.UV(T.Stmt, "stmts"))
+    with N.NullStmt as node:
+        node <<= Parents(T.Stmt)
+    with N.ValueStmt as node:
+        node <<= Parents(T.Stmt)
+    with N.ReturnStmt as node:
         node <<= Parents(T.ValueStmt)
-    with addNode("DeclRefExpr") as node:
+        node <<= Members(
+            V.UP(T.Expr, "return"),
+        )
+    with N.LoopStmt as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(
+            V.UV(T.RangeExpr, "range"),
+            V.UP(T.CompoundStmt, "body"),
+        )
+    with N.IfStmt as node:
+        node <<= Parents(T.Stmt)
+        node <<= Members(
+            V.UP(T.Expr, "condition"),
+            V.UP(T.Stmt, "then"),
+            V.UP(T.Stmt, "else"),
+        )
+    # ******************************************************************************
+    #   Expressions
+    # ******************************************************************************
+    with N.Expr as node:
+        node <<= Parents(T.ValueStmt)
+    with N.DeclRefExpr as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "expr"),
         )
-    with addNode("ThisExpr") as node:
+    with N.ThisExpr as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "expr"),
         )
-    with addNode("UnaryOp") as node:
+    with N.ParenExpr as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "expr"),
         )
-    with addNode("BinaryOp") as node:
+    with N.UnaryOp as node:
+        node <<= Parents(T.Expr)
+        node <<= Members(
+            V.UP(T.Expr, "expr"),
+        )
+    with N.BinaryOp as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "lhs"),
             V.UP(T.Expr, "rhs"),
         )
-    with addNode("CallExpr") as node:
+    with N.CallExpr as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "callee"),
             V.UV(T.Expr, "args"),
         )
-    with addNode("RangeExpr") as node:
+    with N.RangeExpr as node:
         node <<= Parents(T.Expr)
         node <<= Members(
             V.UP(T.Expr, "begin"),
@@ -90,34 +147,8 @@ def exprNodesI(addNode, T):
         )
 
 
-def stmtNodesII(addNode, T):
-    with addNode("LoopStmt") as node:
-        node <<= Parents(T.Stmt)
-        node <<= Members(
-            V.UV(T.RangeExpr, "range"),
-            V.UP(T.CompoundStmt, "body"),
-        )
-    with addNode("IfStmt") as node:
-        node <<= Parents(T.Stmt)
-        node <<= Members(
-            V.UP(T.Expr, "condition"),
-            V.UP(T.Stmt, "then"),
-            V.UP(T.Stmt, "else"),
-        )
-    with addNode("ReturnStmt") as node:
-        node <<= Parents(T.Stmt)
-        node <<= Members(
-            V.UP(T.Expr, "return"),
-        )
-
-
 def langNodes(db: LangDB):
     T = db.types
     addNode = db.addNode
-    attrNodesI(addNode, T)
-    typeNodes(addNode, T)
-    declNodesI(addNode, T)
-    stmtNodesI(addNode, T)
-    declNodesII(addNode, T)
-    exprNodesI(addNode, T)
-    stmtNodesII(addNode, T)
+    declareNodes(addNode)
+    defineNodes(db.nodes, T)

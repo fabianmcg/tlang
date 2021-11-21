@@ -95,6 +95,11 @@ class UniquePtr(TemplateType):
         super().__init__("std::unique_ptr<{}>", Type(T))
 
 
+class Optional(TemplateType):
+    def __init__(self, T):
+        super().__init__("std::optional<{}>", Type(T))
+
+
 from Utility.dotDict import DotDict
 
 typeDict = DotDict(

@@ -1,0 +1,21 @@
+{{ opt_t }} Parser::handle{{ id }}() {
+  using optret_t = {{ opt_t }};
+  using return_t = {{ ret_t }};
+  using result_t = {{ res_t }};
+{% for rule in rules -%}
+  /** BEGIN: {{ rule["str"] }} **/
+  {
+    auto lctx = getLexerContext();
+    auto _parse = [&]() -> optret_t {
+      {{ rule["body"] }}
+    };
+    auto _result = _parse();
+    if (_result) {
+      acceptRule(lctx);
+      return _result;
+    }
+    backtrackLexer(lctx);
+  }
+  /** END:   {{ rule["str"] }} **/
+{% endfor %}return optret_t{};
+} 
