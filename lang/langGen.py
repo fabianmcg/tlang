@@ -11,6 +11,7 @@ from Lang.db import LangDB
 from Conf.nodes import langNodes
 from Conf.grammar import grammar
 from Lexer.generate import generateLexer
+from Grammar.generate import generateParser
 
 
 def main():
@@ -18,8 +19,7 @@ def main():
     lang = LangDB(tokens)
     langNodes(lang)
     grammar(lang)
-    print(lang)
-    # generateLexer(tokens, "./")
+    generateParser(lang.grammar, "./")
 
 
 if __name__ == "__main__":

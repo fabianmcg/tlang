@@ -18,7 +18,6 @@ class LangDB:
     def __init__(self, tokens: LexerDB):
         self.tokens = tokens
         self.nodes = DotDict()
-        self.rules = DotDict()
         self.types = DotDict(
             {
                 "Auto": AutoType(),
