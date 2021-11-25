@@ -35,8 +35,8 @@ class LangDB:
 
     __repr__ = __str__
 
-    def addNode(self, identifier, addRule=True):
-        self.nodes[identifier] = Node(identifier)
+    def addNode(self, identifier, addRule=True, **kwargs):
+        self.nodes[identifier] = Node(identifier, **kwargs)
         self.types[identifier] = NodeType(identifier)
         if addRule:
             self.grammar.addRule(identifier)

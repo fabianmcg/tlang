@@ -27,6 +27,12 @@ class Type:
     typename = __str__
 
 
+class EnumType(Type):
+    def __init__(self, T, isFlag=False):
+        super().__init__(T)
+        self.isFlag = isFlag
+
+
 class Pointer(Type):
     def __init__(self, T):
         super().__init__("{}*", Type(T))

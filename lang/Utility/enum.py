@@ -6,16 +6,20 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
+from enum import Enum
 
-class EnumMember:
-    def __init__(self, identifier, value=None, comment=None, string=None):
+
+class Enumeration:
+    def __init__(self, identifier, enum, isClass=False) -> None:
         self.identifier = identifier
-        self.value = value
-        self.comment = comment
-        self.string = string or self.identifier
+        self.enum = enum
+        self.isClass = isClass
 
-    def cxxEnum(self):
-        return self.identifier, self.string
+    def __str__(self) -> str:
+        return str(repr(self.enum))
 
-    def cxxString(self):
-        return self.identifier, self.string
+    __repr__ = __str__
+
+    @staticmethod
+    def create(identifier, tags, isClass=False):
+        return Enumeration(identifier, Enum(identifier, tags, start=0), isClass)

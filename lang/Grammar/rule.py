@@ -37,10 +37,10 @@ class RuleNode:
         return Optional(self.clone())
 
     def __add__(self, other):
-        return And(self.clone(), other.clone())
+        return All(self.clone(), other.clone())
 
     def __or__(self, other):
-        return Or(self.clone(), other.clone())
+        return Any(self.clone(), other.clone())
 
     def longRepr(self) -> str:
         return (
@@ -143,10 +143,13 @@ def makeFlatNodeList(kind, x, y):
         return [x, y]
 
 
-class And(RuleNode):
-    def __init__(self, x, y, metadata=None):
+class All(RuleNode):
+    def __init__(self, x, y=None, metadata=None):
         super().__init__(metadata)
-        self.nodes = makeFlatNodeList(And, x, y)
+        if y == None:
+            self.nodes = [x]
+        else:
+            self.nodes = makeFlatNodeList(All, x, y)
 
     def getNode(self):
         return self.nodes
@@ -155,10 +158,13 @@ class And(RuleNode):
         return "(" + " & ".join([r.shortRepr() for r in self.nodes]) + ")"
 
 
-class Or(RuleNode):
-    def __init__(self, x, y, metadata=None):
+class Any(RuleNode):
+    def __init__(self, x, y=None, metadata=None):
         super().__init__(metadata)
-        self.nodes = makeFlatNodeList(Or, x, y)
+        if y == None:
+            self.nodes = [x]
+        else:
+            self.nodes = makeFlatNodeList(Any, x, y)
 
     def getNode(self):
         return self.nodes
@@ -177,8 +183,8 @@ ruleDict = DotDict(
         "O": Optional,
         "ZM": ZeroOrMore,
         "OM": OneOrMore,
-        "AD": And,
-        "OR": Or,
+        "AD": All,
+        "OR": Any,
     }
 )
 
@@ -202,7 +208,10 @@ class Rule:
         if isinstance(data, list):
             self.rules.extend(data)
         else:
-            self.rules.append(data)
+            if not isinstance(data, (All, Any)):
+                self.rules.append(All(data))
+            else:
+                self.rules.append(data)
         return self
 
     def __str__(self) -> str:

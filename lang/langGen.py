@@ -19,6 +19,7 @@ def main():
     lang = LangDB(tokens)
     langNodes(lang)
     grammar(lang)
+    # print(lang)
     generateParser(lang.grammar, "./")
 
 

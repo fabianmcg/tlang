@@ -9,4 +9,7 @@ from Utility.struct import Class
 
 
 class Node(Class):
-    pass
+    def __init__(self, typename, accessors=True, loc=False):
+        super().__init__(typename)
+        self.generateGetSet = accessors
+        self.hasLocation = loc
