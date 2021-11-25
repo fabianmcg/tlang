@@ -1,0 +1,9 @@
+#ifndef __{{ ID.upper() }}__
+#define __{{ ID.upper() }}__
+{% if includes is defined %}
+{% for include in includes -%}
+#include {{ include }}
+{% endfor %}
+{% endif %}
+{{ HEADER }}
+#endif

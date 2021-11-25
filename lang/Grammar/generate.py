@@ -76,20 +76,21 @@ class RuleGenerator:
         return src
 
     def handleTerminal(self, rule: Terminal):
-        src = "tok = consumeTok();\n"
+        src = ""
         I = rule.identifier.identifier
         if self.insideLoop:
-            src += generateIf("tok != _lnp_::tok_k::" + I, "break;", Comment="Token: " + I, SingleThen=True)
+            src += generateIf("tok.isNot(tok_k::" + I + ")", "break;", Comment="Token: " + I, SingleThen=True)
         elif len(self.topRule):
             lastRule = self.topRule[-1]
             stmt = "goto {};".format(self.labels[-1])
-            if isinstance(lastRule, And):
-                src += generateIf("tok != _lnp_::tok_k::" + I, stmt, Comment="Token: " + I, SingleThen=True)
+            if isinstance(lastRule, All):
+                src += generateIf("tok.isNot(tok_k::" + I + ")", stmt, Comment="Token: " + I, SingleThen=True)
             else:
-                src += generateIf("tok == _lnp_::tok_k::" + I, stmt, Comment="Token: " + I)
+                src += generateIf("tok.is(tok_k::" + I + ")", stmt, Comment="Token: " + I)
         else:
-            src += generateIf("tok != _lnp_::tok_k::" + I, "goto RET;", Comment="Token: " + I, SingleThen=True)
+            raise (RuntimeError("handleTerminal couldn't perform codegen"))
         src += self.handleMetadata(rule.metadata)
+        src += "tok = consumeTok();\n"
         return src
 
     def handleNonTerminal(self, rule: NonTerminal):
@@ -117,13 +118,13 @@ class RuleGenerator:
         src = ""
         return src
 
-    def handleAnd(self, rule: And):
+    def handleAll(self, rule: All):
         src = ""
         for term in rule.nodes:
             src += self.handleRule(term)
         return src
 
-    def handleOr(self, rule: Or):
+    def handleAny(self, rule: Any):
         src = ""
         for term in rule.nodes:
             src += self.handleRule(term)
@@ -132,8 +133,8 @@ class RuleGenerator:
     def preRule(self, rule: RuleNode):
         self.nodesStack.append(rule)
         src = ""
-        # src = "/** BEGIN: {} **/\n".format(rule.__class__.__name__)
-        if isinstance(rule, And) or isinstance(rule, Or):
+        # src = "/** BEGIN: {} **/\n".format(rule)
+        if isinstance(rule, (All, Any)):
             self.topRule.append(rule)
             name = rule.__class__.__name__
             self.labels.append("{}{}".format(name, self.getId(name)))
@@ -142,8 +143,8 @@ class RuleGenerator:
     def postRule(self, rule: RuleNode):
         self.nodesStack.pop()
         src = ""
-        # src = "/** END:   {} **/\n".format(rule.__class__.__name__)
-        if isinstance(rule, And) or isinstance(rule, Or):
+        # src = "/** END:   {} **/\n".format(rule)
+        if isinstance(rule, (All, Any)):
             label = self.labels.pop()
             self.topRule.pop()
             src += "{}:\n".format(label)
@@ -164,15 +165,15 @@ class RuleGenerator:
             src += self.handleOneOrMore(rule)
         elif isinstance(rule, Optional):
             src += self.handleOptional(rule)
-        elif isinstance(rule, And):
-            src += self.handleAnd(rule)
-        elif isinstance(rule, Or):
-            src += self.handleOr(rule)
+        elif isinstance(rule, All):
+            src += self.handleAll(rule)
+        elif isinstance(rule, Any):
+            src += self.handleAny(rule)
         src += self.postRule(rule)
         return src
 
     def topHandle(self, rule):
-        src = "_lnp_::token_t tok;\nresult_t result;\n{}RET:\n{}"
+        src = "result_t result;\n{}{}"
         return src.format(self.handleRule(rule), self.nullRet)
 
     def handleProductionRule(self, rule: Rule):

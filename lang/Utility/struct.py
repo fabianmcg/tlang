@@ -74,6 +74,27 @@ class ClassMethods(DotDict):
         return len(self) == 0
 
 
+class ClassTypes(DotDict):
+    def __init__(self, *types):
+        super().__init__({m.identifier: m for m in types})
+
+    def __ilshift__(self, x):
+        self.update(x)
+        return self
+
+    def __iadd__(self, x):
+        self[x.identifier] = x
+        return self
+
+    def __str__(self) -> str:
+        return str(list(self.values()))
+
+    __repr__ = __str__
+
+    def empty(self):
+        return len(self) == 0
+
+
 class Class(Type):
     def __init__(
         self,
@@ -81,15 +102,17 @@ class Class(Type):
         parents=None,
         members=None,
         methods=None,
+        subtypes=None,
     ):
         super().__init__(typename)
         self.parents = parents or ClassParents()
         self.members = members or ClassMembers()
         self.methods = methods or ClassMethods()
+        self.types = subtypes or ClassTypes()
 
     def __str__(self) -> str:
-        return "{} {{\n  Parents: {}\n  Members: {}\n  Methods: {}\n}};".format(
-            self.T, self.parents, self.members, self.methods
+        return "{} {{\n  Parents: {}\n  Members: {}\n  Methods: {}\n  Types: {}\n}};".format(
+            self.T, self.parents, self.members, self.methods, self.types
         )
 
     __repr__ = __str__
@@ -99,6 +122,8 @@ class Class(Type):
             return self.members[k]
         elif k in self.methods:
             return self.methods[k]
+        elif k in self.types:
+            return self.types[k]
         raise (KeyError("Unknown key: {}".format(k)))
 
     def __iadd__(self, x):
@@ -115,6 +140,8 @@ class Class(Type):
             self.members <<= x
         elif isinstance(x, ClassMethods):
             self.methods <<= x
+        elif isinstance(x, ClassTypes):
+            self.types <<= x
         return self
 
     def __enter__(self):
