@@ -28,6 +28,7 @@ class LangDB:
                 "String": StringType(),
             }
         )
+        self.nodesByClass = {}
         self.grammar = GrammarDB(tokens)
 
     def __str__(self) -> str:
@@ -41,6 +42,22 @@ class LangDB:
         if addRule:
             self.grammar.addRule(identifier)
         return self.nodes[identifier]
+
+    def genAddNode(self, fileName, classOf=None):
+        classOf = fileName if classOf == None else classOf
+        key = (fileName, classOf)
+
+        def addNode(identifier, addRule=True, **kwargs):
+            if key not in self.nodesByClass:
+                self.nodesByClass[key] = {}
+            self.nodes[identifier] = Node(identifier, classOf=classOf, **kwargs)
+            self.types[identifier] = NodeType(identifier)
+            self.nodesByClass[key][identifier] = self.nodes[identifier]
+            if addRule:
+                self.grammar.addRule(identifier)
+            return self.nodes[identifier]
+
+        return addNode
 
     def addType(self, identifier, T=None):
         self.types[identifier] = T or Class(identifier)
