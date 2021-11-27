@@ -78,7 +78,7 @@ class NodeType(Type):
 
 class TemplateType(Type):
     def __init__(self, TT, T):
-        super().__init__(Type(T))
+        super().__init__(T if isinstance(T, Type) else Type(T))
         self.TT = TT
 
     def __str__(self) -> str:
@@ -93,17 +93,17 @@ class TemplateType(Type):
 
 class Vector(TemplateType):
     def __init__(self, T):
-        super().__init__("std::vector<{}>", Type(T))
+        super().__init__("std::vector<{}>", T if isinstance(T, Type) else Type(T))
 
 
 class UniquePtr(TemplateType):
     def __init__(self, T):
-        super().__init__("std::unique_ptr<{}>", Type(T))
+        super().__init__("std::unique_ptr<{}>", T if isinstance(T, Type) else Type(T))
 
 
 class Optional(TemplateType):
     def __init__(self, T):
-        super().__init__("std::optional<{}>", Type(T))
+        super().__init__("std::optional<{}>", T if isinstance(T, Type) else Type(T))
 
 
 from Utility.dotDict import DotDict
