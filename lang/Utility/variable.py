@@ -23,6 +23,11 @@ class Variable:
         return self.identifier
 
 
+class ReferenceVariable(Variable):
+    def __init__(self, T, identifier):
+        super().__init__(Type.Reference(T), identifier)
+
+
 class AutoVariable(Variable):
     def __init__(self, identifier):
         super().__init__(Type.AutoType(), identifier)
@@ -55,6 +60,7 @@ variableDict = DotDict(
         "V": Variable,
         "A": AutoVariable,
         "N": NodeVariable,
+        "R": ReferenceVariable,
         "VV": VectorVariable,
         "UP": UniquePtrVariable,
         "UV": UniquePtrVectorVariable,

@@ -23,13 +23,15 @@ class LangDB:
                 "Auto": AutoType(),
                 "Bool": BoolType(),
                 "Int": IntType(),
+                "Size": SizeType(),
                 "Float": FloatType(),
                 "Void": VoidType(),
                 "String": StringType(),
             }
         )
-        self.nodesByClass = {}
+        self.definedTypes = DotDict()
         self.grammar = GrammarDB(tokens)
+        self.nodesByClass = {}
 
     def __str__(self) -> str:
         return "Nodes:\n{}\n{}".format("\n".join(list(map(str, self.nodes.values()))), str(self.grammar))
@@ -43,24 +45,19 @@ class LangDB:
             self.grammar.addRule(identifier)
         return self.nodes[identifier]
 
-    def genAddNode(self, fileName, classOf=None):
-        classOf = fileName if classOf == None else classOf
-        key = (fileName, classOf)
-
+    def genAddNode(self, classOf):
         def addNode(identifier, addRule=True, **kwargs):
-            if key not in self.nodesByClass:
-                self.nodesByClass[key] = {}
-            self.nodes[identifier] = Node(identifier, classOf=classOf, **kwargs)
-            self.types[identifier] = NodeType(identifier)
-            self.nodesByClass[key][identifier] = self.nodes[identifier]
-            if addRule:
-                self.grammar.addRule(identifier)
-            return self.nodes[identifier]
+            if classOf not in self.nodesByClass:
+                self.nodesByClass[classOf] = {}
+            node = self.addNode(identifier, addRule, classOf=classOf, **kwargs)
+            self.nodesByClass[classOf][identifier] = node
+            return node
 
         return addNode
 
     def addType(self, identifier, T=None):
-        self.types[identifier] = T or Class(identifier)
+        self.definedTypes[identifier] = T or Class(identifier)
+        self.types[identifier] = StructType(identifier)
         return self.types[identifier]
 
     def getNodes(self, function=lambda x: x):

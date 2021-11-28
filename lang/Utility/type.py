@@ -53,6 +53,11 @@ class IntType(Type):
         super().__init__("int")
 
 
+class SizeType(Type):
+    def __init__(self):
+        super().__init__("size_t")
+
+
 class FloatType(Type):
     def __init__(self):
         super().__init__("float")
@@ -66,6 +71,14 @@ class VoidType(Type):
 class StringType(Type):
     def __init__(self):
         super().__init__("std::string")
+
+
+class StructType(Type):
+    def __init__(self, T):
+        super().__init__(T)
+
+    def __str__(self) -> str:
+        return str(self.T)
 
 
 class NodeType(Type):
@@ -91,6 +104,11 @@ class TemplateType(Type):
         return self.T
 
 
+class Reference(TemplateType):
+    def __init__(self, T):
+        super().__init__("Reference<{}>", Type(T))
+
+
 class Vector(TemplateType):
     def __init__(self, T):
         super().__init__("std::vector<{}>", T if isinstance(T, Type) else Type(T))
@@ -114,6 +132,7 @@ typeDict = DotDict(
         "A": AutoType(),
         "B": BoolType(),
         "I": IntType(),
+        "SZ": SizeType(),
         "F": FloatType(),
         "V": VoidType(),
         "S": StringType(),

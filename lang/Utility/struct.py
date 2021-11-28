@@ -109,6 +109,7 @@ class Class(Type):
         self.members = members or ClassMembers()
         self.methods = methods or ClassMethods()
         self.types = subtypes or ClassTypes()
+        self.defined = False
 
     def __str__(self) -> str:
         return "{} {{\n  Parents: {}\n  Members: {}\n  Methods: {}\n  Types: {}\n}};".format(
@@ -148,6 +149,7 @@ class Class(Type):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
+        self.defined = True
         pass
 
     def shortRepr(self):
