@@ -38,13 +38,20 @@ def makeLexerDB():
     db.addToken(Keyword, "Task")
     db.addToken(Keyword, "Policy")
     db.addToken(Keyword, "Parallel")
+    db.addToken(Keyword, "Computation_context")
     db.addToken(Keyword, "Sync")
     db.addToken(Keyword, "Async")
     db.addToken(Keyword, "Wait")
     db.addToken(Keyword, "Atomic")
+    db.addToken(Keyword, "__allocator__")
+    db.addToken(Keyword, "__deleter__")
+    db.addToken(Keyword, "__parallel__")
+    db.addToken(Keyword, "__executor__")
     # ******************************************************************************
     #   Language constructs
     # ******************************************************************************
+    db.addToken(Keyword, "__builtin__")
+    db.addToken(Keyword, "Typeof")
     db.addToken(Keyword, "Function")
     db.addToken(Keyword, "Struct")
     db.addToken(Keyword, "Enum")

@@ -135,7 +135,7 @@ def generateEnum(classOf, nodes):
 
 def generateAstNodes(grammar: LangDB, outdir: str, inputDir="Templates"):
     for classOf, nodes in grammar.nodesByClass.items():
-        src = generateEnum(classOf[1], nodes)
+        src = generateEnum(classOf, nodes)
         fwd = ""
         structs = ""
         for node in nodes.values():
@@ -143,10 +143,10 @@ def generateAstNodes(grammar: LangDB, outdir: str, inputDir="Templates"):
             structs += generateClass(node) + "\n\n"
         src += fwd + "\n" + structs
         src = "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n#include <macros.hh>\n\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
-            classOf[1].upper(), src
+            classOf.upper(), src
         )
-        with open(pathlib.Path(outdir, classOf[0].lower() + ".hh"), "w") as file:
+        with open(pathlib.Path(outdir, classOf.lower() + ".hh"), "w") as file:
             print(src, file=file)
         from Utility.format import format
 
-        format(pathlib.Path(outdir, classOf[0].lower() + ".hh"))
+        format(pathlib.Path(outdir, classOf.lower() + ".hh"))
