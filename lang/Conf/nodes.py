@@ -29,7 +29,7 @@ def declareAttrs(addNode):
 
 def defineAttrs(N, T, DT):
     with N.AttrList as node:
-        node <<= Children(Dynamic(T.Attr, "attributes"))
+        node <<= Children(ManyDynamic(T.Attr, "attributes"))
     with N.AttrWithLocation as node:
         node <<= Parents(T.Attr)
         node <<= Children(Dynamic(T.Attr, "attr"))
@@ -62,6 +62,7 @@ def declareTypes(addNode):
     addNode("PtrType")
     addNode("SmartPtrType")
     addNode("ArrayType")
+    addNode("DefinedType")
     addNode("TagType")
     addNode("StructType")
     addNode("EnumType")
@@ -97,22 +98,20 @@ def defineTypes(N, T, DT):
         node <<= Parents(T.Type)
         node <<= Members(V.V(T.Size, "size"))
         node <<= Children(Dynamic(T.Type, "underlying"))
-    with N.TagType as node:
+    with N.DefinedType as node:
         node <<= Parents(T.Type)
         node <<= Members(
             V.V(T.Identifier, "identifier"),
             V.R(T.TagDecl, "decl"),
         )
+    with N.TagType as node:
+        node <<= Parents(T.DefinedType)
     with N.StructType as node:
         node <<= Parents(T.TagType)
     with N.EnumType as node:
         node <<= Parents(T.TagType)
     with N.TypedefType as node:
-        node <<= Parents(T.Type)
-        node <<= Members(
-            V.V(T.Identifier, "identifier"),
-            V.R(T.TypedefDecl, "decl"),
-        )
+        node <<= Parents(T.DefinedType)
     with DT.QualType as node:
         node <<= Subtypes(
             Enumeration.create("cvr_qualifiers", [("No_quals", 0), ("Const", 1), ("Reference", 2)]),
@@ -226,8 +225,6 @@ def declareStmts(addNode):
     addNode("SyncStmt")
     addNode("AsyncStmt")
     addNode("ParallelStmt")
-    addNode("DependStmt")
-    addNode("ProvideStmt")
 
 
 def defineStmts(N, T, DT):
@@ -247,7 +244,7 @@ def defineStmts(N, T, DT):
         )
     with N.PolicyStmt as node:
         node <<= Parents(T.AttributedStmt)
-        node <<= Members(V.R(T.PolicyDecl))
+        node <<= Members(V.R(T.PolicyDecl, "policy"))
     with N.IfStmt as node:
         node <<= Parents(T.Stmt)
         node <<= Members(V.V(T.Bool, "constexpr"))
@@ -265,20 +262,21 @@ def defineStmts(N, T, DT):
     with N.ForStmt as node:
         node <<= Parents(T.AttributedStmt)
         node <<= Children(
-            Dynamic(T.RangeStmt, "ranges"),
+            ManyDynamic(T.RangeStmt, "ranges"),
             Dynamic(T.CompoundStmt, "body"),
         )
     with N.LoopStmt as node:
-        node <<= Parents(T.Stmt)
-        node <<= Members(
-            V.UV(T.RangeStmt, "ranges"),
-            V.UP(T.CompoundStmt, "body"),
+        node <<= Parents(T.AttributedStmt)
+        node <<= Children(
+            ManyDynamic(T.RangeStmt, "ranges"),
+            Dynamic(T.CompoundStmt, "body"),
         )
     with N.RangeStmt as node:
         node <<= Parents(T.Stmt)
-        node <<= Members(
-            V.UV(T.RangeStmt, "ranges"),
-            V.UP(T.RangeExpr, "range"),
+        node <<= Children(
+            Dynamic(T.VarDecl, "decl"),
+            Dynamic(T.DeclRefExpr, "variable"),
+            Dynamic(T.RangeExpr, "range"),
         )
     with N.ReturnStmt as node:
         node <<= Parents(T.ValueStmt)
@@ -291,12 +289,10 @@ def defineStmts(N, T, DT):
         node <<= Parents(T.Stmt)
     with N.AsyncStmt as node:
         node <<= Parents(T.Stmt)
+    ###
     with N.ParallelStmt as node:
         node <<= Parents(T.Stmt)
-    with N.DependStmt as node:
-        node <<= Parents(T.Stmt)
-    with N.ProvideStmt as node:
-        node <<= Parents(T.Stmt)
+        node <<= Children(Dynamic(T.Stmt, "stmt"))
 
 
 def declareExprs(addNode):
@@ -307,11 +303,11 @@ def declareExprs(addNode):
     addNode("FloatLiteral")
     addNode("ComplexLiteral")
     addNode("StringLiteral")
-    addNode("DeclRefExpr")
     addNode("ThisExpr")
     addNode("ParenExpr")
     addNode("UnaryOp")
     addNode("BinaryOp")
+    addNode("DeclRefExpr")
     addNode("CallExpr")
     addNode("CastExpr")
     addNode("RangeExpr")
@@ -324,63 +320,58 @@ def declareExprs(addNode):
 def defineExprs(N, T, DT):
     with N.Expr as node:
         node <<= Parents(T.ValueStmt)
-        node <<= Members(V.V(T.QualType, "type"))
-    with N.DeclRefExpr as node:
+        node <<= Children(Static(T.QualType, "type"))
+    with N.LiteralExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "expr"),
-        )
+        node <<= Members(V.V(T.String, "value"))
+    with N.BooleanLiteral as node:
+        node <<= Parents(T.LiteralExpr)
+    with N.IntegerLiteral as node:
+        node <<= Parents(T.LiteralExpr)
+    with N.FloatLiteral as node:
+        node <<= Parents(T.LiteralExpr)
+    with N.ComplexLiteral as node:
+        node <<= Parents(T.LiteralExpr)
+    with N.StringLiteral as node:
+        node <<= Parents(T.LiteralExpr)
     with N.ThisExpr as node:
         node <<= Parents(T.Expr)
     with N.ParenExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "expr"),
-        )
+        node <<= Children(Dynamic(T.Expr, "expr"))
     with N.UnaryOp as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "expr"),
-        )
+        node <<= Children(Dynamic(T.Expr, "expr"))
     with N.BinaryOp as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "lhs"),
-            V.UP(T.Expr, "rhs"),
+        node <<= Children(
+            Dynamic(T.Expr, "lhs"),
+            Dynamic(T.Expr, "rhs"),
+        )
+    with N.DeclRefExpr as node:
+        node <<= Parents(T.Expr)
+        node <<= Children(
+            Dynamic(T.Expr, "expr"),
         )
     with N.CallExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "callee"),
-            V.UV(T.Expr, "args"),
+        node <<= Children(
+            Dynamic(T.Expr, "callee"),
+            ManyDynamic(T.Expr, "args"),
         )
     with N.RangeExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(
-            V.UP(T.Expr, "begin"),
-            V.UP(T.Expr, "step"),
-            V.UP(T.Expr, "end"),
+        node <<= Children(
+            Dynamic(T.Expr, "begin"),
+            Dynamic(T.Expr, "step"),
+            Dynamic(T.Expr, "end"),
         )
-    with N.LiteralExpr as node:
-        node <<= Parents(T.Expr)
-        node <<= Members(V.V(T.QualType, "type"))
-        node <<= Members(V.V(T.String, "value"))
-    with N.IntegerLiteral as node:
-        node <<= Parents(T.LiteralExpr)
-    with N.BooleanLiteral as node:
-        node <<= Parents(T.LiteralExpr)
-    with N.FloatLiteral as node:
-        node <<= Parents(T.LiteralExpr)
-    with N.StringLiteral as node:
-        node <<= Parents(T.LiteralExpr)
     with N.CastExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(V.V(T.QualType, "type"))
-        node <<= Members(V.UP(T.Expr, "expr"))
+        node <<= Children(Dynamic(T.Expr, "expr"))
     with N.AllocateExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Members(V.V(T.QualType, "type"))
-        node <<= Members(V.UP(T.Expr, "expr"))
+        node <<= Children(Dynamic(T.Expr, "expr"))
     with N.ParallelExpr as node:
         node <<= Parents(T.Expr)
     with N.DependExpr as node:
