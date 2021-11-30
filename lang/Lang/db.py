@@ -45,11 +45,13 @@ class LangDB:
             self.grammar.addRule(identifier)
         return self.nodes[identifier]
 
-    def genAddNode(self, classOf):
+    def genAddNode(self, classOf, nodeClass=None):
+        nodeClass = "Node" or nodeClass
+
         def addNode(identifier, addRule=True, **kwargs):
             if classOf not in self.nodesByClass:
                 self.nodesByClass[classOf] = {}
-            node = self.addNode(identifier, addRule, classOf=classOf, **kwargs)
+            node = self.addNode(identifier, addRule, classOf=nodeClass, **kwargs)
             self.nodesByClass[classOf][identifier] = node
             return node
 

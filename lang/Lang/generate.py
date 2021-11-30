@@ -8,142 +8,243 @@ Created on Oct Sun 31 11:09:00 2021
 
 import pathlib
 from Lang.db import LangDB
-from Lang.node import Node
+from Lang.node import Dynamic, ManyDynamic, Node, Static
 from Utility.type import EnumType, Vector, UniquePtr
 from Utility.variable import Variable
+
+
+def generateParents(node: Node):
+    return " : public " + " , ".join(map(str, node.parents.parents)) if len(node.parents.parents) else ""
+
+
+def generateHeader(node: Node, classOf):
+    src = "using node_kind_t = {0:};\nstatic constexpr node_kind_t kind = node_kind_t::{1:};\n"
+    return src.format(classOf, node.typename()) + "virtual node_kind_t classOf() const { return kind; };"
 
 
 def generateConstructors(node: Node):
     src = "{0:}() = default;\nvirtual ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;"
     src = src.format(node.typename())
-    if len(node.members.values()) > 0:
-        variables = []
-        initializers = []
-        c = 0
-        for var in node.members.values():
-            T = var.T
-            if isinstance(T, (Vector, UniquePtr)):
-                variables.append("{}&& _{}".format(T, c))
-                initializers.append("__{}(std::move(_{}))".format(var.identifier, c))
-            else:
-                variables.append("const {}& _{}".format(T, c))
-                initializers.append("__{}(_{})".format(var.identifier, c))
-            c += 1
-        src += "{}({}): {}{{}}".format(node.typename(), " , ".join(variables), " , ".join(initializers))
-    src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = delete;".format(node.typename())
+    # if len(node.members.values()) > 0:
+    #     variables = []
+    #     initializers = []
+    #     c = 0
+    #     for var in node.members.values():
+    #         T = var.T
+    #         if isinstance(T, (Vector, UniquePtr)):
+    #             variables.append("{}&& _{}".format(T, c))
+    #             initializers.append("__{}(std::move(_{}))".format(var.identifier, c))
+    #         else:
+    #             variables.append("const {}& _{}".format(T, c))
+    #             initializers.append("__{}(_{})".format(var.identifier, c))
+    #         c += 1
+    #     src += "{}({}): {}{{}}".format(node.typename(), " , ".join(variables), " , ".join(initializers))
+    src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = delete;\n".format(node.typename())
     return src
 
 
-def generateMembers(var: Variable, node: Node):
+def generateChildren(node: Node):
+    header = ""
+    enum = []
+    children = []
+    getMethods = ""
+    setMethods = ""
+    pushMethods = ""
+    createMethods = ""
+    hasMethods = ""
+    for child in node.children.data:
+        visit = "" if child.visit else ", false"
+        enumTmp = child.identifier + "Offset"
+        kind = "children_kind::"
+        identifier = child.identifier.capitalize()
+        if isinstance(child, (Dynamic, Static)):
+            kind += "dynamic_node" if isinstance(child, Dynamic) else "static_node"
+            getMethods += "{}* get{}() const {{ return __children.template get<{}>();}}\n".format(
+                child.T, identifier, enumTmp
+            )
+            getMethods += "{}& get{}Ref() {{ return __children.template getRef<{}>();}}\n".format(
+                child.T, identifier, enumTmp
+            )
+            getMethods += "const {}& get{}Ref() const {{ return __children.template getRef<{}>();}}\n".format(
+                child.T, identifier, enumTmp
+            )
+        elif isinstance(child, ManyDynamic):
+            kind += "dynamic_list"
+            pushMethods += "template <typename T> void push{}(T&& value) {{ __children.template push<{}>(std::forward<T>(value));}}\n".format(
+                identifier, enumTmp
+            )
+            getMethods += "{}** get{}() const {{ return __children.template get<{}>();}}\n".format(
+                child.T, identifier, enumTmp
+            )
+            getMethods += "{}& get{}Ref(size_t i) {{ return __children.template getRef<{}>(i);}}\n".format(
+                child.T, identifier, enumTmp
+            )
+            getMethods += "const {}& get{}Ref(size_t i) const {{ return __children.template getRef<{}>(i);}}\n".format(
+                child.T, identifier, enumTmp
+            )
+            getMethods += "size_t get{}Size() const {{ return __children.template getSize<{}>();}}\n".format(
+                identifier, enumTmp
+            )
+        else:
+            print("Error generating: ", child)
+        getMethods += "auto& get{}Raw() {{ return __children.template getRaw<{}>();}}\n".format(identifier, enumTmp)
+        setMethods += "template <typename T> void set{}(T&& value) {{ __children.template set<{}>(std::forward<T>(value));}}\n".format(
+            identifier, enumTmp
+        )
+        createMethods += "template <typename...Args> void create{}(Args&&...args) {{ __children.template create<{}>(std::forward<Args>(args)...);}}\n".format(
+            identifier, enumTmp
+        )
+        hasMethods += "bool has{}() const {{ return __children.template has<{}>();}}".format(identifier, enumTmp)
+        children.append("children_node<{}, {},{}{}>".format(kind, child.T, enumTmp, visit))
+        enum.append(enumTmp)
+    childrenMethods = (
+        "children_t* operator->() { return &__children; }\n"
+        "const children_t* operator->() const { return &__children; }\n"
+        "children_t& operator*() { return __children; }\n"
+        "const children_t& operator*() const { return __children; }\n"
+        "children_t& children() { return __children; }\n"
+        + "const children_t& children() const { return __children; }\n"
+    )
+    header = "enum {{{} endOffset}};".format(", ".join(enum) + ("," if len(enum) else ""))
+    header += "using children_t = children_container<{}>;\n".format(", ".join(children))
+    header += 'static_assert(children_t::size == endOffset, "Incongruent number of children.");\n'
+    return (
+        header,
+        "children_t __children;",
+        childrenMethods,
+        getMethods,
+        setMethods,
+        pushMethods,
+        createMethods,
+        hasMethods,
+    )
+
+
+def generateVariable(var: Variable, node: Node):
     ID = var.identifier
     T = var.T
     variableName = "__" + ID
     variable = "{} {} = {{}};\n".format(T, variableName)
-    accessors = ""
-    kindMethods = ""
+    getMethods = ""
+    setMethods = ""
+    pushMethods = ""
+    isMethods = ""
+    hasMethods = ""
+    getMethods += "{}& get{}() {{\n return {};\n}}\n".format(T, ID.capitalize(), variableName)
+    getMethods += "const {}& get{}() const {{\n return {};\n}}\n".format(T, ID.capitalize(), variableName)
+    setMethods += "void set{}({}&& x) {{\n {} = std::forward<{}>(x);\n}}\n".format(ID.capitalize(), T, variableName, T)
     if isinstance(T, Vector):
-        accessors += "\n" + "{}& get{}() {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "const {}& get{}() const {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "void set{}({}&& x) {{\n {} = std::move(x);\n}}".format(ID.capitalize(), T, variableName)
         TT = T.underlying()
-        if isinstance(TT, (Vector, UniquePtr)):
-            accessors += "\n" + "void append{}({}&& x) {{\n {}.push_back(std::move(x));\n}}".format(
-                ID.capitalize(), TT, variableName
-            )
-        else:
-            accessors += "\n" + "void append{}(const {}& x) {{\n {}.push_back(x);\n}}".format(
-                ID.capitalize(), TT, variableName
-            )
-    elif isinstance(T, UniquePtr):
-        accessors += "\n" + "{}* get{}() const {{\n return {}.get();\n}}".format(
-            T.underlying().typename(), ID.capitalize(), variableName
+        pushMethods += "void push{}({}&& x) {{\n {}.push_back(std::forward<{}>(x));\n}}".format(
+            ID.capitalize(), TT, variableName, TT
         )
-        accessors += "\n" + "void set{}({}&& x) {{\n {} = std::move(x);\n}}".format(ID.capitalize(), T, variableName)
+    elif isinstance(T, UniquePtr):
+        hasMethods += "bool has{}() const {{ return {};}}\n".format(ID.capitalize(), variableName)
     elif isinstance(T, EnumType):
         enum = node.types[T.typename()]
         for k in enum.enum:
-            kindMethods += "\n" + "bool is{}() const {{\n return {} == {}; }}".format(k.name, ID, k.name)
-        accessors += "\n" + "{}_t& get{}() {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "const {}_t get{}() const {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "void set{}({}_t x) {{\n {} = x;\n}}".format(ID.capitalize(), T, variableName)
-    else:
-        accessors += "\n" + "{}& get{}() {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "const {}& get{}() const {{\n return {};\n}}".format(T, ID.capitalize(), variableName)
-        accessors += "\n" + "void set{}(const {}& x) {{\n {} = x;\n}}".format(ID.capitalize(), T, variableName)
-    return variable, accessors, kindMethods
+            isMethods += "bool is{}() const {{\n return {} == {}; }}".format(k.name, ID, k.name)
+    return variable, getMethods, setMethods, pushMethods, isMethods, hasMethods
 
 
-def generateLocationMethods():
-    src = "SourceLocation getBeginLoc(SourceLocation& loc) const { return __range.begin; }"
-    src += "SourceLocation getEndLoc(SourceLocation& loc) const { return __range.end; }"
-    src += "void setBeginLoc(SourceLocation& loc) { __range.begin = loc; }"
-    src += "void setEndLoc(SourceLocation& loc) { __range.end = loc; }"
-    src += "SourceRange getSourceRange() const { return __range; }"
-    src += "void setSourceRange(SourceRange& range) { __range = range; }"
-    return src
-
-
-def generateClass(node: Node):
-    classOf = node.classOf + "Class"
-    src = "class {} {{\n{}}};"
-    body = "public:\nstatic constexpr {0:} kind = {0:}::{1:};\n".format(classOf, node.typename())
-    accessors = ""
-    methods = ""
+def generateMembers(node: Node):
     variables = ""
-    header = node.typename()
-    if len(node.parents.parents):
-        header += " : public {}".format(node.parents.parents[0])
-    for parent in node.parents.parents[1:]:
-        header += ", {}".format(parent)
+    getMethods = ""
+    setMethods = ""
+    pushMethods = ""
+    isMethods = ""
+    hasMethods = ""
+    for var in node.members.values():
+        v, gm, sm, pm, Is, hm = generateVariable(var, node)
+        variables += v
+        getMethods += gm
+        setMethods += sm
+        pushMethods += pm
+        isMethods += Is
+        hasMethods += hm
+    return variables, getMethods, setMethods, pushMethods, isMethods, hasMethods
+
+
+def generateSectionComment(section):
+    return "/*{}*/\n".format("{:*^76s}".format("{: ^30s}".format(section)))
+
+
+def generateSubTypes(node: Node):
+    src = ""
     for enum in node.types.values():
         enumSrc = "enum {} {{ {} }};"
         b = ""
         for k in enum.enum:
             b += "{} = {},\n".format(k.name, k.value)
-        body += enumSrc.format(enum.identifier, b) + "using {0:}_t = {0:};".format(enum.identifier)
-    body += generateConstructors(node)
-    body += "\n" + "virtual {0:} classOf() const {{ return kind; }};".format(node.classOf + "Class", node.typename())
-    if node.hasLocation:
-        body += generateLocationMethods()
-        if len(variables) == 0:
-            variables = "protected:\nExtent __extent = {};\n"
-    for var in node.members.values():
-        if len(variables) == 0:
-            variables = "protected:\n"
-        v, a, k = generateMembers(var, node)
-        variables += v
-        accessors += a
-        methods += k
-
-    body += accessors + methods + variables
-    return src.format(header, body)
-
-
-def generateEnum(classOf, nodes):
-    ID = classOf + "Class"
-    enum = ""
-    to_string = ""
-    for node in nodes.values():
-        enum += node.typename() + ",\n"
-        to_string += 'case {0:}::{1:}:\n return "{1:}";'.format(ID, node.typename())
-    src = "enum class {} {{\n{}}};".format(ID, enum)
-    src += 'std::string to_string({0:} kind) {{switch(kind){{{1:}default: return "Unknown {0:}";}}}}'.format(
-        ID, to_string
-    )
+        src += enumSrc.format(enum.identifier, b) + "using {0:}_t = {0:};".format(enum.identifier)
     return src
 
 
+def generateClass(node: Node):
+    classOf = node.classOf + "Class"
+    src = ""
+    public = "public:\n" + generateSectionComment("Class Header") + generateHeader(node, classOf)
+    protected = ""
+    accessors = ""
+    methods = ""
+    variables = ""
+    h, v, cm, gm, sm, pm, Cm, hm = generateChildren(node)
+    public += h
+    public += generateSectionComment("Class Subtypes") + generateSubTypes(node)
+    public += generateSectionComment("Constructors & Operators") + generateConstructors(node)
+    public += generateSectionComment("Children accessors") + cm
+    mv, mgm, msm, mpm, mim, mhm = generateMembers(node)
+    variables = "protected:\n" + v + mv
+    methods += hm + mhm + mim + Cm
+    accessors += gm + mgm + sm + msm + pm + mpm
+    public += generateSectionComment("Accessors") + accessors + generateSectionComment("Methods") + methods
+    protected += variables
+    src += public + protected
+    return "class {} {{\n{}}};".format(node.typename() + generateParents(node), src)
+
+
+def generateNodesHeader(nodesByClass: dict):
+    ID = "NodeClass"
+    fwd = ""
+    enum = ""
+    to_string = ""
+    is_methods = ""
+    for k, nodes in nodesByClass.items():
+        n = len(nodes.values())
+        for i, node in enumerate(nodes.values()):
+            fwd += "class {};\n".format(node.typename())
+            if i == 0:
+                enum += "First{},\n".format(k, node.typename())
+            enum += node.typename() + ",\n"
+            if i == (n - 1):
+                enum += "Last{},\n".format(k, node.typename())
+            to_string += 'case {0:}::{1:}:\n return "{1:}";'.format(ID, node.typename())
+        is_methods += "inline constexpr bool is{0:}({1:} kind) {{ return (NodeClass::First{0:} < kind) && (kind < NodeClass::Last{0:});}}".format(
+            k, ID
+        )
+    src = "enum class {} {{\n{}}};".format(ID, enum)
+    src += is_methods
+    src += 'inline std::string to_string({0:} kind) {{switch(kind){{{1:}default: return "Unknown {0:}";}}}}'.format(
+        ID, to_string
+    )
+    return "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
+        "NODES_HEADER", src
+    )
+
+
 def generateAstNodes(grammar: LangDB, outdir: str, inputDir="Templates"):
+    header = generateNodesHeader(grammar.nodesByClass)
+    with open(pathlib.Path(outdir, "nodes.hh"), "w") as file:
+        print(header, file=file)
+    from Utility.format import format
+
+    format(pathlib.Path(outdir, "nodes.hh"))
     for classOf, nodes in grammar.nodesByClass.items():
-        src = generateEnum(classOf, nodes)
-        fwd = ""
         structs = ""
         for node in nodes.values():
-            fwd += "class {};\n".format(node.typename())
             structs += generateClass(node) + "\n\n"
-        src += fwd + "\n" + structs
-        src = "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n#include <macros.hh>\n\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
-            classOf.upper(), src
+        src = "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n#include <ast_node.hh>\n\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
+            classOf.upper(), structs
         )
         with open(pathlib.Path(outdir, classOf.lower() + ".hh"), "w") as file:
             print(src, file=file)
