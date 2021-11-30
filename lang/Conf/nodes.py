@@ -17,7 +17,6 @@ from Lang.node import ChildrenList as Children, Dynamic, ManyDynamic, Static
 def declareAttrs(addNode):
     addNode("Attr", base=True)
     addNode("AttrList")
-    addNode("AttrWithLocation", loc=True)
     addNode("NamedAttr")
     addNode("TypeAttr")
     addNode("ExprAttr")
@@ -30,9 +29,6 @@ def declareAttrs(addNode):
 def defineAttrs(N, T, DT):
     with N.AttrList as node:
         node <<= Children(ManyDynamic(T.Attr, "attributes"))
-    with N.AttrWithLocation as node:
-        node <<= Parents(T.Attr)
-        node <<= Children(Dynamic(T.Attr, "attr"))
     with N.NamedAttr as node:
         node <<= Parents(T.Attr)
         node <<= Members(V.V(T.Identifier, "identifier"))
@@ -118,10 +114,10 @@ def defineTypes(N, T, DT):
             Enumeration.create("memory_qualifiers", [("Local", 1), ("Global", 2), ("Shared", 3), ("Constant", 8)]),
         )
         node <<= Members(
-            V.UP(T.Type, "type"),
             V.V(EnumType("cvr_qualifiers", True), "qualifiers"),
             V.V(EnumType("memory_qualifiers", True), "mem_qualifiers"),
         )
+        node <<= Children(Dynamic(T.Type, "type"))
 
 
 def declareDecls(addNode):
