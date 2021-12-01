@@ -14,15 +14,19 @@ void addChildren(T *node, S *stack) {
     return;
   else if (kind == NodeClass::ASTNodeList) {
     for (auto &child : node->template getAs<ASTNodeList>())
-      if (child)
+      if (child) {
+        std::cerr << child.get() << std::endl;
         stack->push_back(child.get());
+      }
     return;
   } else {
     using children_t = typename T::children_t;
     if constexpr (children_t::size > 0) {
       for (auto &child : **node)
-        if (child)
+        if (child) {
+          std::cerr << child.get() << std::endl;
           stack->push_back(child.get());
+        }
     }
   }
 }
@@ -36,17 +40,16 @@ struct addChildrenFunction {
   void init() {
     if constexpr (parents_t::size > 0) {
       static_for<0, parents_t::size> sf;
-      auto t = addChildrenFunction<T, S> { node, stack };
-      sf(t);
+      sf(addChildrenFunction<T, S> { node, stack });
     }
   }
-  template <int I, typename TT>
+  template <typename TT>
   inline void walkUp(TT *parent) {
     addChildrenFunction<TT, S> { parent, stack }.init();
   }
   template <int I>
   inline void execute() {
-    walkUp<I>(node->template getAsPtr<type_t<I>>());
+    walkUp(node->template getAsPtr<type_t<I>>());
     __private__::addChildren(node, stack);
   }
 };
@@ -55,6 +58,11 @@ struct addChildrenFunction<DeclContext, S> {
   DeclContext *node;
   S *stack;
   void init() {
+    for (auto &child : **node)
+      if (child) {
+        std::cerr << child.get()->to_string() << std::endl;
+        stack->push_back(child.get());
+      }
   }
 };
 }
