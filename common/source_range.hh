@@ -1,5 +1,5 @@
-#ifndef __EXTENT_HH__
-#define __EXTENT_HH__
+#ifndef __SOURCERANGE_HH__
+#define __SOURCERANGE_HH__
 
 #include <macros.hh>
 #include <iostream>
@@ -7,16 +7,16 @@
 #include <utility>
 
 namespace __lang_np__ {
-struct location {
+struct SourceLocation {
   int line { -1 };
   int column { -1 };
-  location() = default;
-  ~location() = default;
-  location(location&&) = default;
-  location(const location&) = default;
-  location& operator=(location&&) = default;
-  location& operator=(const location&) = default;
-  location(int l, int c) :
+  SourceLocation() = default;
+  ~SourceLocation() = default;
+  SourceLocation(SourceLocation&&) = default;
+  SourceLocation(const SourceLocation&) = default;
+  SourceLocation& operator=(SourceLocation&&) = default;
+  SourceLocation& operator=(const SourceLocation&) = default;
+  SourceLocation(int l, int c) :
       line(l), column(c) {
   }
   bool valid() const {
@@ -26,25 +26,25 @@ struct location {
     line = -1;
     column = -1;
   }
-  bool operator<(const location &loc) const {
+  bool operator<(const SourceLocation &loc) const {
     return line < loc.line || (line <= loc.line && column < loc.column);
   }
-  bool operator<=(const location &loc) const {
+  bool operator<=(const SourceLocation &loc) const {
     return line < loc.line || (line <= loc.line && column <= loc.column);
   }
-  bool operator>(const location &loc) const {
+  bool operator>(const SourceLocation &loc) const {
     return !(*this <= loc);
   }
-  bool operator>=(const location &loc) const {
+  bool operator>=(const SourceLocation &loc) const {
     return !(*this < loc);
   }
-  bool operator==(const location &loc) const {
+  bool operator==(const SourceLocation &loc) const {
     return line == loc.line && column == loc.column;
   }
   std::string to_string() const {
     return "[" + std::to_string(line) + ":" + std::to_string(column) + "]";
   }
-  bool compatible(const location &end) const {
+  bool compatible(const SourceLocation &end) const {
     return valid() && end.valid() && (*this) <= end;
   }
   std::ostream& print(std::ostream &ost) const {
@@ -52,29 +52,29 @@ struct location {
     return ost;
   }
 };
-inline std::ostream& operator<<(std::ostream &ost, const location &loc) {
+inline std::ostream& operator<<(std::ostream &ost, const SourceLocation &loc) {
   return loc.print(ost);
 }
 using offsets_t= std::pair<int64_t, int64_t>;
-struct Extent {
-  location begin { };
-  location end { };
-  Extent() = default;
-  ~Extent() = default;
-  Extent(Extent&&) = default;
-  Extent(const Extent&) = default;
-  Extent& operator=(Extent&&) = default;
-  Extent& operator=(const Extent&) = default;
-  Extent(const location &begin, const location &end) :
+struct SourceRange {
+  SourceLocation begin { };
+  SourceLocation end { };
+  SourceRange() = default;
+  ~SourceRange() = default;
+  SourceRange(SourceRange&&) = default;
+  SourceRange(const SourceRange&) = default;
+  SourceRange& operator=(SourceRange&&) = default;
+  SourceRange& operator=(const SourceRange&) = default;
+  SourceRange(const SourceLocation &begin, const SourceLocation &end) :
       begin(begin), end(end) {
   }
   bool valid() const {
     return begin.compatible(end);
   }
-  bool operator<(const Extent &ext) const {
+  bool operator<(const SourceRange &ext) const {
     return begin < ext.begin || (begin <= ext.begin && end < ext.end);
   }
-  int compare(const Extent &ext) const {
+  int compare(const SourceRange &ext) const {
     if (begin == ext.begin && ext.end == end)
       return 0;  // equal
     else if (begin <= ext.begin && ext.end <= end)
@@ -87,7 +87,7 @@ struct Extent {
       return 2;  // [x,y] comp [z, w], z < x < w < y
     return 3;
   }
-  bool inside(const Extent &ext) const {
+  bool inside(const SourceRange &ext) const {
     int c = compare(ext);
     return c == -1 || c == 1;
   }

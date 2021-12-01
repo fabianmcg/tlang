@@ -7,6 +7,7 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 import pathlib
+from jinja2 import Template
 from Lang.db import LangDB
 from Lang.node import Dynamic, ManyDynamic, Node, Static
 from Utility.type import EnumType, Vector, UniquePtr
@@ -14,12 +15,13 @@ from Utility.variable import Variable
 
 
 def generateParents(node: Node):
-    return " : public " + " , ".join(map(str, node.parents.parents)) if len(node.parents.parents) else ""
+    return " : " + " , ".join(map(lambda x: "public " + str(x), node.parents.parents)) if len(node.parents.parents) else ""
 
 
 def generateHeader(node: Node, classOf):
-    src = "using node_kind_t = {0:};\nstatic constexpr node_kind_t kind = node_kind_t::{1:};\n"
-    return src.format(classOf, node.typename()) + "virtual node_kind_t classOf() const { return kind; };"
+    src = "using parents_t = parent_container<{}>;\n".format(", ".join(map(str, node.parents.parents)))
+    src += "using node_kind_t = {0:};\nstatic constexpr node_kind_t kind = node_kind_t::{1:};\n"
+    return src.format(classOf, node.typename()) + "virtual node_kind_t classOf() const { return kind; }"
 
 
 def generateConstructors(node: Node):
@@ -73,7 +75,7 @@ def generateChildren(node: Node):
             pushMethods += "template <typename T> void push{}(T&& value) {{ __children.template push<{}>(std::forward<T>(value));}}\n".format(
                 identifier, enumTmp
             )
-            getMethods += "{}** get{}() const {{ return __children.template get<{}>();}}\n".format(
+            getMethods += "{}* get{}(size_t i) const {{ return __children.template get<{}>(i);}}\n".format(
                 child.T, identifier, enumTmp
             )
             getMethods += "{}& get{}Ref(size_t i) {{ return __children.template getRef<{}>(i);}}\n".format(
@@ -143,7 +145,7 @@ def generateVariable(var: Variable, node: Node):
     elif isinstance(T, EnumType):
         enum = node.types[T.typename()]
         for k in enum.enum:
-            isMethods += "bool is{}() const {{\n return {} == {}; }}".format(k.name, ID, k.name)
+            isMethods += "bool is{}() const {{\n return {} == {}; }}".format(k.name, variableName, k.name)
     return variable, getMethods, setMethods, pushMethods, isMethods, hasMethods
 
 
@@ -180,6 +182,23 @@ def generateSubTypes(node: Node):
     return src
 
 
+def generateParent(node: Node):
+    src = ""
+    parents = node.parents.parents
+    if len(parents) > 1:
+        for i, p in enumerate(parents):
+            src += "template <int I = 0, std::enable_if_t<I == {0:}, int> = 0> {1:}& getAsParent() {{ return  getAs<{1:}>(); }}\n".format(
+                i, p
+            )
+            src += "template <int I = 0, std::enable_if_t<I == {0:}, int> = 0> const {1:}& getAsParent() const {{ return  getAs<{1:}>(); }}\n".format(
+                i, p
+            )
+    else:
+        src += "{0:}& getAsParent() {{ return  getAs<{0:}>(); }}\n".format(parents[0])
+        src += "const {0:}& getAsParent() const {{ return  getAs<{0:}>(); }}\n".format(parents[0])
+    return src
+
+
 def generateClass(node: Node):
     classOf = node.classOf + "Class"
     src = ""
@@ -192,6 +211,7 @@ def generateClass(node: Node):
     public += h
     public += generateSectionComment("Class Subtypes") + generateSubTypes(node)
     public += generateSectionComment("Constructors & Operators") + generateConstructors(node)
+    public += generateSectionComment("Parent operations") + generateParent(node)
     public += generateSectionComment("Children accessors") + cm
     mv, mgm, msm, mpm, mim, mhm = generateMembers(node)
     variables = "protected:\n" + v + mv
@@ -222,21 +242,52 @@ def generateNodesHeader(nodesByClass: dict):
         is_methods += "inline constexpr bool is{0:}({1:} kind) {{ return (NodeClass::First{0:} < kind) && (kind < NodeClass::Last{0:});}}".format(
             k, ID
         )
-    src = "enum class {} {{\n{}}};".format(ID, enum)
+    src = "enum class {} {{\nASTNode,\nASTNodeList,\n{}}};".format(ID, enum)
     src += is_methods
     src += 'inline std::string to_string({0:} kind) {{switch(kind){{{1:}default: return "Unknown {0:}";}}}}'.format(
         ID, to_string
     )
-    return "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
+    src += fwd
+    return "#ifndef __AST_{0:}__\n#define __AST_{0:}__\n#include <string>\nnamespace _astnp_ {{\n{1:}}}\n#endif".format(
         "NODES_HEADER", src
     )
 
 
+def generateRecursive(nodes: dict):
+    visit = ""
+    walkup = ""
+    traverse = ""
+    traverse_cases = ""
+    for node in nodes.values():
+        visit += "bool visit{0:}({0:}* node) {{ return true; }}\n".format(node.typename())
+        walkups = ""
+        for p in node.parents.parents:
+            if p.typename() != "DeclContext":
+               walkups += "WALKUP_STMT({1:}, {0:})\n".format(node.typename(), p)
+        walkup += "bool walkUpTo{0:}({0:}* node) {{ {1:} }}\n".format(
+            node.typename(), walkups
+        )
+        traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr) {{ TRAVERSE_STMT({0:}) }}\n".format(
+            node.typename()
+        )
+        traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node->getAsPtr<{0:}>(), stack);\n".format(
+            node.typename()
+        )
+    return {"VISIT": visit, "WALK_UP": walkup, "TRAVERSE_CASES": traverse_cases, "TRAVERSE": traverse}
+
+
+from Utility.format import format
+
+
 def generateAstNodes(grammar: LangDB, outdir: str, inputDir="Templates"):
+    with open(pathlib.Path(inputDir, "recursive_ast_visitor.hh.j2"), "r") as file:
+        j2 = Template(file.read())
+        with open(pathlib.Path(outdir, "recursive_ast_visitor.hh"), "w") as file:
+            print(j2.render(generateRecursive(grammar.nodes)), file=file)
+        format(pathlib.Path(outdir, "recursive_ast_visitor.hh"))
     header = generateNodesHeader(grammar.nodesByClass)
     with open(pathlib.Path(outdir, "nodes.hh"), "w") as file:
         print(header, file=file)
-    from Utility.format import format
 
     format(pathlib.Path(outdir, "nodes.hh"))
     for classOf, nodes in grammar.nodesByClass.items():
@@ -248,6 +299,5 @@ def generateAstNodes(grammar: LangDB, outdir: str, inputDir="Templates"):
         )
         with open(pathlib.Path(outdir, classOf.lower() + ".hh"), "w") as file:
             print(src, file=file)
-        from Utility.format import format
 
         format(pathlib.Path(outdir, classOf.lower() + ".hh"))

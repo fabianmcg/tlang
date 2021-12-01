@@ -27,7 +27,10 @@ def declareAttrs(addNode):
 
 
 def defineAttrs(N, T, DT):
+    with N.Attr as node:
+        node <<= Parents(T.ASTNode)
     with N.AttrList as node:
+        node <<= Parents(T.ASTNode)
         node <<= Children(ManyDynamic(T.Attr, "attributes"))
     with N.NamedAttr as node:
         node <<= Parents(T.Attr)
@@ -52,6 +55,7 @@ def defineAttrs(N, T, DT):
 
 def declareTypes(addNode):
     addNode("Type", base=True)
+    addNode("QualType", base=True)
     addNode("DeducedType")
     addNode("AutoType")
     addNode("BuiltinType")
@@ -66,6 +70,8 @@ def declareTypes(addNode):
 
 
 def defineTypes(N, T, DT):
+    with N.Type as node:
+        node <<= Parents(T.ASTNode)
     with N.DeducedType as node:
         node <<= Parents(T.Type)
     with N.AutoType as node:
@@ -108,7 +114,8 @@ def defineTypes(N, T, DT):
         node <<= Parents(T.TagType)
     with N.TypedefType as node:
         node <<= Parents(T.DefinedType)
-    with DT.QualType as node:
+    with N.QualType as node:
+        node <<= Parents(T.ASTNode)
         node <<= Subtypes(
             Enumeration.create("cvr_qualifiers", [("No_quals", 0), ("Const", 1), ("Reference", 2)]),
             Enumeration.create("memory_qualifiers", [("Local", 1), ("Global", 2), ("Shared", 3), ("Constant", 8)]),
@@ -144,6 +151,7 @@ def declareDecls(addNode):
 
 def defineDecls(N, T, DT):
     with N.Decl as node:
+        node <<= Parents(T.ASTNode)
         node <<= Children(Dynamic(T.AttrList, "attributes"))
     with N.NamedDecl as node:
         node <<= Parents(T.Decl)
@@ -191,6 +199,7 @@ def defineDecls(N, T, DT):
     with N.FunctorDecl as node:
         node <<= Parents(T.NamedDecl, T.DeclContext)
         node <<= Children(
+            ManyDynamic(T.ParDecl, "args"),
             Dynamic(T.CompoundStmt, "body"),
         )
     with N.FunctionDecl as node:
@@ -224,6 +233,8 @@ def declareStmts(addNode):
 
 
 def defineStmts(N, T, DT):
+    with N.Stmt as node:
+        node <<= Parents(T.ASTNode)
     with N.CompoundStmt as node:
         node <<= Parents(T.Stmt)
         node <<= Children(ManyDynamic(T.Stmt, "stmts"))
@@ -346,8 +357,9 @@ def defineExprs(N, T, DT):
         )
     with N.DeclRefExpr as node:
         node <<= Parents(T.Expr)
-        node <<= Children(
-            Dynamic(T.Expr, "expr"),
+        node <<= Members(
+            V.V(T.Identifier, "identifier"),
+            V.R(T.Decl, "decl"),
         )
     with N.CallExpr as node:
         node <<= Parents(T.Expr)
@@ -358,9 +370,9 @@ def defineExprs(N, T, DT):
     with N.RangeExpr as node:
         node <<= Parents(T.Expr)
         node <<= Children(
-            Dynamic(T.Expr, "begin"),
+            Dynamic(T.Expr, "start"),
             Dynamic(T.Expr, "step"),
-            Dynamic(T.Expr, "end"),
+            Dynamic(T.Expr, "stop"),
         )
     with N.CastExpr as node:
         node <<= Parents(T.Expr)
@@ -395,9 +407,11 @@ def defineNodes(N, T, DT):
 def langNodes(db: LangDB):
     db.addType("DeclContext")
     db.addType("Identifier")
-    db.addType("QualType")
+    db.addType("ASTNode")
     declareNodes(db.genAddNode)
     defineNodes(db.nodes, db.types, db.definedTypes)
     for node in db.nodes.values():
+        if len(node.parents.parents) > 1:
+            print(node)
         if not node.defined:
             print(node)

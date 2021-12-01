@@ -36,6 +36,7 @@ void comment(YFlexLexer &ylex);
 %%{% raw %}
 "/*"                          { comment(*this); }
 "//".*                        {}
+{WS}*                         {}
 \n                            { __yybufpos = 1; }{% endraw %}
 {% for rule, value in rules.items() -%}
 {{ "{: <30}{{ return static_cast<int>(_lnp_::tok_k::{}); }}".format(rule, value) }}

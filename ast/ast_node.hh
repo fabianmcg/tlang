@@ -61,6 +61,12 @@ public:
   virtual node_kind_t classOf() const {
     return kind;
   }
+  bool is(node_kind_t k) const {
+    return classOf() == k;
+  }
+  bool isNot(node_kind_t k) const {
+    return classOf() != k;
+  }
   using children_t = children_container<>;
   ASTNode() = default;
   ASTNode(const SourceRange &range) :
@@ -110,19 +116,19 @@ public:
   }
   template <typename T>
   T* getAsPtr() {
-    return reinterpret_cast<T*>(this);
+    return dynamic_cast<T*>(this);
   }
   template <typename T>
   const T* getAsPtr() const {
-    return reinterpret_cast<const T*>(this);
+    return dynamic_cast<const T*>(this);
   }
   template <typename T>
   T& getAs() {
-    return *reinterpret_cast<T*>(this);
+    return *static_cast<T*>(this);
   }
   template <typename T>
   const T& getAs() const {
-    return *reinterpret_cast<const T*>(this);
+    return *static_cast<const T*>(this);
   }
   inline bool isAttr() const {
     return _astnp_::isAttr(classOf());
@@ -179,23 +185,23 @@ public:
   }
   template <int offset, typename V>
   V* getAs() const {
-    return reinterpret_cast<V*>(data[offset].get());
+    return dynamic_cast<V*>(data[offset].get());
   }
   template <int offset, std::enable_if_t<children_kinds[offset] != children_kind::dynamic_list, int> = 0>
   children_t<offset>* get() const {
-    return reinterpret_cast<children_t<offset>*>(data[offset].get());
+    return static_cast<children_t<offset>*>(data[offset].get());
   }
   template <int offset, std::enable_if_t<children_kinds[offset] != children_kind::dynamic_list, int> = 0>
   children_t<offset>& getRef() {
-    return *reinterpret_cast<children_t<offset>*>(data[offset].get());
+    return *static_cast<children_t<offset>*>(data[offset].get());
   }
   template <int offset, std::enable_if_t<children_kinds[offset] != children_kind::dynamic_list, int> = 0>
   const children_t<offset>& getRef() const {
-    return *reinterpret_cast<children_t<offset>*>(data[offset].get());
+    return *static_cast<children_t<offset>*>(data[offset].get());
   }
   template <int offset, std::enable_if_t<children_kinds[offset] == children_kind::dynamic_list, int> = 0>
   children_t<offset>* get(size_t i) const {
-    return data[offset].get() ? reinterpret_cast<children_t<offset>*>(getAs<offset, ASTNodeList>()->at(i).get()) : nullptr;
+    return data[offset].get() ? static_cast<children_t<offset>*>(getAs<offset, ASTNodeList>()->at(i).get()) : nullptr;
   }
   template <int offset, std::enable_if_t<children_kinds[offset] == children_kind::dynamic_list, int> = 0>
   children_t<offset>& getRef(size_t i) {
@@ -212,9 +218,8 @@ public:
   template <int offset, typename V, std::enable_if_t<children_kinds[offset] == children_kind::dynamic_list, int> = 0>
   void push(V &&value) {
     if (!data[offset].get())
-      create<offset>( { std::forward<V>(value) });
-    else
-      getAs<offset, ASTNodeList>()->push_back();
+      create<offset>();
+    getAs<offset, ASTNodeList>()->push_back(std::forward<V>(value));
   }
   template <int offset>
   std::unique_ptr<ASTNode>& getRaw() {
@@ -236,8 +241,9 @@ public:
   void create(Args &&... args) {
     if constexpr (children_kinds[offset] != children_kind::dynamic_list)
       data[offset] = std::make_unique<children_t<offset>>(std::forward<Args>(args)...);
-    else
+    else {
       data[offset] = std::make_unique<ASTNodeList>(std::forward<Args>(args)...);
+    }
   }
 private:
   std::array<std::unique_ptr<ASTNode>, size> data;

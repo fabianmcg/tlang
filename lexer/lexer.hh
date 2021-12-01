@@ -7,7 +7,7 @@
 #include <macros.hh>
 #include <toks.hh>
 #include <exception.hh>
-#include <extent.hh>
+#include <source_range.hh>
 
 namespace __lang_np__ {
 namespace __lex_np__ {
@@ -15,15 +15,24 @@ using tk = token_kind;
 struct token {
   std::string text { };
   token_kind kind { tk::NONE };
-  location loc { };
+  SourceLocation loc { };
   static token create(const char *txt, tk kind, int32_t l, int32_t c) {
-    return token { std::string(txt), kind, location { l, c } };
+    return token { std::string(txt), kind, SourceLocation { l, c } };
   }
   inline bool valid() const {
     return kind != tk::NONE;
   }
   inline std::string to_tring() const {
-    return to_string(kind) + loc.to_string();
+    return text + " " + to_string(kind) + loc.to_string();
+  }
+  inline bool is(token_kind k) const {
+    return kind == k;
+  }
+  inline bool isNot(token_kind k) const {
+    return kind != k;
+  }
+  inline std::string value() const {
+    return text;
   }
 };
 inline std::ostream& operator<<(std::ostream &ost, const token &tok) {
