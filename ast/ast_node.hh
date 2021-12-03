@@ -152,6 +152,7 @@ protected:
 };
 struct ASTNodeList: public ASTNode, std::vector<std::unique_ptr<ASTNode>> {
   using vector_t = std::vector<std::unique_ptr<ASTNode>>;
+  using parents_t = parent_container<ASTNode>;
   static constexpr node_kind_t kind = node_kind_t::ASTNodeList;
   virtual node_kind_t classOf() const {
     return kind;
