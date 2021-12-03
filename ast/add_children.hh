@@ -9,24 +9,20 @@ namespace _astnp_ {
 namespace __private__ {
 template <typename T, typename S>
 void addChildren(T *node, S *stack) {
-  auto kind = node->classOf();
-  if (kind == NodeClass::ASTNode)
+  constexpr NodeClass kind = T::kind;
+  if constexpr (kind == NodeClass::ASTNode)
     return;
-  else if (kind == NodeClass::ASTNodeList) {
+  else if constexpr (kind == NodeClass::ASTNodeList) {
     for (auto &child : node->template getAs<ASTNodeList>())
-      if (child) {
-        std::cerr << child.get() << std::endl;
+      if (child)
         stack->push_back(child.get());
-      }
     return;
   } else {
     using children_t = typename T::children_t;
     if constexpr (children_t::size > 0) {
       for (auto &child : **node)
-        if (child) {
-          std::cerr << child.get() << std::endl;
+        if (child)
           stack->push_back(child.get());
-        }
     }
   }
 }
@@ -41,6 +37,7 @@ struct addChildrenFunction {
     if constexpr (parents_t::size > 0) {
       static_for<0, parents_t::size> sf;
       sf(addChildrenFunction<T, S> { node, stack });
+      __private__::addChildren(node, stack);
     }
   }
   template <typename TT>
@@ -50,7 +47,6 @@ struct addChildrenFunction {
   template <int I>
   inline void execute() {
     walkUp(node->template getAsPtr<type_t<I>>());
-    __private__::addChildren(node, stack);
   }
 };
 template <typename S>
@@ -60,7 +56,6 @@ struct addChildrenFunction<DeclContext, S> {
   void init() {
     for (auto &child : **node)
       if (child) {
-        std::cerr << child.get()->to_string() << std::endl;
         stack->push_back(child.get());
       }
   }
