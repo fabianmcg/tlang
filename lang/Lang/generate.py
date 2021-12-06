@@ -15,7 +15,9 @@ from Utility.variable import Variable
 
 
 def generateParents(node: Node):
-    return " : " + " , ".join(map(lambda x: "public " + str(x), node.parents.parents)) if len(node.parents.parents) else ""
+    return (
+        " : " + " , ".join(map(lambda x: "public " + str(x), node.parents.parents)) if len(node.parents.parents) else ""
+    )
 
 
 def generateHeader(node: Node, classOf):
@@ -263,10 +265,8 @@ def generateRecursive(nodes: dict):
         walkups = ""
         for p in node.parents.parents:
             if p.typename() != "DeclContext":
-               walkups += "WALKUP_STMT({1:}, {0:})\n".format(node.typename(), p)
-        walkup += "bool walkUpTo{0:}({0:}* node) {{ {1:} }}\n".format(
-            node.typename(), walkups
-        )
+                walkups += "WALKUP_STMT({1:}, {0:})\n".format(node.typename(), p)
+        walkup += "bool walkUpTo{0:}({0:}* node) {{ {1:} }}\n".format(node.typename(), walkups)
         traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr) {{ TRAVERSE_STMT({0:}) }}\n".format(
             node.typename()
         )

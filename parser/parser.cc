@@ -1,7 +1,6 @@
 #include "parser.hh"
 
 namespace tlang::parser {
-
 Parser::unique_t<QualType> Parser::handleType() {
   auto qualType = make_unique<QualType>();
   switch (tok.kind) {
@@ -56,8 +55,8 @@ void Parser::handleParameters(FunctionDecl &function) {
     }
     case tok_k::Float: {
       auto par = handlePar();
-//      if (par)
-//        function.pushArgs(std::move(par));
+      if (par)
+        function.pushArgs(std::move(par));
       return;
     }
     default:
