@@ -19,3 +19,7 @@ def makeListVariadic(*x):
 
 def getShort(x):
     return str(x) if not hasattr(x, "shortRepr") else x.shortRepr()
+
+
+def getCxx(x):
+    return str(x) if not hasattr(x, "cxx") else x.cxx()
