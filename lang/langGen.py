@@ -11,16 +11,18 @@ from Lang.db import LangDB
 from Conf.nodes import langNodes
 from Lexer.generate import generateLexer
 from Lang.generate import generateAstNodes
+from Grammar.parser import parse
 
 
 def main():
-    tokens = makeLexerDB()
-    lang = LangDB(tokens)
-    langNodes(lang)
-    generateAstNodes(lang, "./gen")
-    generateLexer(lang.tokens, "./gen")
+    # tokens = makeLexerDB()
+    # lang = LangDB(tokens)
+    # langNodes(lang)
+    # generateAstNodes(lang, "./gen")
+    # generateLexer(lang.tokens, "./gen")
     # grammar(lang)
     # generateParser(lang.grammar, "./")
+    parse("grammar.conf")
 
 
 if __name__ == "__main__":
