@@ -202,13 +202,17 @@ class Parser:
     @staticmethod
     def createRule():
         ruleNode = Parser.createRuleNode()
-        instruction = Parser.parseElement(Parser.createInstruction(":{", "}:"), Parser.parseInstruction(RuleInstruction))
+        instruction = Parser.parseElement(
+            Parser.createInstruction(":{", "}:"), Parser.parseInstruction(RuleInstruction)
+        )
         return Parser.parseElement(pp.Group(pp.ZeroOrMore(ruleNode)) + pp.Optional(instruction), Parser.parseRule)
 
     @staticmethod
     def createProductionAttributes():
         lat, rat = suppressLiterals("@<", ">@")
-        instruction = Parser.parseElement(Parser.createInstruction(":{", "}:"), Parser.parseInstruction(RuleInstruction))
+        instruction = Parser.parseElement(
+            Parser.createInstruction(":{", "}:"), Parser.parseInstruction(RuleInstruction)
+        )
         returnType = pp.Optional(Parser.parseElement(lat + ... + rat, lambda x: ("returnType", x[0])))
         inline = pp.Optional(Parser.parseElement(pp.Keyword("node"), lambda x: ("isNode", True)))
         instruction = Parser.parseElement(pp.Optional(instruction), lambda x: ("instruction", x))

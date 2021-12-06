@@ -6,7 +6,7 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-import Utility.type as Type
+import Lang.type as Type
 
 
 class Variable:
@@ -23,11 +23,6 @@ class Variable:
         return self.identifier
 
 
-class ReferenceVariable(Variable):
-    def __init__(self, T, identifier):
-        super().__init__(Type.Reference(T), identifier)
-
-
 class AutoVariable(Variable):
     def __init__(self, identifier):
         super().__init__(Type.AutoType(), identifier)
@@ -36,6 +31,11 @@ class AutoVariable(Variable):
 class NodeVariable(Variable):
     def __init__(self, T, identifier):
         super().__init__(Type.NodeType(T), identifier)
+
+
+class ReferenceVariable(Variable):
+    def __init__(self, T, identifier):
+        super().__init__(Type.Reference(T), identifier)
 
 
 class VectorVariable(Variable):
@@ -51,18 +51,3 @@ class UniquePtrVariable(Variable):
 class UniquePtrVectorVariable(Variable):
     def __init__(self, T, identifier):
         super().__init__(Type.Vector(Type.UniquePtr(T)), identifier)
-
-
-from Utility.dotDict import DotDict
-
-variableDict = DotDict(
-    {
-        "V": Variable,
-        "A": AutoVariable,
-        "N": NodeVariable,
-        "R": ReferenceVariable,
-        "VV": VectorVariable,
-        "UP": UniquePtrVariable,
-        "UV": UniquePtrVectorVariable,
-    }
-)
