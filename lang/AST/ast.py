@@ -34,7 +34,7 @@ class FileNamespace:
 
     def cxx(self):
         declarations = map(getCxx, self.declarations) if self.declarations else []
-        return "\n".join(declarations)
+        return formatStr("\n".join(declarations))
 
 
 class ASTDatabase:
@@ -52,3 +52,6 @@ class ASTDatabase:
 
     def parseStr(self, indentation=0):
         return "\n".join(map(getParseStr, self.fileNamespaces.values()))
+
+    def cxx(self):
+        return "\n".join(map(getCxx, self.fileNamespaces.values()))

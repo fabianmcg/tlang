@@ -8,7 +8,7 @@ Created on Oct Sun 31 11:09:00 2021
 
 from Cxx.type import EnumType, StructType, Type
 from Cxx.util import CxxList
-from Utility.util import formatStr, indentTxt
+from Utility.util import formatStr, generateSectionComment, getCxx, getParseStr, indentTxt
 
 
 class CodeSection:
@@ -87,10 +87,11 @@ class EnumElement:
 
 
 class Enum:
-    def __init__(self, identifier, isClass, values) -> None:
+    def __init__(self, identifier, isClass, values, insideClass=False) -> None:
         self.identifier = identifier
         self.isClass = isClass
         self.values = values
+        self.insideClass = insideClass
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -104,15 +105,36 @@ class Enum:
     def notEmpty(self):
         return not self.empty()
 
+    def typename(self):
+        return EnumType(self.identifier)
+
     def parseStr(self, indentation=0):
         if self.empty():
             return ""
         tmp = indentTxt(",\n".join(map(str, self.values)), 2)
         isClass = "class " if self.isClass else ""
         return indentTxt("enum {}{} {{\n{}\n}};".format(isClass, self.identifier, tmp), indentation)
-    
-    def typename(self):
-        return EnumType(self.identifier)
+
+    def cxxOperators(self):
+        if self.insideClass or not self.isClass:
+            return ""
+        op = "{0:} operator {1:}({0:} x, {0:} y) {{ return static_cast<{0:}>(static_cast<int>(x) {1:} static_cast<int>(y)); }}"
+        return op.format(self.identifier, "|") + op.format(self.identifier, "&")
+
+    def cxx(self):
+        ops = self.cxxOperators()
+        tmp = ""
+        if not self.isClass:
+            tmp = "\nusing {0:}_t = {0:};".format(self.identifier)
+        return self.parseStr() + tmp + ("\n" + ops if len(ops) else "")
+
+    def isCxx(self, memberName):
+        isClass = "{}::".format(self.identifier) if self.isClass else ""
+        method = "bool is{}() const {{ return {} == {}{}; }}\n"
+        src = ""
+        for value in self.values:
+            src += method.format(value.identifier.capitalize(), memberName, isClass, value.identifier)
+        return src
 
 
 class EnumList(CxxList):
@@ -140,7 +162,7 @@ class Struct:
         return self.parseStr()
 
     __repr__ = __str__
-    
+
     def typename(self):
         return StructType(self.identifier)
 
@@ -185,3 +207,80 @@ class Struct:
         node = Struct(identifier=identifier)
         node.setBody(**kwargs)
         return node
+
+    def addComment(self, comment, x):
+        if x:
+            return generateSectionComment(comment) + x
+        return ""
+
+    def cxxHeader(self):
+        src = "public:\n" + generateSectionComment("Header")
+        src += "using class_type = {};".format(self.identifier)
+        src += "using parents_t = parent_container<{}>;\n".format(", ".join(map(str, self.parents)))
+        enums = ""
+        if self.enums.notEmpty():
+            enums = "\n".join(map(getCxx, self.enums))
+        return src + self.cxxPostHeader() + enums
+
+    def cxxPostHeader(self):
+        return ""
+
+    def cxxConstructorsAndOperators(self):
+        if self.parents.notEmpty():
+            src = "{0:}() = default;\nvirtual ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = default;".format(
+                self.identifier
+            )
+        else:
+            src = (
+                "{0:}() = default;\n ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = default;".format(
+                    self.identifier
+                )
+            )
+        src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = default;\n".format(self.identifier)
+        return src
+
+    def cxxPreMembers(self):
+        return ""
+
+    def cxxMembers(self):
+        src = "\n".join(map(lambda x: x.getCxx(), self.members))
+        if len(src):
+            src += "\n"
+        return self.addComment("Member modifiers", src)
+
+    def cxxPostMembers(self):
+        return ""
+
+    def cxxEnumIsMethods(self):
+        src = ""
+        enums = {e.identifier: e for e in self.enums}
+        for member in self.members:
+            if str(member.T) in enums:
+                src += enums[str(member.T)].isCxx(member.varName())
+        return self.addComment("Is methods", src)
+
+    def cxxProtectedSectionBody(self):
+        return "\n".join(map(lambda x: getCxx(x) + ";", self.members))
+
+    def cxxProtectedSection(self):
+        src = self.cxxProtectedSectionBody()
+        if len(src):
+            src = "protected:\n" + src
+        return src
+
+    def cxxBody(self):
+        tmp = self.headerSection.cxx()
+        src = self.cxxHeader() + (tmp + "\n" if len(tmp) else "")
+        src += self.addComment("Constructors & operators", self.cxxConstructorsAndOperators())
+        src += self.cxxPreMembers()
+        src += self.cxxMembers()
+        src += self.cxxPostMembers()
+        src += self.cxxEnumIsMethods()
+        src += self.addComment("Epilogue", self.epilogueSection.cxx() + self.cxxProtectedSection())
+        return src
+
+    def cxx(self):
+        src = "class {}{}{{{}}};"
+        parents = ",".join(map(lambda x: "public " + x, self.parents))
+        parents = ": " + parents if len(parents) else ""
+        return src.format(self.identifier, parents, self.cxxBody())
