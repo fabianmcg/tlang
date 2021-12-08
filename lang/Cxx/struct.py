@@ -118,7 +118,7 @@ class Enum:
     def cxxOperators(self):
         if self.insideClass or not self.isClass:
             return ""
-        op = "{0:} operator {1:}({0:} x, {0:} y) {{ return static_cast<{0:}>(static_cast<int>(x) {1:} static_cast<int>(y)); }}"
+        op = "inline {0:} operator {1:}({0:} x, {0:} y) {{ return static_cast<{0:}>(static_cast<int>(x) {1:} static_cast<int>(y)); }}"
         return op.format(self.identifier, "|") + op.format(self.identifier, "&")
 
     def cxx(self):

@@ -26,12 +26,7 @@ class Keyword(Token):
         super().__init__(identifier, keyword if keyword != None else identifier.lower())
 
 
-class Literal(Token):
-    def __init__(self, identifier, keyword):
-        super().__init__(identifier, keyword)
-
-
-class Character(Token):
+class Punctuation(Token):
     def __init__(self, identifier, character):
         super().__init__(identifier, character)
 

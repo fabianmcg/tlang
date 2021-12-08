@@ -1,0 +1,66 @@
+file type {
+    node Type<Type> {
+    parents: [ASTNode];
+  };
+  node QualType<Type> {
+    parents: [ASTNode];
+    members: [
+      cvr_qualifiers qualifiers,
+      memory_qualifiers mem_qualifiers
+    ];
+    children: [
+      Type type
+    ];
+  };
+  node DeducedType<Type> {
+    parents: [Type];
+  };
+  node AutoType<Type> {
+    parents: [DeducedType];
+  };
+  node BuiltinType<Type> {
+    parents: [Type];
+    members: [
+      builtin_types kind,
+      numeric_precision precision,
+      signed_kind signedness
+    ];
+  };
+  node PtrType<Type> {
+    parents: [Type];
+    children: [
+      Type underlying
+    ];
+  };
+  node SmartPtrType<Type> {
+    parents: [PtrType];
+  };
+  node ArrayType<Type> {
+    parents: [Type];
+    members: [
+      size_t size
+    ];
+    children: [
+      Type underlying
+    ];
+  };
+  node DefinedType<Type> {
+    parents: [Type];
+    members: [
+      Identifier identifier,
+      reference<TagDecl> decl
+    ];
+  };
+  node TagType<Type> {
+    parents: [DefinedType];
+  };
+  node StructType<Type> {
+    parents: [TagType];
+  };
+  node EnumType<Type> {
+    parents: [TagType];
+  };
+  node TypedefType<Type> {
+    parents: [DefinedType];
+  };
+};

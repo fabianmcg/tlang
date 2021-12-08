@@ -6,29 +6,24 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-# from Conf.toks import makeLexerDB
-# from Lang.db import LangDB
-# from Conf.nodes import langNodes
-# from Lexer.generate import generateLexer
-# from Lang.generate import generateAstNodes
-
-# from Grammar.parser import parse
-from Cxx.struct import ParentList
-from AST.confParser import parse
-
-# from Lang.nodes import CodeSection, HeaderSection
-# from Lang.AST import var
+from Conf.toks import makeLexer
+from AST.confParser import makeAST
 
 
 def main():
-    # tokens = makeLexerDB()
+    tokens = makeLexer()
+    ast = makeAST("Conf/")
+    # ast.generateASTNodes("./", "./", "Templates/header.hh.j2")
+    ast.generateRecursiveASTVisitor("./", "Templates")
+    # tokens.generateLexer(".", "Templates")
     # lang = LangDB(tokens)
     # langNodes(lang)
     # generateAstNodes(lang, "./gen")
     # generateLexer(lang.tokens, "./gen")
     # grammar(lang)
     # generateParser(lang.grammar, "./")
-    parse("Conf/nodes.conf")
+    # db = parse("Conf/nodes_ax.conf")
+    # print(db.cxx())
 
 
 if __name__ == "__main__":

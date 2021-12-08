@@ -1,0 +1,191 @@
+file stmt {
+  node Stmt<Stmt> {
+    parents: [ASTNode];
+  };
+  node CompoundStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Stmt stmts
+    ];
+  };
+  node ValueStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node DeclStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Decl decl
+    ];
+  };
+  node AttributedStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      AttrList attributes,
+      Stmt stmt
+    ];
+  };
+  node PolicyStmt<Stmt> {
+    parents: [AttributedStmt];
+    members: [
+      reference<PolicyDecl> policy
+    ];
+  };
+  node IfStmt<Stmt> {
+    parents: [Stmt];
+    members: [
+      bool constexpr
+    ];
+    children: [
+      Expr condition,
+      Stmt then,
+      Stmt else
+    ];
+  };
+  node ForStmt<Stmt> {
+    parents: [AttributedStmt];
+    children: [
+      RangeStmt ranges,
+      CompoundStmt body
+    ];
+  };
+  node WhileStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Expr condition,
+      CompoundStmt body
+    ];
+  };
+  node LoopStmt<Stmt> {
+    parents: [AttributedStmt];
+    children: [
+      RangeStmt ranges,
+      CompoundStmt body
+    ];
+  };
+  node RangeStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      VarDecl decl,
+      DeclRefExpr variable,
+      RangeExpr range
+    ];
+  };
+  node BreakStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node ContinueStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node ReturnStmt<Stmt> {
+    parents: [ValueStmt];
+    children: [
+      Expr return
+    ];
+  };
+  node SyncStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node AsyncStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node ParallelStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Stmt stmt
+    ];
+  };
+};
+file expr {
+  node Expr<Stmt> {
+    parents: [ValueStmt];
+    children: [
+      QualType type
+    ];
+  };
+  node LiteralExpr<Stmt> {
+    parents: [Expr];
+    members: [
+      string value
+    ];
+  };
+  node BooleanLiteral<Stmt> {
+    parents: [LiteralExpr];
+  };
+  node IntegerLiteral<Stmt> {
+    parents: [LiteralExpr];
+  };
+  node FloatLiteral<Stmt> {
+    parents: [LiteralExpr];
+  };
+  node ComplexLiteral<Stmt> {
+    parents: [LiteralExpr];
+  };
+  node StringLiteral<Stmt> {
+    parents: [LiteralExpr];
+  };
+  node ThisExpr<Stmt> {
+    parents: [Expr];
+  };
+  node ParenExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr expr
+    ];
+  };
+  node UnaryOp<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr expr
+    ];
+  };
+  node BinaryOp<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr lhs,
+      Expr rhs
+    ];
+  };
+  node DeclRefExpr<Stmt> {
+    parents: [Expr];
+    members: [
+      Identifier identifier,
+      reference<Decl> decl
+    ];
+  };
+  node CallExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr callee,
+      Expr args
+    ];
+  };
+  node CastExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr expr
+    ];
+  };
+  node RangeExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr start,
+      Expr step,
+      Expr stop
+    ];
+  };
+  node AllocateExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr expr
+    ];
+  };
+  node ParallelExpr<Stmt> {
+    parents: [Expr];
+  };
+  node DependExpr<Stmt> {
+    parents: [Expr];
+  };
+  node ProvideExpr<Stmt> {
+    parents: [Expr];
+  };
+};

@@ -1,0 +1,93 @@
+file decl {
+  node Decl<Decl> {
+    parents: [ASTNode];
+    children: [
+      AttrList attributes
+    ];
+  };
+  node NamedDecl<Decl> {
+    parents: [Decl];
+    members: [
+      Identifier identifier
+    ];
+  };
+  node ModuleDecl<Decl> {
+    parents: [NamedDecl, DeclContext];
+  };
+  node ImportDecl<Decl> {
+    parents: [Decl];
+    members: [
+      Identifier moduleName,
+      reference<ModuleDecl> module
+    ];
+  };
+  node UsingDecl<Decl> {
+    parents: [Decl];
+    members: [
+      Identifier declName,
+      reference<Decl> decl
+    ];
+  };
+  node TypeDecl<Decl> {
+    parents: [NamedDecl];
+  };
+  node ContextDecl<Decl> {
+    parents: [TypeDecl, DeclContext];
+  };
+  node PolicyDecl<Decl> {
+    parents: [TypeDecl, DeclContext];
+  };
+  node TypedefDecl<Decl> {
+    parents: [TypeDecl];
+    children: [
+      QualType type
+    ];
+  };
+  node TagDecl<Decl> {
+    parents: [TypeDecl, DeclContext];
+  };
+  node StructDecl<Decl> {
+    parents: [TagDecl];
+  };
+  node EnumDecl<Decl> {
+    parents: [TagDecl];
+    children: [
+      QualType type
+    ];
+  };
+  node FunctorDecl<Decl> {
+    parents: [NamedDecl, DeclContext];
+    children: [
+      ParDecl args,
+      CompoundStmt body
+    ];
+  };
+  node FunctionDecl<Decl> {
+    parents: [FunctorDecl];
+  };
+  node MethodDecl<Decl> {
+    parents: [FunctorDecl];
+  };
+  node VarDecl<Decl> {
+    parents: [NamedDecl];
+    children: [
+      QualType type,
+      Expr init
+    ];
+  };
+  node ParDecl<Decl> {
+    parents: [VarDecl];
+  };
+  node MemberDecl<Decl> {
+    parents: [VarDecl];
+  };
+  node EnumMemberDecl<Decl> {
+    parents: [Decl];
+    members: [
+      Identifier identifier
+    ];
+    children: [
+      Expr value
+    ];
+  };
+};

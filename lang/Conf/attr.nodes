@@ -1,0 +1,47 @@
+file attr {
+  node Attr<Attr> {
+    parents: [ASTNode];
+  };
+  node AttrList<Attr> {
+    parents: [ASTNode];
+    children: [
+      Attr attributes
+    ];
+  };
+  node NamedAttr<Attr> {
+    parents: [Attr];
+    members: [
+      Identifier identifier
+    ];
+    children: [
+      Attr attr
+    ];
+  };
+  node TypeAttr<Attr> {
+    parents: [Attr];
+    children: [
+      QualType type
+    ];
+  };
+  node ExprAttr<Attr> {
+    parents: [Attr];
+    children: [
+      Expr expr
+    ];
+  };
+  node LiteralAttr<Attr> {
+    parents: [ExprAttr];
+  };
+  node DeclAttr<Attr> {
+    parents: [Attr];
+    children: [
+      Decl decl
+    ];
+  };
+  node ContextAttr<Attr> {
+    parents: [DeclAttr];
+  };
+  node PolicyAttr<Attr> {
+    parents: [DeclAttr];
+  };
+};
