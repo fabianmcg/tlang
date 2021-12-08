@@ -7,6 +7,8 @@ Created on Oct Sun 31 11:09:00 2021
 """
 import textwrap
 from subprocess import run
+import pathlib
+from jinja2 import Template
 
 
 def format(filename):
@@ -41,3 +43,26 @@ def objetOrNone(x):
 
 def generateSectionComment(section):
     return "/*{}*/\n".format("{:*^76s}".format("{: ^30s}".format(section)))
+
+
+def pathJoin(*paths):
+    return pathlib.Path(*paths)
+
+
+def jinjaTemplate(outputFile, inputFile, templateDict):
+    with open(inputFile, "r") as file:
+        j2 = Template(file.read())
+    with open(outputFile, "w") as file:
+        print(j2.render(templateDict), file=file)
+
+
+def getJinjaTemplate(inputFile, templateDict):
+    with open(inputFile, "r") as file:
+        j2 = Template(file.read())
+        return j2.render(templateDict)
+    return ""
+
+
+def printToFile(data, outputFile):
+    with open(outputFile, "w") as file:
+        print(data, file=file)

@@ -12,7 +12,7 @@ from Utility.parsing import punctuation as P
 from Cxx.type import TypeHelper
 from Cxx.variable import Variable
 from Cxx.struct import *
-from AST.ast import *
+from AST.ast import FileNamespace, ASTDatabase
 from AST.astNode import *
 from Utility.util import objetOrNone
 
@@ -252,3 +252,14 @@ class Parser:
 
 def parse(filename, db: ASTDatabase):
     Parser.parse(filename, db)
+
+
+def makeAST(nodesDir: str):
+    from glob import glob
+
+    files = sorted(glob(nodesDir + "*.nodes"))
+    db = ASTDatabase()
+    for file in files:
+        parse(file, db)
+    db.consolidate()
+    return db
