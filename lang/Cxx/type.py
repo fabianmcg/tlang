@@ -6,12 +6,19 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
+from Utility.format import indentTxt
 from Utility.util import getCxx
 
 
 class Type:
     def __init__(self, identifier: str):
         self.identifier = identifier
+
+    def __str__(self) -> str:
+        return self.parseStr()
+
+    def __repr__(self) -> str:
+        return str(self)
 
     @staticmethod
     def make(x):
@@ -27,15 +34,13 @@ class Type:
         return False
 
     def cxx(self):
-        return self.__str__()
-
-    def __str__(self) -> str:
-        return str(self.identifier)
-
-    def __repr__(self) -> str:
         return str(self)
 
-    typename = __str__
+    def typename(self) -> str:
+        return str(self)
+
+    def parseStr(self, indentation=0):
+        return indentTxt(str(self.identifier), indentation)
 
 
 class UnresolvedType(Type):

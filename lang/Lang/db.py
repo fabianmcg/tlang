@@ -7,10 +7,8 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Utility.dotDict import DotDict, DotDictWrapper
-from Utility.type import *
 from Utility.struct import Class
 from Lexer.db import LexerDB
-from Lang.node import Node
 from Grammar.db import GrammarDB
 
 

@@ -4,7 +4,7 @@ all:
 
 .PHONY: frmt
 frmt:
-	black -t py39 -l 120 langGen.py Conf/ Lang/ Lexer/ Utility/ Grammar/
+	black -t py39 -l 120 langGen.py Conf/ Lang/ Lexer/ Utility/ Grammar/ Cxx/
 
 .PHONY: clean
 clean:

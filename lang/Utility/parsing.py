@@ -57,6 +57,16 @@ def parseGroup(parseElement, action=None):
     return x
 
 
+def parseOptional(parseElement, action=None, default=None):
+    if default == None:
+        default = []
+    if action == None:
+        return pp.Optional(parseElement, default=default)
+    x = pp.Optional(parseElement.copy(), default=default)
+    x.setParseAction(action)
+    return x
+
+
 punctuation = ApplyDotDict(
     lambda x: x.copy(),
     {
