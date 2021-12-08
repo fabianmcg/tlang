@@ -57,12 +57,12 @@ class parseEnum:
         return enum
 
     @staticmethod
-    def createEnum():
+    def createEnum(insideClass=False):
         enum = suppressKeywords("enum")
         kw_class = keywordList("class")
 
         def action(x):
-            return Enum(x[1], len(x[0]) > 0, x[2])
+            return Enum(x[1], len(x[0]) > 0, x[2], insideClass=insideClass)
 
         membertList = parseGroup(delimitedList(parseEnum.createEnumMember()))
         return parseElement(
@@ -70,8 +70,8 @@ class parseEnum:
         )
 
     @staticmethod
-    def createEnums():
-        return parseGroup(OneOrMore(parseEnum.createEnum()))
+    def createEnums(insideClass=False):
+        return parseGroup(OneOrMore(parseEnum.createEnum(insideClass)))
 
 
 class parseNode:
@@ -151,7 +151,7 @@ class Parser:
         header = parseNode.createHeader()
         parents = parseNode.createParents()
         members = parseNode.createMembers()
-        enums = parseEnum.createEnums()
+        enums = parseEnum.createEnums(True)
         children = parseNode.createChildren()
         headerSection = parseNode.createHeaderSection()
         epilogueSection = parseNode.createSection()
@@ -195,7 +195,7 @@ class Parser:
         node = suppressKeywords("struct")
         parents = parseNode.createParents()
         members = parseNode.createMembers()
-        enums = parseEnum.createEnums()
+        enums = parseEnum.createEnums(True)
         headerSection = parseNode.createHeaderSection()
         epilogueSection = parseNode.createSection()
         body = parseGroup(
@@ -245,12 +245,10 @@ class Parser:
         return pp.OneOrMore(fileNamespace).ignore(pp.cStyleComment)
 
     @staticmethod
-    def parse(filename):
+    def parse(filename, db: ASTDatabase):
         pp._enable_all_warnings()
-        db = ASTDatabase()
         Parser.createTop(db).ignore(pp.cStyleComment).parseFile(filename, parseAll=True)
-        print(db)
 
 
-def parse(filename):
-    parser = Parser.parse(filename)
+def parse(filename, db: ASTDatabase):
+    Parser.parse(filename, db)

@@ -37,3 +37,7 @@ def objetOrNone(x):
     if isinstance(x, (list, str)) or hasattr(x, "__len__"):
         return x if len(x) > 0 else None
     return x
+
+
+def generateSectionComment(section):
+    return "/*{}*/\n".format("{:*^76s}".format("{: ^30s}".format(section)))
