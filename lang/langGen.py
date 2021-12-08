@@ -14,8 +14,10 @@ Created on Oct Sun 31 11:09:00 2021
 
 # from Grammar.parser import parse
 from Cxx.struct import ParentList
-from Lang.nodeParser import parse
-from Lang.nodes import CodeSection, HeaderSection
+from AST.confParser import parse
+
+# from Lang.nodes import CodeSection, HeaderSection
+# from Lang.AST import var
 
 
 def main():

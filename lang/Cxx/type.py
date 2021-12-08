@@ -6,7 +6,6 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from Utility.format import indentTxt
 from Utility.util import getCxx
 
 
@@ -39,8 +38,8 @@ class Type:
     def typename(self) -> str:
         return str(self)
 
-    def parseStr(self, indentation=0):
-        return indentTxt(str(self.identifier), indentation)
+    def parseStr(self):
+        return str(self.identifier)
 
 
 class UnresolvedType(Type):
@@ -96,10 +95,18 @@ class NodeType(Type):
         super().__init__(identifier)
 
 
+class EnumType(Type):
+    def __init__(self, identifier):
+        super().__init__(identifier)
+
+
 class TemplateType(Type):
     def __init__(self, identifier: str, *templateArgs):
         super().__init__(identifier)
         self.templateArgs = list(templateArgs)
+
+    def __str__(self) -> str:
+        return self.parseStr()
 
     def isTemplate(self):
         return True
@@ -119,7 +126,7 @@ class TemplateType(Type):
     def argStr(self):
         return ", ".join(map(str, self.templateArgs))
 
-    def __str__(self) -> str:
+    def parseStr(self):
         return "{}<{}>".format(self.identifier, self.argStr())
 
     def cxx(self) -> str:
