@@ -35,6 +35,10 @@ def getParseStr(x, *args):
     return str(x) if not hasattr(x, "parseStr") else x.parseStr(*args)
 
 
+def getShortRepr(x, *args):
+    return str(x) if not hasattr(x, "shortRepr") else x.shortRepr(*args)
+
+
 def objetOrNone(x):
     if isinstance(x, (list, str)) or hasattr(x, "__len__"):
         return x if len(x) > 0 else None

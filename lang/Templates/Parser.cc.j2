@@ -1,0 +1,18 @@
+#include "Parser/Parser.hh"
+
+namespace _parser_np_ {
+class ParserHelper {
+public:
+  ParserHelper(Parser &parser) : parser(parser) {} {{ PARSE_METHODS }}
+private:
+  Parser &parser;
+  auto getContext() { return parser.getContext(); }
+  template <typename T> void restoreContext(T &&context) {
+    parser.restoreContext(std::forward<T>(context));
+  }
+};
+void Parse::ParseASTContext() {
+  auto helper = ParserHelper(*this);
+  ParseTop(helper.ParseTop());
+}
+} // namespace _parser_np_
