@@ -7,7 +7,7 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 import pyparsing as pp
-from Utility.parsing import parseOptional, suppressLiterals, suppressChars, parseElement, punctuation as P
+from Utility.parsing import keywordList, parseOptional, suppressLiterals, suppressChars, parseElement, punctuation as P
 from Grammar.parseElements import *
 from Grammar.grammar import Grammar
 from Lexer.lexer import Lexer
@@ -39,7 +39,7 @@ class Parser:
             if str(x[0]) in self.tokens:
                 return Terminal(self.tokens[x[0]], x[1])
             elif str(x[0]) == "E":
-                return EmptyTerminal(x[1])
+                return EmptyString(x[1])
             return NonTerminal(*x)
 
         return parseElement(node + instruction, action)
@@ -51,7 +51,7 @@ class Parser:
         def action(x):
             return Rule(x[0], x[1])
 
-        return parseElement(pp.Group(pp.ZeroOrMore(ruleNode)) + instruction, action)
+        return parseElement(pp.Group(pp.OneOrMore(ruleNode)) + instruction, action)
 
     def createProductionAttributes(self):
         lat, rat = suppressLiterals("@<", ">@")
@@ -88,5 +88,5 @@ class Parser:
 
 def makeParser(filename, lexer: Lexer):
     grammar = Grammar(lexer)
-    grammar.productions = Parser(grammar.terminals).parse(filename)
+    grammar.setProductions(Parser(grammar.tokens).parse(filename))
     return grammar
