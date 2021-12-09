@@ -38,7 +38,7 @@ def makeLexer():
     db.addToken(Keyword, "Task")
     db.addToken(Keyword, "Policy")
     db.addToken(Keyword, "Parallel")
-    db.addToken(Keyword, "Computation_context")
+    db.addToken(Keyword, "Context")
     db.addToken(Keyword, "Sync")
     db.addToken(Keyword, "Async")
     db.addToken(Keyword, "Wait")
@@ -75,6 +75,7 @@ def makeLexer():
     db.addToken(Keyword, "Constexpr")
     db.addToken(Keyword, "Alignment")
     db.addToken(Keyword, "Auto")
+    db.addToken(Keyword, "Namespace")
     # ******************************************************************************
     #   Memory Kinds
     # ******************************************************************************
@@ -119,7 +120,7 @@ def makeLexer():
     db.addToken(Punctuation, "LShift", "<<")
     db.addToken(Punctuation, "RShift", ">>")
     db.addToken(Punctuation, "Pow", "^^")
-    db.addToken(Punctuation, "Namespace", "::")
+    db.addToken(Punctuation, "NamespaceOp", "::")
     # ******************************************************************************
     #   Characters
     # ******************************************************************************
