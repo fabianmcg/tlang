@@ -4,10 +4,10 @@
 #include <any>
 #include <deque>
 #include <iostream>
-#include <macros.hh>
-#include <toks.hh>
-#include <exception.hh>
-#include <source_range.hh>
+#include <Common/Macros.hh>
+#include <Common/Exception.hh>
+#include <Common/SourceRange.hh>
+#include <Tokens.hh>
 
 namespace __lang_np__ {
 namespace __lex_np__ {

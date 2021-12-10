@@ -1,7 +1,8 @@
-#ifndef __AST_CONTEXT_HH__
-#define __AST_CONTEXT_HH__
+#ifndef __AST_ATSCONTEXT_HH__
+#define __AST_ASTCONTEXT_HH__
 
-#include "ast_node.hh"
+#include "Common/Macros.hh"
+#include "ASTCommon.hh"
 
 namespace _astnp_ {
 struct ASTContext {
@@ -14,6 +15,10 @@ struct ASTContext {
   }
   ModuleDecl* operator*() const {
     return translation_unit.get();
+  }
+  ASTContext& operator=(std::unique_ptr<ModuleDecl> &&module) {
+    translation_unit = std::move(module);
+    return *this;
   }
 };
 }

@@ -1,8 +1,7 @@
-#include <io.hh>
-#include <macros.hh>
-#include <lexer.hh>
-#include <parser.hh>
-#include <recursive_ast_visitor.hh>
+#include <Common/Io.hh>
+#include <Lexer/Lexer.hh>
+#include <Parser/Parser.hh>
+#include "AST/RecursiveASTVisitor.hh"
 
 struct Visitor: _astnp_::RecursiveASTVistor<Visitor> {
 public:
@@ -17,14 +16,14 @@ public:
     std::cerr << ": " << node->getIdentifier();
     return true;
   }
-  bool postVisit(_astnp_::ASTNode *node) {
-    std::cerr << std::endl;
-    return true;
-  }
-  bool afterVisit(_astnp_::ASTNode *node) {
-    ident--;
-    return true;
-  }
+//  bool postVisit(_astnp_::ASTNode *node) {
+//    std::cerr << std::endl;
+//    return true;
+//  }
+//  bool afterVisit(_astnp_::ASTNode *node) {
+//    ident--;
+//    return true;
+//  }
   size_t ident { };
 };
 
@@ -35,8 +34,8 @@ int main(int argc, char **argv) {
   auto fs = unique_fstream::open_istream("main.tt");
   Lexer lex(*fs);
   Parser parser = Parser(lex);
-  Visitor v;
   ASTContext context = parser.parse();
-  v.traverseModuleDecl(*context);
+  //  Visitor v;
+//  v.traverseModuleDecl(*context);
   return 0;
 }

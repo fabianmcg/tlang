@@ -1,14 +1,14 @@
-file attr {
+file Attr {
   node Attr<Attr> {
     parents: [ASTNode];
   };
   node AttrList<Attr> {
     parents: [ASTNode];
     children: [
-      Attr attributes
+      list Attr attributes
     ];
   };
-  node NamedAttr<Attr> {
+  /*node NamedAttr<Attr> {
     parents: [Attr];
     members: [
       Identifier identifier
@@ -43,5 +43,5 @@ file attr {
   };
   node PolicyAttr<Attr> {
     parents: [DeclAttr];
-  };
+  };*/
 };

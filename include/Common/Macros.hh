@@ -1,5 +1,5 @@
-#ifndef __MACROS_HH__
-#define __MACROS_HH__
+#ifndef __COMMON_MACROS_HH__
+#define __COMMON_MACROS_HH__
 
 
 #define __lang_np__ tlang

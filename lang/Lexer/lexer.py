@@ -57,7 +57,7 @@ class Lexer:
                 rules['"{}"'.format(v.rules[0])] = k
 
         jinjaTemplate(
-            pathJoin(outputDir, "tokens.hh"), pathJoin(inputDir, "tokens.hh.j2"), {"enum": enum, "switch": switch}
+            pathJoin(outputDir, "Tokens.hh"), pathJoin(inputDir, "tokens.hh.j2"), {"enum": enum, "switch": switch}
         )
         jinjaTemplate(
             pathJoin(outputDir, "lex.yy"), pathJoin(inputDir, "lex.yy.j2"), {"definitions": definitions, "rules": rules}

@@ -1,5 +1,5 @@
-#ifndef COMMON_STATIC_FOR_HH_
-#define COMMON_STATIC_FOR_HH_
+#ifndef __COMMON_STATIC_FOR_HH__
+#define __COMMON_STATIC_FOR_HH__
 
 #include <utility>
 #include <type_traits>

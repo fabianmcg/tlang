@@ -72,7 +72,7 @@ def main():
     if genParser:
         grammar = makeParser(str(pathJoin(args.config_dir, "grammar.conf")), tokens)
         grammar.generateCxx(
-            str(pathJoin(args.output_dir, "Parser.cc")), str(pathJoin(args.template_dir, "Parser.cc.j2"))
+            str(pathJoin(args.output_dir, "ParserHandler.cc")), str(pathJoin(args.template_dir, "Parser.cc.j2"))
         )
 
 

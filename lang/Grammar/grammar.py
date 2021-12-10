@@ -52,7 +52,7 @@ class Grammar:
         if isinstance(node, EmptyString):
             return ""
         elif isinstance(node, Terminal):
-            return "auto {0:} = consumeTok(); if ({0:}.isNot({1:})) return return_t::fail();".format(
+            return "auto {0:} = tok; if ({0:}.isNot({1:})) return return_t::fail(); consumeToken();".format(
                 varName, node.identifier.cxx()
             )
         elif isinstance(node, NonTerminal):

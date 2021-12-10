@@ -1,9 +1,14 @@
 #ifndef __AST_ADD_CHILDREN_HH__
 #define __AST_ADD_CHILDREN_HH__
 
-#include <static_for.hh>
-#include <nodes.hh>
-#include <decl_context.hh>
+#include "Common/StaticFor.hh"
+#include "ASTNode.hh"
+#include "Attr.hh"
+#include "Decl.hh"
+#include "Type.hh"
+#include "Stmt.hh"
+#include "Expr.hh"
+#include "DeclContext.hh"
 
 namespace _astnp_ {
 namespace __private__ {

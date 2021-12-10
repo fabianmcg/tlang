@@ -4,11 +4,11 @@
 #include <list>
 #include <memory>
 #include <type_traits>
-#include "macros.hh"
-#include "nodes.hh"
+#include "Common/Macros.hh"
+#include "ASTCommon.hh"
 
 namespace _astnp_ {
-using Identifier = std::string;
+template <typename> struct reference{};
 struct DeclContext {
   std::list<std::unique_ptr<Decl>>& operator*() {
     return decls;

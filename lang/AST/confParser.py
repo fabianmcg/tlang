@@ -257,7 +257,7 @@ def parse(filename, db: ASTDatabase):
 def makeAST(nodesDir: str):
     from glob import glob
 
-    files = sorted(glob(nodesDir + "*.nodes"))
+    files = sorted(glob(nodesDir + "/*.nodes"))
     db = ASTDatabase()
     for file in files:
         parse(file, db)

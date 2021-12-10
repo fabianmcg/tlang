@@ -260,7 +260,7 @@ class Struct:
         return self.addComment("Is methods", src)
 
     def cxxProtectedSectionBody(self):
-        return "\n".join(map(lambda x: getCxx(x) + ";", self.members))
+        return "\n".join(map(lambda x: getCxx(x) + "{};", self.members))
 
     def cxxProtectedSection(self):
         src = self.cxxProtectedSectionBody()

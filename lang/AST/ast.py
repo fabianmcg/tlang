@@ -55,7 +55,7 @@ class FileNamespace:
         tmp = []
         if len(declarations):
             if isinstance(declarations[0], HeaderSection):
-                src = getCxx(declarations.pop(0))
+                src = getCxx(declarations.pop(0)) + "\n"
             tmp = map(getCxx, declarations) if declarations else []
         tmp = postHeader + "\n".join(tmp)
         if tmp:
@@ -119,10 +119,10 @@ class ASTDatabase:
         libSrc = ""
         identifier = "AST_{}_HEADER".format(namespace.getId())
         if not namespace.isMain():
-            incSrc = namespace.cxx("_ast_np_")
-            incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"ASTNode.hh"']})
+            incSrc = namespace.cxx("_astnp_")
+            incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"']})
         else:
-            incSrc = namespace.cxx("_ast_np_", self.generateMain())
+            incSrc = namespace.cxx("_astnp_", self.generateMain())
             incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ["<string>"]})
         return incSrc, libSrc
 
@@ -159,7 +159,7 @@ class ASTDatabase:
                     )
                 )
                 traverse_cases += (
-                    "case NodeClass::{0:}: return derived.traverse{0:}(node->getAsPtr<{0:}>(), stack);\n".format(
+                    "case NodeClass::{0:}: return derived.traverse{0:}(node->template getAsPtr<{0:}>(), stack);\n".format(
                         node.typename()
                     )
                 )

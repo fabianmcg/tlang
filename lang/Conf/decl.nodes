@@ -1,4 +1,4 @@
-file decl {
+file Decl {
   node Decl<Decl> {
     parents: [ASTNode];
     children: [
@@ -13,7 +13,20 @@ file decl {
   };
   node ModuleDecl<Decl> {
     parents: [NamedDecl, DeclContext];
+    .{
+        
+    }.
   };
+  node FunctorDecl<Decl> {
+    parents: [NamedDecl, DeclContext];
+    children: [
+      CompoundStmt body
+    ];
+  };
+  node FunctionDecl<Decl> {
+    parents: [FunctorDecl];
+  };
+  /*
   node ImportDecl<Decl> {
     parents: [Decl];
     members: [
@@ -55,16 +68,6 @@ file decl {
       QualType type
     ];
   };
-  node FunctorDecl<Decl> {
-    parents: [NamedDecl, DeclContext];
-    children: [
-      ParDecl args,
-      CompoundStmt body
-    ];
-  };
-  node FunctionDecl<Decl> {
-    parents: [FunctorDecl];
-  };
   node MethodDecl<Decl> {
     parents: [FunctorDecl];
   };
@@ -89,5 +92,5 @@ file decl {
     children: [
       Expr value
     ];
-  };
+  };*/
 };

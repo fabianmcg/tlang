@@ -149,5 +149,5 @@ class Node(Struct):
 
     def cxxProtectedSectionBody(self):
         src = Struct.cxxProtectedSectionBody(self)
-        src += "children_t __children;"
+        src += "children_t __children{};"
         return src

@@ -1,3 +1,7 @@
 file main {
     enum class access_kind { pointer, reference, container};
+    :{
+      using string = std::string;
+      using Identifier = std::string;
+    }:
 };

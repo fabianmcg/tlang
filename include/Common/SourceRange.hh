@@ -1,7 +1,7 @@
-#ifndef __SOURCERANGE_HH__
-#define __SOURCERANGE_HH__
+#ifndef __COMMON_SOURCE_RANGE_HH__
+#define __COMMON_SOURCE_RANGE_HH__
 
-#include <macros.hh>
+#include <Common/Macros.hh>
 #include <iostream>
 #include <string>
 #include <utility>

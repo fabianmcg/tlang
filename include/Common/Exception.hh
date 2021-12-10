@@ -1,7 +1,8 @@
-#ifndef __EXCEPTION_HH__
-#define __EXCEPTION_HH__
+#ifndef __COMMON_EXCEPTION_HH__
+#define __COMMON_EXCEPTION_HH__
 
-#include <macros.hh>
+#include <Common/Macros.hh>
+#include <string>
 #include <exception>
 
 namespace __lang_np__ {
