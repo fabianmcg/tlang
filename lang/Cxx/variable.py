@@ -27,6 +27,6 @@ class Variable:
         return str(self.T) + " " + self.varName()
 
     def getCxx(self):
-        return "{}& {}() {{ return {};}}\n".format(
-            self.T, self.identifier, self.varName()
-        ) + "const {}& {}() const {{ return {};}}".format(self.T, self.identifier, self.varName())
+        return "{}& get{}() {{ return {};}}\n".format(
+            self.T, self.identifier.capitalize(), self.varName()
+        ) + "const {}& get{}() const {{ return {};}}".format(self.T, self.identifier.capitalize(), self.varName())

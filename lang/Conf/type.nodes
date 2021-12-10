@@ -1,16 +1,19 @@
-file type {
+file Type {
     node Type<Type> {
     parents: [ASTNode];
   };
   node QualType<Type> {
     parents: [ASTNode];
     members: [
-      cvr_qualifiers qualifiers,
-      memory_qualifiers mem_qualifiers
+      cvr_qualifiers qualifiers
     ];
     children: [
       Type type
     ];
+    enum cvr_qualifiers {
+      Reference = 1,
+      Const = 2
+    };
   };
   node DeducedType<Type> {
     parents: [Type];
@@ -18,13 +21,20 @@ file type {
   node AutoType<Type> {
     parents: [DeducedType];
   };
-  node BuiltinType<Type> {
+  /*node BuiltinType<Type> {
     parents: [Type];
+  };
+  node IntType<Type> {
+    parents: [BuiltinType];
     members: [
-      builtin_types kind,
-      numeric_precision precision,
-      signed_kind signedness
+      numeric_precision precision
     ];
+    enum numeric_precision {
+      P_8,
+      P_16,
+      P_32,
+      P_64
+    };
   };
   node PtrType<Type> {
     parents: [Type];
@@ -62,5 +72,5 @@ file type {
   };
   node TypedefType<Type> {
     parents: [DefinedType];
-  };
+  };*/
 };

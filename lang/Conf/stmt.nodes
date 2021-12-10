@@ -1,4 +1,4 @@
-file stmt {
+file Stmt {
   node Stmt<Stmt> {
     parents: [ASTNode];
   };
@@ -11,6 +11,7 @@ file stmt {
   node ValueStmt<Stmt> {
     parents: [Stmt];
   };
+  /*
   node DeclStmt<Stmt> {
     parents: [Stmt];
     children: [
@@ -33,7 +34,7 @@ file stmt {
   node IfStmt<Stmt> {
     parents: [Stmt];
     members: [
-      bool constexpr
+      bool Constexpr
     ];
     children: [
       Expr condition,
@@ -93,16 +94,19 @@ file stmt {
     children: [
       Stmt stmt
     ];
-  };
+  };*/
 };
-file expr {
+file Expr {
+  .{
+    #include "AST/Stmt.hh"
+  }.
   node Expr<Stmt> {
     parents: [ValueStmt];
     children: [
       QualType type
     ];
   };
-  node LiteralExpr<Stmt> {
+  /*node LiteralExpr<Stmt> {
     parents: [Expr];
     members: [
       string value
@@ -187,5 +191,5 @@ file expr {
   };
   node ProvideExpr<Stmt> {
     parents: [Expr];
-  };
+  };*/
 };
