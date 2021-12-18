@@ -48,7 +48,7 @@ class Grammar:
                         raise (Exception("Invalid node"))
 
     def cxxNode(self, index, node: AbstractNode):
-        varName = "_{}".format(index + 1)
+        varName = "_{}".format(index)
         if isinstance(node, EmptyString):
             return ""
         elif isinstance(node, Terminal):
@@ -75,7 +75,7 @@ class Grammar:
         if production.attributes.hasReturnType():
             returnType = returnType.format(production.attributes.returnType)
         elif production.attributes.isNode:
-            returnType = returnType.format("unique<{}>".format(production.identifier))
+            returnType = returnType.format("{}".format(production.identifier))
         else:
             print("Error the {} production has no return type.".format(production.identifier))
         body = "using return_t = {};{}".format(returnType, production.attributes.instruction)
@@ -107,17 +107,25 @@ class GrammarGraph:
         self.graph.vertex_properties[name] = property
         return property
 
+    def addEdgeProperty(self, name, type, values=None, value=None):
+        property = self.graph.new_edge_property(type, vals=values, val=value)
+        self.graph.edge_properties[name] = property
+        return property
+
     def orderedNodes(self):
         return sorted(self.nodeToVertex.keys(), key=lambda x: self.nodeToVertex[x])
 
     def saveGraph(self, filename):
         nodes = self.orderedNodes()
+        G = self.graph
         self.addVertexProperty("label", "string", values=[node.identifier for node in nodes])
         self.addVertexProperty(
             "shape",
             "string",
             values=[("doublecircle" if isinstance(node, NonTerminal) else "circle") for node in nodes],
         )
+        self.addEdgeProperty("style", "string", ["solid" if G.ep.type[e] == 0 else "dotted" for e in G.edges()])
+        self.addEdgeProperty("color", "string", ["green" if G.ep.type[e] == 0 else "red" for e in G.edges()])
         self.graph.save(filename + ".graphml", "graphml")
         self.graph.save(filename + ".dot", "dot")
 
@@ -154,9 +162,8 @@ class GrammarGraph:
 
     def createGraph(self):
         G = self.graph
-        nt = set([n.identifier for n in self.terminals.values()] + [n.identifier for n in self.nonTerminals.values()])
-        n = set([n.identifier for n in self.nodeToVertex.keys()])
         G.add_vertex(len(self.nodeToVertex))
+        edgeType = self.addEdgeProperty("type", "int")
         productions = self.grammar.productions
         productionStack = [self.entryProduction]
         visited = set([])
@@ -168,10 +175,11 @@ class GrammarGraph:
             production = productions[pid]
             pv = G.vertex(self.nodeToVertex[production.asNonTerminal()])
             for rule in production:
-                pnv = None
+                pnv = pv
                 for i, node in enumerate(rule):
                     nv = G.vertex(self.nodeToVertex[node])
-                    G.add_edge(pv if i == 0 else pnv, nv)
+                    e = G.add_edge(pnv, nv)
+                    edgeType[e] = 0 if i == 0 else 1
                     pnv = nv
                     if node.identifier in productions:
                         productionStack.append(node.identifier)

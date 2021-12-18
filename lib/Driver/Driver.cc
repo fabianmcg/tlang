@@ -3,17 +3,23 @@
 #include <Parser/Parser.hh>
 #include "AST/RecursiveASTVisitor.hh"
 
-struct Visitor: _astnp_::RecursiveASTVistor<Visitor> {
+struct Visitor: _astnp_::RecursiveASTVistor<Visitor, _astnp_::VisitorPattern::prePostOrder> {
 public:
   Visitor() {
   }
-  bool visitASTNode(_astnp_::ASTNode *node) {
-    std::cerr << std::string(ident, '-') + _astnp_::to_string(node->classOf());
-    ident++;
+  bool visitASTNode(_astnp_::ASTNode *node, bool isFirst) {
+    if (isFirst) {
+      std::cerr << std::string(ident, '-') + _astnp_::to_string(node->classOf());
+      ident++;
+    } else {
+      std::cerr << std::endl;
+      ident--;
+    }
     return true;
   }
-  bool visitNamedDecl(_astnp_::NamedDecl *node) {
-    std::cerr << ": " << node->getIdentifier();
+  bool visitNamedDecl(_astnp_::NamedDecl *node, bool isFirst) {
+    if (isFirst)
+      std::cerr << ": " << node->getIdentifier() << std::endl;
     return true;
   }
 //  bool postVisit(_astnp_::ASTNode *node) {
@@ -35,7 +41,7 @@ int main(int argc, char **argv) {
   Lexer lex(*fs);
   Parser parser = Parser(lex);
   ASTContext context = parser.parse();
-  //  Visitor v;
-//  v.traverseModuleDecl(*context);
+  Visitor v;
+  v.traverseModuleDecl(*context);
   return 0;
 }

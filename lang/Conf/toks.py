@@ -47,6 +47,7 @@ def makeLexer():
     db.addToken(Keyword, "__deleter__")
     db.addToken(Keyword, "__parallel__")
     db.addToken(Keyword, "__executor__")
+    db.addToken(Keyword, "execute")
     # ******************************************************************************
     #   Language constructs
     # ******************************************************************************

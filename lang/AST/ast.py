@@ -120,7 +120,9 @@ class ASTDatabase:
         identifier = "AST_{}_HEADER".format(namespace.getId())
         if not namespace.isMain():
             incSrc = namespace.cxx("_astnp_")
-            incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"']})
+            incSrc = getJinjaTemplate(
+                templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"']}
+            )
         else:
             incSrc = namespace.cxx("_astnp_", self.generateMain())
             incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ["<string>"]})
@@ -158,10 +160,8 @@ class ASTDatabase:
                         node.typename()
                     )
                 )
-                traverse_cases += (
-                    "case NodeClass::{0:}: return derived.traverse{0:}(node->template getAsPtr<{0:}>(), stack);\n".format(
-                        node.typename()
-                    )
+                traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node->template getAsPtr<{0:}>(), stack);\n".format(
+                    node.typename()
                 )
         jinjaTemplate(
             pathJoin(outputDir, "RecursiveASTVisitor.hh"),
