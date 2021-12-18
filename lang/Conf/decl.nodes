@@ -10,11 +10,14 @@ file Decl {
     members: [
       Identifier identifier
     ];
+    .{
+       NamedDecl(const Identifier& identifier): __identifier(identifier) {}  
+    }.
   };
   node ModuleDecl<Decl> {
     parents: [NamedDecl, DeclContext];
     .{
-        
+      ModuleDecl(const Identifier& identifier, DeclContext &&context): NamedDecl(identifier), DeclContext(std::move(context)) {}
     }.
   };
   node FunctorDecl<Decl> {
@@ -22,11 +25,16 @@ file Decl {
     children: [
       CompoundStmt body
     ];
+    .{
+      FunctorDecl(const Identifier& identifier, DeclContext &&context): NamedDecl(identifier), DeclContext(std::move(context)) {}
+    }.
   };
   node FunctionDecl<Decl> {
     parents: [FunctorDecl];
+    .{
+      FunctionDecl(const Identifier& identifier, DeclContext &&context): FunctorDecl(identifier, std::move(context)) {}
+    }.
   };
-  /*
   node ImportDecl<Decl> {
     parents: [Decl];
     members: [
@@ -34,6 +42,7 @@ file Decl {
       reference<ModuleDecl> module
     ];
   };
+  /*
   node UsingDecl<Decl> {
     parents: [Decl];
     members: [

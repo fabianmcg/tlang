@@ -6,6 +6,12 @@
 #include "Lexer/Lexer.hh"
 
 namespace tlang::parser {
+template <typename T>
+using unique = std::unique_ptr<T>;
+template <typename T, typename ...Args>
+unique<T> make_unique_ptr(Args &&...args) {
+  return std::make_unique<T>(std::forward<Args>(args)...);
+}
 enum class ParseResult {
   success,
   fail,
@@ -13,8 +19,14 @@ enum class ParseResult {
 };
 template <typename T>
 struct ParseReturnType {
+  unique<T> data { };
   ParseResult parse_result { };
-  T data { };
+  ParseReturnType(ParseResult result) :
+      parse_result(result) {
+  }
+  ParseReturnType(unique<T> &&data, ParseResult result) :
+      data(std::move(data)), parse_result(result) {
+  }
   ParseReturnType() = default;
   ~ParseReturnType() = default;
   ParseReturnType(ParseReturnType&&) = default;
@@ -25,23 +37,36 @@ struct ParseReturnType {
     return parse_result == ParseResult::success;
   }
   bool operator !() const {
-    return parse_result != ParseResult::fail;
+    return parse_result == ParseResult::fail;
   }
-  T& operator*() {
+  unique<T>& operator*() {
     return data;
   }
+  ParseReturnType& operator++() {
+    parse_result = ParseResult::success;
+    return *this;
+  }
+  template <typename V>
+  ParseReturnType& operator=(ParseReturnType<V> &&result) {
+    parse_result = result.parse_result;
+    if (result.parse_result == ParseResult::success)
+      data = std::move(result.data);
+    return *this;
+  }
+  template <typename ...Args>
+  static ParseReturnType make(Args &&...args) {
+    return ParseReturnType(make_unique_ptr<T>(std::forward<Args>(args)...), ParseResult::success );
+  }
   static ParseReturnType empty() {
-    return ParseReturnType { ParseResult::empty };
+    return ParseReturnType { nullptr, ParseResult::empty };
   }
   static ParseReturnType fail() {
-    return ParseReturnType { ParseResult::fail };
+    return ParseReturnType { nullptr, ParseResult::fail };
   }
 };
 template <typename T>
 using parse_return_t = ParseReturnType<T>;
 using namespace lex;
-template <typename T>
-using unique = std::unique_ptr<T>;
 class Parser {
 public:
   friend class ParserHelper;
@@ -53,10 +78,6 @@ public:
   ASTContext parse();
 protected:
   void ParseASTContext(ASTContext &ctx);
-  template <typename T, typename ...Args>
-  unique<T> make_unique(Args &&...args) {
-    return std::make_unique<T>(std::forward<Args>(args)...);
-  }
   using tok_it_t = std::list<token>::iterator;
   using context_t = tok_it_t;
   token peekToken();

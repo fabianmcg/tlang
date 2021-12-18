@@ -1,4 +1,5 @@
-function saxpy(int x) {
+function saxpy() {
+}
 
-
+function saxy2() {
 }
