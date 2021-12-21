@@ -49,7 +49,7 @@ class Parser:
         instruction = parseOptional(Parser.createInstruction(":{", "}:", RuleInstruction), default=RuleInstruction(""))
 
         def action(x):
-            return Rule(x[0], x[1])
+            return Rule([symbol for symbol in x[0] if not isinstance(symbol, EmptyString)], x[1])
 
         return parseElement(pp.Group(pp.OneOrMore(ruleNode)) + instruction, action)
 

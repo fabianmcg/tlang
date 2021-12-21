@@ -10,7 +10,9 @@ import argparse
 from Conf.toks import makeLexer
 from AST.confParser import makeAST
 from Grammar.confParser import makeParser
-from Grammar.grammar import GrammarGraph
+from Grammar.grammarParser import GrammarParser
+
+# from Grammar.grammar import GrammarGraph
 from Utility.util import pathJoin
 
 
@@ -75,7 +77,9 @@ def main():
     #         str(pathJoin(args.output_dir, "ParserHandler.cc")), str(pathJoin(args.template_dir, "Parser.cc.j2"))
     #     )
     grammar = makeParser(str(pathJoin("Conf/", "grammar.conf")), tokens)
-    GrammarGraph(grammar).saveGraph("graph")
+    grammarParser = GrammarParser(grammar)
+    for p in grammar.nonTerminals.values():
+        print(p.identifier, p.data)
 
 
 if __name__ == "__main__":
