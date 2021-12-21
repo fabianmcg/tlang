@@ -40,7 +40,7 @@ class NodeData:
         self.follow = set([])
 
     def __str__(self) -> str:
-        return str(self.first)
+        return str(self.first) + "\t" + str(self.follow)
 
     def __repr__(self) -> str:
         return str(self)
@@ -88,7 +88,7 @@ class Grammar:
             for ruleId, rule in enumerate(production):
                 if not rule.data:
                     rule.data = RuleData(production.identifier, ruleId)
-                for node in rule:
+                for nodeId, node in enumerate(rule):
                     symbol = None
                     if isinstance(node, Terminal):
                         if node.identifier not in terminals:
@@ -107,7 +107,7 @@ class Grammar:
                             symbol = nonTerminals[node.identifier]
                     else:
                         raise (Exception("Invalid node"))
-                    symbol.data.occurrences.add((production.identifier, ruleId))
+                    symbol.data.occurrences.add((production.identifier, ruleId, nodeId))
         self.productionsAsRules = [rule for production in self.productions.values() for rule in production]
 
     def traverseDFS(self, fn, stack: list = None):

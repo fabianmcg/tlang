@@ -15,6 +15,7 @@ class GrammarParser:
         self.grammar = grammar
         self.computeDerivesInEmpty()
         self.computeFirst()
+        self.computeFollow()
 
     def computeDerivesInEmpty(self):
         productions = self.grammar.productions
@@ -41,39 +42,8 @@ class GrammarParser:
                 rule.data.count -= 1
                 check(rule)
 
-    def computeFirst(self):
-        grammar = self.grammar
-        productions = self.grammar.productions
-        visited = set([])
-
-        def visitNonTerminal(identifier: str):
-            if identifier in visited:
-                return
-            visited.add(identifier)
-            nonTerminal = grammar.nonTerminal(identifier)
-            for rule in grammar.production(identifier):
-                if rule.isEmpty():
-                    nonTerminal.data.first.add("E")
-                    continue
-                first = set([])
-                for symbol in rule:
-                    if isinstance(symbol, Terminal):
-                        nonTerminal.data.first.add(symbol.identifier)
-                        break
-                    visitNonTerminal(symbol.identifier)
-                    symbolNT = grammar.nonTerminal(symbol.identifier)
-                    first = first | symbolNT.data.first
-                    if not symbolNT.data.derivesEmpty:
-                        break
-                nonTerminal.data.first = nonTerminal.data.first | set([f for f in first if not isinstance(f, str)])
-                if rule.data.derivesEmpty:
-                    nonTerminal.data.first.add("E")
-
-        for production in productions:
-            visitNonTerminal(production)
-    
     @staticmethod
-    def first(grammar: Grammar, symbolList: list, visitNonTerminal = None):
+    def first(grammar: Grammar, symbolList: list, visitNonTerminal=None):
         first = set([])
         k = 0
         for symbol in symbolList:
@@ -88,11 +58,13 @@ class GrammarParser:
                 break
             else:
                 k += 1
-        if k == len(symbolList):
+        if "E" in first:
+            first.remove("E")
+        if k == len(symbolList) and k > 0:
             first.add("E")
         return first
 
-    def computeFollow(self):
+    def computeFirst(self):
         grammar = self.grammar
         productions = self.grammar.productions
         visited = set([])
@@ -106,17 +78,35 @@ class GrammarParser:
                 if rule.isEmpty():
                     nonTerminal.data.first.add("E")
                     continue
-                for symbol in rule:
-                    if isinstance(symbol, Terminal):
-                        nonTerminal.data.first.add(symbol.identifier)
-                        break
-                    visitNonTerminal(symbol.identifier)
-                    symbolNT = grammar.nonTerminal(symbol.identifier)
-                    nonTerminal.data.first = nonTerminal.data.first | symbolNT.data.first
-                    if not symbolNT.data.derivesEmpty:
-                        break
+                first = GrammarParser.first(grammar, rule.rule, visitNonTerminal)
+                nonTerminal.data.first = nonTerminal.data.first | first
                 if rule.data.derivesEmpty:
                     nonTerminal.data.first.add("E")
 
         for production in productions:
             visitNonTerminal(production)
+
+    def computeFollow(self):
+        grammar = self.grammar
+        nonTerminals = self.grammar.nonTerminals
+        visited = set([])
+
+        def visitNonTerminal(nonTerminal: NonTerminal):
+            if nonTerminal.identifier in visited:
+                return
+            visited.add(nonTerminal.identifier)
+            for occurrence in nonTerminal.data.occurrences:
+                rule = grammar.production(occurrence[0])[occurrence[1]]
+                rule = rule[occurrence[2] + 1 :]
+                first = GrammarParser.first(grammar, rule)
+                if len(first):
+                    nonTerminal.data.follow = nonTerminal.data.follow | first
+                if "E" in first or len(rule) == 0:
+                    nt = grammar.nonTerminal(occurrence[0])
+                    visitNonTerminal(nt)
+                    nonTerminal.data.follow = nonTerminal.data.follow | nt.data.follow
+
+        for nonTerminal in nonTerminals.values():
+            visitNonTerminal(nonTerminal)
+            if "E" in nonTerminal.data.follow:
+                nonTerminal.data.follow.remove("E")
