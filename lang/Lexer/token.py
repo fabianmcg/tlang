@@ -18,6 +18,12 @@ class Token:
     def __repr__(self) -> str:
         return str(self)
 
+    def __hash__(self) -> int:
+        return hash(self.identifier)
+
+    def __eq__(self, other):
+        return other.identifier == self.identifier
+
     def cxx(self):
         return "tok_k::{}".format(self.identifier)
 

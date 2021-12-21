@@ -87,21 +87,28 @@ class Terminal(AbstractNode):
     def __init__(self, identifier, instruction: Instruction) -> None:
         super().__init__(identifier, instruction=instruction)
 
+    def clone(self):
+        return Terminal(self.identifier, Instruction(""))
+
 
 class NonTerminal(AbstractNode):
     def __init__(self, identifier, instruction: Instruction) -> None:
         super().__init__(identifier, instruction=instruction)
 
+    def clone(self):
+        return NonTerminal(self.identifier, Instruction(""))
+
 
 class EmptyString(NonTerminal):
-    def __init__(self, instruction: Instruction) -> None:
-        super().__init__("E", instruction)
+    def __init__(self, instruction=None) -> None:
+        super().__init__("E", instruction or Instruction(""))
 
 
 class Rule:
     def __init__(self, rule: list, instruction: Instruction) -> None:
         self.rule = rule
         self.instruction = instruction
+        self.data = None
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -109,17 +116,17 @@ class Rule:
     def __repr__(self) -> str:
         return str(self)
 
+    def __len__(self):
+        return len(self.rule)
+
     def __iter__(self):
         return self.rule.__iter__()
 
     def __getitem__(self, item):
         return self.rule[item]
 
-    def __len__(self):
-        return len(self.rule)
-
     def isEmpty(self):
-        return len(self.rule) == 0 or (len(self.rule) == 1 and isinstance(self.rule[0], EmptyString))
+        return len(self.rule) == 0
 
     def hasInstruction(self):
         return self.instruction.notEmpty()
@@ -128,7 +135,8 @@ class Rule:
         instruction = "{}".format(self.instruction) if self.hasInstruction() else ""
         if len(instruction):
             instruction = " " + instruction
-        return "{}{}".format(" ".join(map(str, self.rule)), instruction)
+        rule = " ".join(map(str, self.rule)) if len(self.rule) else "E"
+        return "{}{}".format(rule, instruction)
 
     def shortRepr(self):
         return "{}".format(" ".join(map(getShortRepr, self.rule)))
@@ -170,6 +178,7 @@ class Production:
         self.identifier = identifier
         self.attributes = attributes
         self.rules = rules
+        self.data = None
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -177,20 +186,20 @@ class Production:
     def __repr__(self) -> str:
         return str(self)
 
-    def __iter__(self):
-        return self.rules.__iter__()
-
-    def __hash__(self) -> int:
-        return hash(self.identifier)
-
     def __eq__(self, other):
         return other.identifier == self.identifier
+
+    def __len__(self):
+        return len(self.rules)
+
+    def __iter__(self):
+        return self.rules.__iter__()
 
     def __getitem__(self, item):
         return self.rules[item]
 
-    def __len__(self):
-        return len(self.rules)
+    def __hash__(self) -> int:
+        return hash(self.identifier)
 
     def isTop(self):
         return "__top__" == self.identifier
