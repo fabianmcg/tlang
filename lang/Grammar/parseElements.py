@@ -14,8 +14,6 @@ class Instruction:
     def __init__(self, instruction: str, lDelimiter="{", rDelimiter="}") -> None:
         if isinstance(instruction, str):
             instruction = instruction.strip()
-            # if len(instruction):
-            #     instruction = formatStr(instruction)
         self.instruction = instruction
         self.lDelimiter = lDelimiter
         self.rDelimiter = rDelimiter
@@ -53,7 +51,8 @@ class AbstractNode:
     def __init__(self, identifier, instruction: Instruction) -> None:
         self.identifier = identifier
         self.instruction = instruction
-        self.data = None
+        self.firstSet = set([])
+        self.occurrencesSet = []
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -86,6 +85,7 @@ class AbstractNode:
 class Terminal(AbstractNode):
     def __init__(self, identifier, instruction: Instruction) -> None:
         super().__init__(identifier, instruction=instruction)
+        self.firstSet.add(identifier)
 
     def clone(self):
         return Terminal(self.identifier, Instruction(""))
@@ -94,9 +94,14 @@ class Terminal(AbstractNode):
 class NonTerminal(AbstractNode):
     def __init__(self, identifier, instruction: Instruction) -> None:
         super().__init__(identifier, instruction=instruction)
+        self.followSet = set([])
+        self.derivesEmpty = False
 
     def clone(self):
         return NonTerminal(self.identifier, Instruction(""))
+
+    def info(self) -> str:
+        return "{}\t{}".format(self.firstSet, self.followSet)
 
 
 class EmptyString(NonTerminal):
@@ -108,7 +113,10 @@ class Rule:
     def __init__(self, rule: list, instruction: Instruction) -> None:
         self.rule = rule
         self.instruction = instruction
-        self.data = None
+        self.productionId = None
+        self.countEmpty = 0
+        self.firstSet = set([])
+        self.derivesEmpty = False
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -178,7 +186,9 @@ class Production:
         self.identifier = identifier
         self.attributes = attributes
         self.rules = rules
-        self.data = None
+        self.nonTerminal = NonTerminal(self.identifier, Instruction(""))
+        for rule in self.rules:
+            rule.productionId = self.identifier
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -203,9 +213,6 @@ class Production:
 
     def isTop(self):
         return "__top__" == self.identifier
-
-    def asNonTerminal(self):
-        return NonTerminal(self.identifier, RuleInstruction(""))
 
     def hasEmpty(self):
         return any([r.isEmpty() for r in self.rules])
