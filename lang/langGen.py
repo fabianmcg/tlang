@@ -79,7 +79,7 @@ def main():
     grammar = makeParser(str(pathJoin("Conf/", "grammar.conf")), tokens)
     grammarParser = GrammarParser(grammar)
     for p in grammar.nonTerminals.values():
-        print(p.identifier, p.data)
+        print(p.identifier, p.info())
 
 
 if __name__ == "__main__":
