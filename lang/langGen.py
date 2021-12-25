@@ -13,7 +13,7 @@ from Grammar.confParser import makeParser
 from Grammar.grammarParser import GrammarParser
 
 # from Grammar.grammar import GrammarGraph
-from Utility.util import pathJoin
+from Utility.util import pathJoin, printToFile
 
 
 def parseArgs():
@@ -78,8 +78,12 @@ def main():
     #     )
     grammar = makeParser(str(pathJoin("Conf/", "grammar.conf")), tokens)
     grammarParser = GrammarParser(grammar)
-    for p in grammar.nonTerminals.values():
-        print(p.identifier, p.info())
+    print(grammarParser.cxx())
+    # for p in grammar.nonTerminals.values():
+    #     print(p.identifier, p.info())
+    # for p in grammar.productions.values():
+    #     print(p.identifier, p.isLL1, p.isPredictable)
+    # printToFile(grammar, "grammar.conf")
 
 
 if __name__ == "__main__":

@@ -117,6 +117,8 @@ class Rule:
         self.countEmpty = 0
         self.firstSet = set([])
         self.derivesEmpty = False
+        self.isPredictable = False
+        self.isLL1 = False
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -189,6 +191,8 @@ class Production:
         self.nonTerminal = NonTerminal(self.identifier, Instruction(""))
         for rule in self.rules:
             rule.productionId = self.identifier
+        self.isPredictable = False
+        self.isLL1 = False
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -221,7 +225,7 @@ class Production:
         n = len(self.rules)
         if n > 1:
             rules = "\n|".join([indentTxt((" " if i == 0 else "") + str(x), 8) for i, x in enumerate(self.rules)])
-            rules = indentTxt(rules + "\n;", 8)
+            rules = indentTxt(rules + "\n;", 7)
             rules = "\n" + rules
         else:
             rules = " {};".format(self.rules[0])
@@ -231,7 +235,7 @@ class Production:
         n = len(self.rules)
         if n > 1:
             rules = "\n|".join(
-                [indentTxt((" " if i == 0 else "") + x.shortRepr(), 8) for i, x in enumerate(self.rules)]
+                [indentTxt((" " if i == 0 else "") + x.shortRepr(), 7) for i, x in enumerate(self.rules)]
             )
             rules = indentTxt(rules + "\n;", 8)
             rules = "\n" + rules
