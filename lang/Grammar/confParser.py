@@ -57,7 +57,7 @@ class Parser:
         lat, rat = suppressLiterals("@<", ">@")
         instruction = Parser.createInstruction(":{", "}:", RuleInstruction)
         returnType = parseOptional(lat + ... + rat, lambda x: ("returnType", x[0]), "")
-        inline = parseOptional(pp.Keyword("node"), lambda x: ("isNode", True), False)
+        inline = parseOptional(pp.Keyword("node"), lambda x: ("isNode", True if x[0] else False), False)
         instruction = parseOptional(instruction, lambda x: ("instruction", x[0]), RuleInstruction(""))
 
         def action(x):

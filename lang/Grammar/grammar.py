@@ -21,7 +21,7 @@ class Grammar:
         self.productionsAsRules = {}
 
     def __str__(self) -> str:
-        return "{}".format("\n".join(list(map(str, self.productions))))
+        return "{}".format("\n".join(list(map(str, self.productions.values()))))
 
     def __repr__(self) -> str:
         return str(self)
@@ -103,6 +103,7 @@ class Grammar:
         self.derivesEmpty()
         self.computeFirstSet()
         self.computeFollow()
+        self.computeLL1()
 
     def derivesEmpty(self):
         productions = self.productions
@@ -144,7 +145,7 @@ class Grammar:
                 k += 1
         if "E" in first:
             first.remove("E")
-        if k == len(symbolList) and k > 0:
+        if k == len(symbolList):
             first.add("E")
         return first
 
@@ -158,9 +159,6 @@ class Grammar:
             visited.add(identifier)
             nonTerminal = self.nonTerminal(identifier)
             for rule in self.production(identifier):
-                if rule.isEmpty():
-                    nonTerminal.firstSet.add("E")
-                    continue
                 first = self.firstSet(rule.rule, visitNonTerminal)
                 rule.firstSet = first
                 nonTerminal.firstSet = nonTerminal.firstSet | first
@@ -195,3 +193,27 @@ class Grammar:
             visitNonTerminal(nonTerminal)
             if "E" in nonTerminal.followSet:
                 nonTerminal.followSet.remove("E")
+
+    def computeLL1(self):
+        productions = self.productions
+        for production in productions.values():
+            followSet = production.nonTerminal.followSet
+            firstSets = [rule.firstSet for rule in production]
+            disjoint = [True] * len(production)
+            isLL1 = [True] * len(production)
+            for i, rule in enumerate(production):
+                for o, s in enumerate(firstSets[i + 1: ]):
+                    if len(s.intersection(rule.firstSet)) != 0:
+                        disjoint[i] = False
+                        disjoint[o] = False
+                    if "E" in s and len(followSet.intersection(rule.firstSet)) != 0:
+                        isLL1[i] = False
+                        isLL1[o] = False
+                    if "E" in rule.firstSet and len(followSet.intersection(s)) != 0:
+                        isLL1[i] = False
+                        isLL1[o] = False
+            for i, rule in enumerate(production):
+                rule.isPredictable = disjoint[i]
+                rule.isLL1 = isLL1[i] and disjoint[i]
+            production.isPredictable = all(disjoint)
+            production.isLL1 = all(isLL1 + disjoint)

@@ -47,11 +47,9 @@ def makeLexer():
     db.addToken(Keyword, "__deleter__")
     db.addToken(Keyword, "__parallel__")
     db.addToken(Keyword, "__executor__")
-    db.addToken(Keyword, "execute")
     # ******************************************************************************
     #   Language constructs
     # ******************************************************************************
-    db.addToken(Keyword, "__builtin__")
     db.addToken(Keyword, "Typeof")
     db.addToken(Keyword, "Function")
     db.addToken(Keyword, "Struct")
@@ -90,6 +88,7 @@ def makeLexer():
     db.addToken(Keyword, "Void")
     db.addToken(Keyword, "Bool")
     db.addToken(Keyword, "Int")
+    db.addToken(Keyword, "Uint")
     db.addToken(Keyword, "Float")
     db.addToken(Keyword, "Complex")
     db.addToken(Keyword, "Array")
