@@ -7,7 +7,7 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Utility.dotDict import DotDict
-from Utility.util import jinjaTemplate, pathJoin, printToFile
+from Utility.util import jinjaTemplate, pathJoin
 from Lexer.token import *
 
 

@@ -33,20 +33,19 @@ class Parser:
 
     def createRuleNode(self):
         node = P.identifier | pp.QuotedString('"')
-        instruction = parseOptional(Parser.createInstruction("@{", "}@", NodeInstruction), default=NodeInstruction(""))
 
         def action(x):
             if str(x[0]) in self.tokens:
-                return Terminal(self.tokens[x[0]], x[1])
+                return Terminal(self.tokens[x[0]])
             elif str(x[0]) == "E":
-                return EmptyString(x[1])
+                return EmptyString()
             return NonTerminal(*x)
 
-        return parseElement(node + instruction, action)
+        return parseElement(node, action)
 
     def createRule(self):
         ruleNode = self.createRuleNode()
-        instruction = parseOptional(Parser.createInstruction(":{", "}:", RuleInstruction), default=RuleInstruction(""))
+        instruction = parseOptional(Parser.createInstruction(":{", "}:", Instruction), default=Instruction(""))
 
         def action(x):
             return Rule([symbol for symbol in x[0] if not isinstance(symbol, EmptyString)], x[1])
@@ -55,21 +54,33 @@ class Parser:
 
     def createProductionAttributes(self):
         lat, rat = suppressLiterals("@<", ">@")
-        instruction = Parser.createInstruction(":{", "}:", RuleInstruction)
         returnType = parseOptional(lat + ... + rat, lambda x: ("returnType", x[0]), "")
-        inline = parseOptional(pp.Keyword("node"), lambda x: ("isNode", True if x[0] else False), False)
-        instruction = parseOptional(instruction, lambda x: ("instruction", x[0]), RuleInstruction(""))
+        dynamic = parseOptional(pp.Keyword("static"), lambda x: ("isDynamic", True if x[0] == True else False), True)
+        kind = pp.Keyword("ZeroOrMore") | pp.Keyword("OneOrMore") | pp.Keyword("Optional")
+
+        def getKind(x):
+            x = x[0]
+            kind = ProductionKind.Regular
+            if x == "ZeroOrMore":
+                kind = ProductionKind.ZeroOrMore
+            elif x == "OneOrMore":
+                kind = ProductionKind.OneOrMore
+            elif x == "Optional":
+                kind = ProductionKind.Optional
+            return ("kind", kind)
+
+        kind = parseOptional(kind, getKind, None)
 
         def action(x):
             return ProductionAttributes(**{k: v for k, v in x})
 
-        return parseElement(returnType + inline + instruction, action)
+        return parseElement(returnType + dynamic + kind, action)
 
     def createProduction(self):
         pipe = suppressChars("|")
         equal = suppressLiterals(":=")
         attributes = parseOptional(
-            self.createProductionAttributes(), default=ProductionAttributes("", False, RuleInstruction(""))
+            self.createProductionAttributes(), default=ProductionAttributes("", False, Instruction(""))
         )
         rule = self.createRule()
         semicolon = suppressChars(";")

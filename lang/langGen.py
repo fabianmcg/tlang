@@ -59,7 +59,7 @@ def parseArgs():
 
 
 def main():
-    # args = parseArgs()
+    args = parseArgs()
     # genAST = True if args.feature == "all" or args.feature == "ast" else False
     # genLex = True if args.feature == "all" or args.feature == "lexer" else False
     # genParser = True if args.feature == "all" or args.feature == "parser" else False
@@ -78,12 +78,11 @@ def main():
     #     )
     grammar = makeParser(str(pathJoin("Conf/", "grammar.conf")), tokens)
     grammarParser = GrammarParser(grammar)
-    print(grammarParser.cxx())
+    grammarParser.generateParser(args.output_dir, args.template_dir)
     # for p in grammar.nonTerminals.values():
     #     print(p.identifier, p.info())
     # for p in grammar.productions.values():
     #     print(p.identifier, p.isLL1, p.isPredictable)
-    # printToFile(grammar, "grammar.conf")
 
 
 if __name__ == "__main__":
