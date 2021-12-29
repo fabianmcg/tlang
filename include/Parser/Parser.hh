@@ -20,7 +20,7 @@ protected:
   void ParseASTContext(ASTContext &ctx);
   using tok_it_t = std::list<token>::iterator;
   using context_t = tok_it_t;
-  token peekToken();
+  const token& peekToken() const;
   void consumeToken();
   void restoreContext(tok_it_t);
   tok_it_t getContext();

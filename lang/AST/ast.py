@@ -130,6 +130,7 @@ class ASTDatabase:
 
     def generateASTNodes(self, includeOutdir, libOutdir, templatePath):
         for namespace in self.fileNamespaces.values():
+            print(namespace.getId() + ".hh")
             inc, lib = self.generateNamespace(namespace, templatePath)
             incName = pathJoin(includeOutdir, namespace.getId() + ".hh")
             libName = pathJoin(libOutdir, namespace.getId() + ".cc")
@@ -141,26 +142,22 @@ class ASTDatabase:
     def generateRecursiveASTVisitor(self, outputDir, inputDir):
         visit = ""
         walkup = ""
-        visit_pp = ""
-        walkup_pp = ""
         traverse = ""
         traverse_cases = ""
         for node in self.nodes.values():
             if isinstance(node, Node):
-                visit += "bool visit{0:}({0:}* node) {{ return true; }}\n".format(node.typename())
-                visit_pp += "bool visit{0:}({0:}* node, bool isFirst) {{ return true; }}\n".format(node.typename())
+                visit += "bool visit{0:}({0:}* node, bool firstQ = true) {{ return true; }}\n".format(node.typename())
                 walkups = ""
                 for p in node.parents:
                     if p != "DeclContext":
                         walkups += "WALKUP_MACRO({1:}, {0:})\n".format(node.typename(), p)
-                walkup += "bool walkUpTo{0:}({0:}* node) {{ {1:} }}\n".format(node.typename(), walkups)
-                walkup_pp += "bool walkUpTo{0:}({0:}* node, bool isFirst) {{ {1:} }}\n".format(node.typename(), walkups)
+                walkup += "bool walkUpTo{0:}({0:}* node, bool firstQ = true) {{ {1:} }}\n".format(node.typename(), walkups)
                 traverse += (
-                    "bool traverse{0:}({0:}* node, stack_t *stack = nullptr) {{ TRAVERSE_MACRO({0:}) }}\n".format(
+                    "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
                         node.typename()
                     )
                 )
-                traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node->template getAsPtr<{0:}>(), stack);\n".format(
+                traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node.first->template getAsPtr<{0:}>(), stack, node.second);\n".format(
                     node.typename()
                 )
         jinjaTemplate(
@@ -169,8 +166,6 @@ class ASTDatabase:
             {
                 "VISIT": visit,
                 "WALK_UP": walkup,
-                "VISIT_PP": visit_pp,
-                "WALK_UP_PP": walkup_pp,
                 "TRAVERSE_CASES": traverse_cases,
                 "TRAVERSE": traverse,
             },

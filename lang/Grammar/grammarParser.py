@@ -31,22 +31,28 @@ class GrammarParser:
             return "return _r;"
         if rule.isEmpty():
             return "return return_t::empty();"
-        src = "return_t _r;"
+        src = ""
         for i, symbol in enumerate(production[ruleId]):
             if isinstance(symbol, Terminal):
-                src += "auto _{} = match({}, \"{}\");".format(i, symbol.identifier.cxx(), production.identifier)
+                src += 'auto _{} = match({}, "{}");'.format(i, symbol.identifier.cxx(), production.identifier)
             elif isinstance(symbol, NonTerminal):
                 src += "auto _{} = Parse{}();".format(i, symbol.identifier)
-                src += "check(_{}, \"{}\", \"{}\");".format(i, symbol.identifier, production.identifier)
+                src += 'check(_{}, "{}", "{}");'.format(i, symbol.identifier, production.identifier)
         src += production[ruleId].instruction.cxx()
-        return src + "return _r;"
+        if production.attributes.kind == ProductionKind.Regular:
+            src = "return_t _r;" + src + "return _r;"
+        else:
+            src = src + "break;"
+        return src
 
     def cxxProductionLL1(self, production: Production, aProduction: Production):
         cases = ""
+
         def cxxCase(terminal):
             if isinstance(terminal, str):
-                return "case tok::EOF:"
+                return "case tok_k::EOS:"
             return "case {}:".format(terminal.cxx())
+
         for i, rule in enumerate(aProduction):
             predict = self.predictSet(rule, aProduction)
             tmp = "\n".join(map(cxxCase, predict))
@@ -55,23 +61,29 @@ class GrammarParser:
             tmp += "}"
             cases += tmp
 
-        return "switch (peek().kind) {{{} default: syntaxError(\"{}\");}}".format(cases, production.identifier)
+        return 'switch (peek().kind) {{{} default: syntaxError("{}");}}'.format(cases, production.identifier)
 
     def cxxProductionNLL1(self, production: Production, aProduction: Production):
-        cases = ""
-        def cxxCase(terminal):
-            if isinstance(terminal, str):
-                return "case tok::EOF:"
-            return "case {}:".format(terminal.cxx())
-        for i, rule in enumerate(aProduction):
-            predict = self.predictSet(rule, aProduction)
-            tmp = "\n".join(map(cxxCase, predict))
-            tmp += "{"
-            tmp += self.cxxRule(rule, production, aProduction, i)
-            tmp += "}"
-            cases += tmp
+        print("Not LL1:\n", production)
+        if aProduction.isPredictable:
+            cases = ""
 
-        return "switch (peek().kind) {{{} default: syntaxError(__LINE__, __func__);}}".format(cases)
+            def cxxCase(terminal):
+                if isinstance(terminal, str):
+                    return "default:"
+                return "case {}:".format(terminal.cxx())
+
+            for i, rule in enumerate(aProduction):
+                predict = rule.firstSet
+                tmp = "\n".join(map(cxxCase, predict))
+                tmp += "{"
+                tmp += self.cxxRule(rule, production, aProduction, i)
+                tmp += "}"
+                cases += tmp
+            return "switch (peek().kind) {{{}}}".format(cases)
+        else:
+            print("Not implemented")
+            return ""
 
     def cxxProduction(self, production: Production, aProduction: Production):
         tmp = "Dynamic" if production.isDynamic() else "Static"
@@ -104,6 +116,24 @@ class GrammarParser:
         # for production in productions.values():
         #     print(production.identifier, production.nonTerminal.firstSet, production.nonTerminal.followSet)
         return "\n".join(p)
+
+    def binOp(self):
+        tokens = self.grammar.tokens
+        precedenceMap = []
+        precedence = [100]
+
+        def add(*tok):
+            for t in tok:
+                precedenceMap.append((tokens[t], precedence[0]))
+                precedence[0] += 100
+
+        add("=")
+        add("<", ">", "<=", ">=")
+        add("<<", ">>")
+        add("+", "-")
+        add("*", "/", "%")
+        add(".")
+        add("::")
 
     def generateParser(self, outputPath, templatePath):
         jinjaTemplate(

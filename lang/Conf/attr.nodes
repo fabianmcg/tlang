@@ -8,7 +8,7 @@ file Attr {
       list Attr attributes
     ];
   };
-  /*node NamedAttr<Attr> {
+  node NamedAttr<Attr> {
     parents: [Attr];
     members: [
       Identifier identifier
@@ -43,5 +43,5 @@ file Attr {
   };
   node PolicyAttr<Attr> {
     parents: [DeclAttr];
-  };*/
+  };
 };

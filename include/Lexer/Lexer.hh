@@ -14,16 +14,16 @@ namespace __lex_np__ {
 using tk = token_kind;
 struct token {
   std::string text { };
-  token_kind kind { tk::NONE };
+  token_kind kind { tk::EOS };
   SourceLocation loc { };
   static token create(const char *txt, tk kind, int32_t l, int32_t c) {
     return token { std::string(txt), kind, SourceLocation { l, c } };
   }
   inline bool valid() const {
-    return kind != tk::NONE;
+    return kind != tk::EOS;
   }
-  inline std::string to_tring() const {
-    return text + " " + to_string(kind) + loc.to_string();
+  inline std::string to_string() const {
+    return text + " " + __lex_np__::to_string(kind) + loc.to_string();
   }
   inline bool is(token_kind k) const {
     return kind == k;
@@ -36,13 +36,13 @@ struct token {
   }
 };
 inline std::ostream& operator<<(std::ostream &ost, const token &tok) {
-  ost << tok.to_tring();
+  ost << tok.to_string();
   return ost;
 }
 struct lexer_exception: public compiler_exception {
   lexer_exception(const token &tok) :
       compiler_exception("Lexer exception: ") {
-    message += tok.to_tring();
+    message += tok.to_string();
   }
 };
 class Lexer {

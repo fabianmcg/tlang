@@ -12,7 +12,6 @@ public:
       std::cerr << std::string(ident, '-') + _astnp_::to_string(node->classOf());
       ident++;
     } else {
-      std::cerr << std::endl;
       ident--;
     }
     return true;
@@ -22,14 +21,6 @@ public:
       std::cerr << ": " << node->getIdentifier() << std::endl;
     return true;
   }
-//  bool postVisit(_astnp_::ASTNode *node) {
-//    std::cerr << std::endl;
-//    return true;
-//  }
-//  bool afterVisit(_astnp_::ASTNode *node) {
-//    ident--;
-//    return true;
-//  }
   size_t ident { };
 };
 

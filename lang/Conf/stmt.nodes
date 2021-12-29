@@ -11,7 +11,6 @@ file Stmt {
   node ValueStmt<Stmt> {
     parents: [Stmt];
   };
-  /*
   node DeclStmt<Stmt> {
     parents: [Stmt];
     children: [
@@ -94,7 +93,7 @@ file Stmt {
     children: [
       Stmt stmt
     ];
-  };*/
+  };
 };
 file Expr {
   .{
@@ -106,7 +105,7 @@ file Expr {
       QualType type
     ];
   };
-  /*node LiteralExpr<Stmt> {
+  node LiteralExpr<Stmt> {
     parents: [Expr];
     members: [
       string value
@@ -191,5 +190,5 @@ file Expr {
   };
   node ProvideExpr<Stmt> {
     parents: [Expr];
-  };*/
+  };
 };

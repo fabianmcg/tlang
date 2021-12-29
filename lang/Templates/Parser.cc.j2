@@ -1,4 +1,5 @@
 #include "Parser/Parser.hh"
+#include <stdexcept>
 #include <optional>
 #include <type_traits>
 
@@ -33,7 +34,7 @@ struct parse_result {
     return data;
   }
   template <typename V>
-  parse_result& operator=(parse_result<V> &&result) {
+  parse_result& operator=(parse_result<V, kind> &&result) {
     status = result.status;
     if (result.isSuccess())
       data = std::move(result.data);
@@ -61,6 +62,10 @@ struct parse_result {
   static parse_result fail() {
     return parse_result { result_status::Fail };
   }
+  void init() {
+    if (!data)
+      (*this) = make();
+  }
 };
 class ParserHelper {
 public:
@@ -86,7 +91,7 @@ public:
       syntaxError(parsing_function);
   }
   void syntaxError(const std::string& parsing_function) {
-    throw(std::runtime_exception("Error while parsing: " + parsing_function + ", got unexpected: " + peek().to_string()));
+    throw(std::runtime_error("Error while parsing: " + parsing_function + ", got unexpected: " + peek().to_string()));
   }
 };
 void Parser::ParseASTContext(ASTContext& ctx) {
