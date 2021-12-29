@@ -42,7 +42,6 @@ file Decl {
       reference<ModuleDecl> module
     ];
   };
-  /*
   node UsingDecl<Decl> {
     parents: [Decl];
     members: [
@@ -101,5 +100,5 @@ file Decl {
     children: [
       Expr value
     ];
-  };*/
+  };
 };

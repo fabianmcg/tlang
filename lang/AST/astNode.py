@@ -123,6 +123,26 @@ class Node(Struct):
         node.setBody(**kwargs)
         return node
 
+    def cxxSpecialConstructor(self, init=False):
+        src = "template <typename...Args> {}(".format(self.identifier)
+        i = ""
+        addComma = False
+        for parent in self.parents:
+            src += "," if addComma else ""
+            i += "," if addComma else ""
+            src += "{}&& __{}".format(parent, str(parent).lower())
+            i += "{}(std::move(__{}))".format(parent, str(parent).lower())
+            addComma = True
+        for member in self.members:
+            src += "," if addComma else ""
+            i += "," if addComma else ""
+            src += "{}&& _{}".format(member.T, str(member.identifier).lower())
+            i += "{}(std::move(_{}))".format(member.varName(), str(member.identifier).lower())
+            addComma = True
+        i += "," if addComma else ""
+        i += "__children(std::forward<Args>(args)...)"
+        return src + ", Args&&...args) {} {{}}".format(": " + i if len(i) else "")
+
     def cxxPostHeader(self):
         enum = ", ".join(map(lambda x: x.identifier + "Offset", self.children))
         src = "enum {{{} endOffset}};".format(enum + ("," if len(enum) else ""))

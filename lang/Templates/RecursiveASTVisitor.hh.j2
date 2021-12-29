@@ -9,13 +9,21 @@ enum class VisitorPattern {
   postOrder = 2,
   prePostOrder = 3,
 };
-template <typename Derived, VisitorPattern pattern = VisitorPattern::preOrder>
-class RecursiveASTVistor {
+inline VisitorPattern operator|(VisitorPattern x, VisitorPattern y) {
+  return static_cast<VisitorPattern>(static_cast<int>(x) | static_cast<int>(y));
+}
+inline VisitorPattern operator&(VisitorPattern x, VisitorPattern y) {
+  return static_cast<VisitorPattern>(static_cast<int>(x) & static_cast<int>(y));
+}
+inline bool isPreVisit(VisitorPattern x) { return (x & VisitorPattern::preOrder) == VisitorPattern::preOrder; }
+inline bool isPostVisit(VisitorPattern x) { return (x & VisitorPattern::postOrder) == VisitorPattern::postOrder; }
+template <typename Derived, VisitorPattern pattern = VisitorPattern::preOrder> class RecursiveASTVistor {
 public:
-  using stack_t = std::deque<ASTNode*>;
+  using node_t = std::pair<ASTNode *, bool>;
+  using stack_t = std::deque<node_t>;
 #define WALKUP_MACRO(PARENT, CLASS)                                                                                    \
   auto &derived = getDerived();                                                                                        \
-  if (!(derived.walkUpTo##PARENT(node->template getAsPtr<PARENT>()) && derived.visit##CLASS(node)))                    \
+  if (!(derived.walkUpTo##PARENT(node->template getAsPtr<PARENT>(), firstQ) && derived.visit##CLASS(node, firstQ)))    \
     return false;                                                                                                      \
   return true;
 #define MAKE_STACK                                                                                                     \
@@ -26,36 +34,36 @@ public:
   }
 #define TRAVERSE_MACRO(CLASS)                                                                                          \
   auto &derived = getDerived();                                                                                        \
-  if constexpr (VisitorPattern::preOrder == pattern)                                                                   \
-    if (!derived.walkUpTo##CLASS(node))                                                                                \
+  if (isPreVisit(pattern) || !firstQ)                                                                                  \
+    if (!derived.walkUpTo##CLASS(node, firstQ))                                                                        \
       return false;                                                                                                    \
   MAKE_STACK                                                                                                           \
-  addChildren<CLASS>(node, stack);                                                                                     \
-  if (!traverseStack(stack))                                                                                           \
+  if (isPostVisit(pattern) && firstQ)                                                                                  \
+    stack->push_front(node_t{node, false});                                                                            \
+  if (firstQ)                                                                                                          \
+    addChildren<CLASS>(node, stack);                                                                                   \
+  if (_stack && !traverseStack(stack))                                                                                \
     return false;                                                                                                      \
-  if constexpr (VisitorPattern::postOrder == pattern)                                                                  \
-    if (!derived.walkUpTo##CLASS(node))                                                                                \
-      return false;                                                                                                    \
   return true;
   Derived& getDerived() {
     return *static_cast<Derived*>(this);
   }
-  bool visitASTNode(ASTNode *node) {
+  bool visitASTNode(ASTNode *node, bool firstQ = true) {
     return true;
   }
-  bool visitASTNodeList(ASTNodeList *node) {
+  bool visitASTNodeList(ASTNodeList *node, bool firstQ = true) {
     return true;
   }
-  {{ VISIT }}bool walkUpToASTNode(ASTNode *node) {
-    return getDerived().visitASTNode(node);
+  {{ VISIT }}bool walkUpToASTNode(ASTNode *node, bool firstQ = true) {
+    return getDerived().visitASTNode(node, firstQ);
   }
-  bool walkUpToASTNodeList(ASTNodeList *node) {
+  bool walkUpToASTNodeList(ASTNodeList *node, bool firstQ = true) {
     WALKUP_MACRO(ASTNode, ASTNodeList)
   }
-  {{ WALK_UP }}bool traverseASTNode(ASTNode *node, stack_t *stack = nullptr) {
+  {{ WALK_UP }}bool traverseASTNode(ASTNode *node, stack_t *stack = nullptr, bool firstQ = true) {
     return getDerived().walkUpToASTNode(node);
   }
-  bool traverseASTNodeList(ASTNodeList *node, stack_t *stack = nullptr) {
+  bool traverseASTNodeList(ASTNodeList *node, stack_t *stack = nullptr, bool firstQ = true) {
     TRAVERSE_MACRO(ASTNodeList)
   }
   {{ TRAVERSE }}protected:
@@ -63,98 +71,21 @@ public:
     while (!stack->empty()) {
       auto top = stack->front();
       stack->pop_front();
-      if (!top)
+      if (!top.first)
         continue;
       if (!selectTraverse(top, stack))
         return false;
     }
     return true;
   }
-  bool selectTraverse(ASTNode *node, stack_t *stack) {
-    auto kind = node->classOf();
+  bool selectTraverse(node_t node, stack_t *stack) {
+    auto kind = node.first->classOf();
     auto &derived = getDerived();
     switch (kind) {
     case NodeClass::ASTNode:
-      return derived.traverseASTNode(node, stack);
+      return derived.traverseASTNode(node.first, stack, node.second);
     case NodeClass::ASTNodeList:
-      return derived.traverseASTNodeList(node->template getAsPtr<ASTNodeList>(), stack);
-    {{ TRAVERSE_CASES }}default:
-      break;
-    }
-    return true;
-  }
-#undef WALKUP_MACRO
-#undef TRAVERSE_MACRO
-#undef MAKE_STACK
-};
-
-template <typename Derived>
-class RecursiveASTVistor<Derived, VisitorPattern::prePostOrder> {
-public:
-  using stack_t = std::deque<ASTNode*>;
-#define WALKUP_MACRO(PARENT, CLASS)                                                                                    \
-  auto &derived = getDerived();                                                                                        \
-  if (!(derived.walkUpTo##PARENT(node->template getAsPtr<PARENT>(), isFirst) && derived.visit##CLASS(node, isFirst)))  \
-    return false;                                                                                                      \
-  return true;
-#define MAKE_STACK                                                                                                     \
-  std::unique_ptr<stack_t> _stack;                                                                                     \
-  if (!stack) {                                                                                                        \
-    _stack = std::make_unique<stack_t>();                                                                              \
-    stack = _stack.get();                                                                                              \
-  }
-#define TRAVERSE_MACRO(CLASS)                                                                                          \
-  auto &derived = getDerived();                                                                                        \
-  if (!derived.walkUpTo##CLASS(node, true))                                                                            \
-    return false;                                                                                                      \
-  MAKE_STACK                                                                                                           \
-  addChildren<CLASS>(node, stack);                                                                                     \
-  if (!traverseStack(stack))                                                                                           \
-    return false;                                                                                                      \
-  if (!derived.walkUpTo##CLASS(node, false))                                                                           \
-    return false;                                                                                                      \
-  return true;
-  Derived& getDerived() {
-    return *static_cast<Derived*>(this);
-  }
-  bool visitASTNode(ASTNode *node, bool isFirst) {
-    return true;
-  }
-  bool visitASTNodeList(ASTNodeList *node, bool isFirst) {
-    return true;
-  }
-  {{ VISIT_PP }}bool walkUpToASTNode(ASTNode *node, bool isFirst) {
-    return getDerived().visitASTNode(node, isFirst);
-  }
-  bool walkUpToASTNodeList(ASTNodeList *node, bool isFirst) {
-    WALKUP_MACRO(ASTNode, ASTNodeList)
-  }
-  {{ WALK_UP_PP }}bool traverseASTNode(ASTNode *node, stack_t *stack = nullptr) {
-    return getDerived().walkUpToASTNode(node, true) && getDerived().walkUpToASTNode(node, false);
-  }
-  bool traverseASTNodeList(ASTNodeList *node, stack_t *stack = nullptr) {
-    TRAVERSE_MACRO(ASTNodeList)
-  }
-  {{ TRAVERSE }}protected:
-  bool traverseStack(stack_t *stack) {
-    while (!stack->empty()) {
-      auto top = stack->front();
-      stack->pop_front();
-      if (!top)
-        continue;
-      if (!selectTraverse(top, stack))
-        return false;
-    }
-    return true;
-  }
-  bool selectTraverse(ASTNode *node, stack_t *stack) {
-    auto kind = node->classOf();
-    auto &derived = getDerived();
-    switch (kind) {
-    case NodeClass::ASTNode:
-      return derived.traverseASTNode(node, stack);
-    case NodeClass::ASTNodeList:
-      return derived.traverseASTNodeList(node->template getAsPtr<ASTNodeList>(), stack);
+      return derived.traverseASTNodeList(node.first->template getAsPtr<ASTNodeList>(), stack, node.second);
     {{ TRAVERSE_CASES }}default:
       break;
     }

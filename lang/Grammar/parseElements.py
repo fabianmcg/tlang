@@ -175,7 +175,7 @@ class ProductionAttributes:
 
     def parseStr(self):
         text = " @< {} >@".format(self.returnType) if len(self.returnType) else ""
-        text += " static" if self.isDynamic else ""
+        text += "" if self.isDynamic else " static"
         if self.kind != ProductionKind.Regular:
             text += " {}".format(self.kind.name)
         return text

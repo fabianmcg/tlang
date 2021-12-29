@@ -225,18 +225,35 @@ class Struct:
     def cxxPostHeader(self):
         return ""
 
+    def cxxSpecialConstructor(self, init=False):
+        src = "{}(".format(self.identifier)
+        i = ""
+        addComma = False
+        for parent in self.parents:
+            src += "," if addComma else ""
+            i += "," if addComma else ""
+            src += "{}&& _{}".format(parent, str(parent).lower())
+            i += "{}(std::move(_{}))".format(parent, str(parent).lower())
+            addComma = True
+        for member in self.members:
+            src += "," if addComma else ""
+            i += "," if addComma else ""
+            src += "{}&& _{}".format(member.T, str(member.identifier).lower())
+            i += "{}(std::move(_{}))".format(member.varName(), str(member.identifier).lower())
+            addComma = True
+        return src + ") {} {{}}".format(": " + i if len(i) else "")
+
     def cxxConstructorsAndOperators(self):
         if self.parents.notEmpty():
-            src = "{0:}() = default;\nvirtual ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = default;".format(
+            src = "{0:}() = default;\nvirtual ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(
                 self.identifier
             )
         else:
-            src = (
-                "{0:}() = default;\n ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = default;".format(
-                    self.identifier
-                )
+            src = "{0:}() = default;\n ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(
+                self.identifier
             )
-        src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = default;\n".format(self.identifier)
+        src += self.cxxSpecialConstructor()
+        src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = delete;\n".format(self.identifier)
         return src
 
     def cxxPreMembers(self):

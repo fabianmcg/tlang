@@ -75,6 +75,7 @@ def makeLexer():
     db.addToken(Keyword, "Alignment")
     db.addToken(Keyword, "Auto")
     db.addToken(Keyword, "Namespace")
+    db.addToken(Keyword, "This")
     # ******************************************************************************
     #   Memory Kinds
     # ******************************************************************************
