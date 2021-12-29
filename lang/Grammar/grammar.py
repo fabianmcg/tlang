@@ -6,19 +6,28 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from numpy.core.fromnumeric import prod
-from Grammar.parseElements import EmptyString, NonTerminal, Production, Rule, Terminal
-from Lexer.lexer import Lexer
+from Grammar.parseElements import (
+    EmptyString,
+    Instruction,
+    NonTerminal,
+    Production,
+    ProductionAttributes,
+    ProductionKind,
+    Rule,
+    Terminal,
+)
 from Utility.util import getShortRepr
+from copy import deepcopy
 
 
 class Grammar:
-    def __init__(self, lexer: Lexer):
-        self.tokens = {tok.parseRepr(): tok for tok in lexer.tokens.values()}
+    def __init__(self, lexer=None, tokens=None):
+        self.tokens = {tok.parseRepr(): tok for tok in lexer.tokens.values()} if lexer else tokens
         self.terminals = {}
         self.nonTerminals = {}
         self.productions = {}
         self.productionsAsRules = {}
+        self.specialProductions = {}
 
     def __str__(self) -> str:
         return "{}".format("\n".join(list(map(str, self.productions.values()))))
@@ -37,7 +46,6 @@ class Grammar:
 
     def setProductions(self, productions: list):
         self.productions = {production.identifier: production for production in productions}
-        self.consolidate()
 
     def shortRepr(self) -> str:
         return "{}".format("\n".join(list(map(getShortRepr, self.productions.values()))))
@@ -100,6 +108,8 @@ class Grammar:
                         raise (Exception("Invalid node"))
                     symbol.occurrencesSet.append((production.identifier, ruleId, nodeId))
         self.productionsAsRules = [rule for production in productions.values() for rule in production]
+
+    def analysis(self):
         self.derivesEmpty()
         self.computeFirstSet()
         self.computeFollow()
@@ -202,7 +212,7 @@ class Grammar:
             disjoint = [True] * len(production)
             isLL1 = [True] * len(production)
             for i, rule in enumerate(production):
-                for o, s in enumerate(firstSets[i + 1: ]):
+                for o, s in enumerate(firstSets[i + 1 :]):
                     if len(s.intersection(rule.firstSet)) != 0:
                         disjoint[i] = False
                         disjoint[o] = False
@@ -217,3 +227,39 @@ class Grammar:
                 rule.isLL1 = isLL1[i] and disjoint[i]
             production.isPredictable = all(disjoint)
             production.isLL1 = all(isLL1 + disjoint)
+
+
+def grammarForAnalysis(G: Grammar) -> Grammar:
+    grammar = Grammar(tokens=G.tokens)
+    specialProductions = grammar.specialProductions
+    grammar.productions = {
+        k: deepcopy(production)
+        for k, production in G.productions.items()
+        if production.attributes.kind == ProductionKind.Regular
+    }
+    productions = grammar.productions
+    for k, production in G.productions.items():
+        attributes = production.attributes
+        if attributes.kind != ProductionKind.Regular:
+            if k not in specialProductions:
+                specialProductions[k] = []
+            if attributes.kind == ProductionKind.ZeroOrMore:
+                symbol = deepcopy(production[0][0])
+                rules = [Rule([symbol, NonTerminal(k)], Instruction()), Rule([], Instruction())]
+                productions[k] = Production(k, ProductionAttributes(attributes.returnType, attributes.isDynamic), rules)
+                specialProductions[k].append(k)
+            elif attributes.kind == ProductionKind.OneOrMore:
+                identifier = "OOM_{}".format(k)
+                symbol = deepcopy(production[0][0])
+                rules = [Rule([symbol, NonTerminal(identifier)], Instruction())]
+                productions[k] = Production(k, ProductionAttributes(attributes.returnType, attributes.isDynamic), rules)
+                rules = [Rule([NonTerminal(k)], Instruction()), Rule([], Instruction())]
+                productions[identifier] = Production(identifier, ProductionAttributes(), rules)
+                specialProductions[k].append(k)
+                specialProductions[k].append(identifier)
+            elif attributes.kind == ProductionKind.Optional:
+                symbol = deepcopy(production[0][0])
+                rules = [Rule([symbol], Instruction()), Rule([], Instruction())]
+                productions[k] = Production(k, ProductionAttributes(attributes.returnType, attributes.isDynamic), rules)
+                specialProductions[k].append(k)
+    return grammar

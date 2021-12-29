@@ -1,18 +1,92 @@
 #include "Parser/Parser.hh"
+#include <optional>
+#include <type_traits>
 
 namespace _pnp_ {
+enum class return_kind {
+  Dynamic,
+  Static
+};
+enum class result_status {
+  Success,
+  Fail,
+  Empty
+};
+template <typename T, return_kind kind>
+struct parse_result {
+  using data_type = std::conditional_t<kind == return_kind::Dynamic, std::unique_ptr<T>, std::optional<T>>;
+  data_type data { };
+  result_status status { };
+  parse_result(result_status status) :
+      status(status) {
+  }
+  parse_result(data_type &&data, result_status status) :
+      data(std::move(data)), status(status) {
+  }
+  parse_result() = default;
+  ~parse_result() = default;
+  parse_result(parse_result&&) = default;
+  parse_result(const parse_result&) = delete;
+  parse_result& operator=(parse_result&&) = default;
+  parse_result& operator=(const parse_result&) = delete;
+  data_type& operator*() {
+    return data;
+  }
+  template <typename V>
+  parse_result& operator=(parse_result<V> &&result) {
+    status = result.status;
+    if (result.isSuccess())
+      data = std::move(result.data);
+    return *this;
+  }
+  bool isSuccess() const {
+    return status == result_status::Success;
+  }
+  bool isFail() const {
+    return status == result_status::Fail;
+  }
+  bool isEmpty() const {
+    return status == result_status::Empty;
+  }
+  template <typename ...Args>
+  static parse_result make(Args &&...args) {
+    if constexpr (kind == return_kind::Dynamic)
+      return parse_result(std::make_unique<T>(std::forward<Args>(args)...), result_status::Success );
+    else
+      return parse_result(std::make_optional<T>(std::forward<Args>(args)...), result_status::Success );
+  }
+  static parse_result empty() {
+    return parse_result { result_status::Empty };
+  }
+  static parse_result fail() {
+    return parse_result { result_status::Fail };
+  }
+};
 class ParserHelper {
 public:
-  ParserHelper(Parser &parser) : parser(parser), tok(parser.tok) {} {{ PARSE_METHODS }}
-private:
+  ParserHelper(Parser &parser) : parser(parser) {} {{ PARSE_METHODS }}private:
   using context_t = typename Parser::context_t;
   Parser &parser;
-  token &tok;
-  token peekToken() { return parser.peekToken(); }
-  void consumeToken() { return parser.consumeToken(); }
+  inline const token& peek() const { return parser.peekToken(); }
+  inline auto consume() { return parser.consumeToken(); }
   context_t getContext() { return parser.getContext(); }
   template <typename T> void restoreContext(T &&context) {
     parser.restoreContext(std::forward<T>(context));
+  }
+  inline token match(tok_k kind, const std::string& parsing_function) {
+    auto tok = peek();
+    if (tok.isNot(kind))
+      syntaxError(parsing_function);
+    consume();
+    return tok;
+  }
+  template <typename T>
+  inline void check(const T& result, const std::string& non_terminal, const std::string& parsing_function) {
+    if (result.isFail())
+      syntaxError(parsing_function);
+  }
+  void syntaxError(const std::string& parsing_function) {
+    throw(std::runtime_exception("Error while parsing: " + parsing_function + ", got unexpected: " + peek().to_string()));
   }
 };
 void Parser::ParseASTContext(ASTContext& ctx) {

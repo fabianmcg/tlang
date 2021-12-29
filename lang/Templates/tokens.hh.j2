@@ -10,7 +10,7 @@ namespace __lang_np__ {
 namespace __lex_np__ {
 enum class token_kind {
   UNKW = -1,
-  NONE = 0,
+  EOF = 0,
   FIRST = 1024,
 {% for key, value in enum.items() -%}
 {{ "  {: <30}//  {}".format(key + ',', value) }}
@@ -20,8 +20,8 @@ inline std::string to_string(tok_k kind) {
   switch (kind) {
   case tok_k::UNKW:
     return "unknown";
-  case tok_k::NONE:
-    return "none";
+  case tok_k::EOF:
+    return "eof";
 {% for key, value in switch.items() -%}
 {{ "  case tok_k::{}:".format(key) }}
     return "{{ value }}";

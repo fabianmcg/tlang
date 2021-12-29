@@ -6,12 +6,13 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from numpy.core.fromnumeric import prod
+from enum import Enum
 from Utility.util import formatStr, getShortRepr, indentTxt
+from copy import deepcopy
 
 
 class Instruction:
-    def __init__(self, instruction: str, lDelimiter="{", rDelimiter="}") -> None:
+    def __init__(self, instruction: str = "", lDelimiter=":{", rDelimiter="}:") -> None:
         if isinstance(instruction, str):
             instruction = instruction.strip()
         self.instruction = instruction
@@ -37,20 +38,9 @@ class Instruction:
         return self.instruction
 
 
-class NodeInstruction(Instruction):
-    def __init__(self, instruction) -> None:
-        super().__init__(instruction, "@{", "}@")
-
-
-class RuleInstruction(Instruction):
-    def __init__(self, instruction) -> None:
-        super().__init__(instruction, ":{", "}:")
-
-
 class AbstractNode:
-    def __init__(self, identifier, instruction: Instruction) -> None:
+    def __init__(self, identifier) -> None:
         self.identifier = identifier
-        self.instruction = instruction
         self.firstSet = set([])
         self.occurrencesSet = []
 
@@ -69,44 +59,38 @@ class AbstractNode:
             or (isinstance(self, NonTerminal) and isinstance(other, NonTerminal))
         )
 
-    def hasInstruction(self):
-        return self.instruction.notEmpty()
-
     def parseStr(self):
-        instruction = "{}".format(self.instruction) if self.hasInstruction() else ""
-        if len(instruction):
-            instruction = " " + instruction
-        return "{}{}".format(self.identifier, instruction)
+        return "{}".format(self.identifier)
 
     def shortRepr(self):
         return "{}".format(self.identifier)
 
 
 class Terminal(AbstractNode):
-    def __init__(self, identifier, instruction: Instruction) -> None:
-        super().__init__(identifier, instruction=instruction)
+    def __init__(self, identifier) -> None:
+        super().__init__(identifier)
         self.firstSet.add(identifier)
 
     def clone(self):
-        return Terminal(self.identifier, Instruction(""))
+        return Terminal(self.identifier)
 
 
 class NonTerminal(AbstractNode):
-    def __init__(self, identifier, instruction: Instruction) -> None:
-        super().__init__(identifier, instruction=instruction)
+    def __init__(self, identifier) -> None:
+        super().__init__(identifier)
         self.followSet = set([])
         self.derivesEmpty = False
 
     def clone(self):
-        return NonTerminal(self.identifier, Instruction(""))
+        return NonTerminal(self.identifier)
 
     def info(self) -> str:
         return "{}\t{}".format(self.firstSet, self.followSet)
 
 
 class EmptyString(NonTerminal):
-    def __init__(self, instruction=None) -> None:
-        super().__init__("E", instruction or Instruction(""))
+    def __init__(self) -> None:
+        super().__init__("E")
 
 
 class Rule:
@@ -135,6 +119,16 @@ class Rule:
     def __getitem__(self, item):
         return self.rule[item]
 
+    def __deepcopy__(self, memo):
+        cpy = Rule(deepcopy(self.rule), deepcopy(self.instruction))
+        cpy.productionId = self.productionId
+        cpy.firstSet = deepcopy(self.firstSet)
+        cpy.countEmpty = self.countEmpty
+        cpy.derivesEmpty = self.derivesEmpty
+        cpy.isPredictable = self.isPredictable
+        cpy.isLL1 = self.isLL1
+        return cpy
+
     def isEmpty(self):
         return len(self.rule) == 0
 
@@ -152,14 +146,23 @@ class Rule:
         return "{}".format(" ".join(map(getShortRepr, self.rule)))
 
 
+class ProductionKind(Enum):
+    Regular = 0
+    ZeroOrMore = 1
+    OneOrMore = 2
+    Optional = 3
+
+
 class ProductionAttributes:
-    def __init__(self, returnType: str, isNode: bool, instruction: Instruction) -> None:
+    def __init__(
+        self, returnType: str = "", isDynamic: bool = False, kind: ProductionKind = ProductionKind.Regular
+    ) -> None:
         returnType = returnType.strip()
         if len(returnType):
             returnType = formatStr(returnType)
         self.returnType = returnType
-        self.isNode = isNode
-        self.instruction = instruction
+        self.isDynamic = isDynamic
+        self.kind = kind
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -167,16 +170,14 @@ class ProductionAttributes:
     def __repr__(self) -> str:
         return str(self)
 
-    def hasInstruction(self):
-        return self.instruction.notEmpty()
-
     def hasReturnType(self):
         return len(self.returnType) > 0
 
     def parseStr(self):
         text = " @< {} >@".format(self.returnType) if len(self.returnType) else ""
-        text += " node" if self.isNode else ""
-        text += " {}".format(self.instruction) if self.instruction.notEmpty() else ""
+        text += " static" if self.isDynamic else ""
+        if self.kind != ProductionKind.Regular:
+            text += " {}".format(self.kind.name)
         return text
 
     def shortRepr(self):
@@ -188,7 +189,7 @@ class Production:
         self.identifier = identifier
         self.attributes = attributes
         self.rules = rules
-        self.nonTerminal = NonTerminal(self.identifier, Instruction(""))
+        self.nonTerminal = NonTerminal(self.identifier)
         for rule in self.rules:
             rule.productionId = self.identifier
         self.isPredictable = False
@@ -215,8 +216,29 @@ class Production:
     def __hash__(self) -> int:
         return hash(self.identifier)
 
+    def __deepcopy__(self, memo):
+        cpy = Production(self.identifier, deepcopy(self.attributes), [deepcopy(rule) for rule in self.rules])
+        cpy.nonTerminal = deepcopy(self.nonTerminal)
+        cpy.isPredictable = self.isPredictable
+        cpy.isLL1 = self.isLL1
+        return cpy
+
+    def returnType(self):
+        return self.attributes.returnType if self.attributes.hasReturnType() else self.identifier
+
+    def isDynamic(self):
+        return self.attributes.isDynamic
+
     def isTop(self):
         return "__top__" == self.identifier
+
+    def isSimple(self):
+        return (
+            ProductionKind.Regular == self.attributes.kind
+            and len(self.rules) == 1
+            and len(self.rules[0]) == 1
+            and isinstance(self.rules[0][0], NonTerminal)
+        )
 
     def hasEmpty(self):
         return any([r.isEmpty() for r in self.rules])

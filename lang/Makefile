@@ -8,4 +8,4 @@ frmt:
 
 .PHONY: clean
 clean:
-	rm -v *.hh *.yy
+	rm -v *.hh *.yy *.dot *.graphml
