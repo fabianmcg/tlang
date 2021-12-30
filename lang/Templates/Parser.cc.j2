@@ -9,15 +9,15 @@ enum class return_kind {
   Static
 };
 enum class result_status {
+  Empty,
   Success,
   Fail,
-  Empty
 };
 template <typename T, return_kind kind>
 struct parse_result {
   using data_type = std::conditional_t<kind == return_kind::Dynamic, std::unique_ptr<T>, std::optional<T>>;
   data_type data { };
-  result_status status { };
+  result_status status { result_status::Empty };
   parse_result(result_status status) :
       status(status) {
   }
@@ -40,6 +40,9 @@ struct parse_result {
       data = std::move(result.data);
     return *this;
   }
+  operator bool () const {
+    return status == result_status::Success && data;
+  } 
   bool isSuccess() const {
     return status == result_status::Success;
   }
@@ -55,6 +58,13 @@ struct parse_result {
       return parse_result(std::make_unique<T>(std::forward<Args>(args)...), result_status::Success );
     else
       return parse_result(std::make_optional<T>(std::forward<Args>(args)...), result_status::Success );
+  }
+  template <typename V>
+  static parse_result create(V && value) {
+    if constexpr (kind == return_kind::Dynamic)
+      return parse_result(std::make_unique<V>(std::forward<V>(value)), result_status::Success );
+    else
+      return parse_result(std::make_optional<T>(std::forward<V>(value)), result_status::Success );
   }
   static parse_result empty() {
     return parse_result { result_status::Empty };

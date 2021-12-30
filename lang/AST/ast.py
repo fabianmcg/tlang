@@ -97,7 +97,7 @@ class ASTDatabase:
     def generateMain(self):
         enum = ""
         fwd = "\n".join(map(lambda x: "class {};".format(x), list(self.nodes.keys()) + list(self.structs.keys())))
-        to_string = ""
+        to_string = 'case NodeClass::ASTNode:\nreturn "ASTNode";case NodeClass::ASTNodeList:\nreturn "ASTNodeList";'
         is_methods = ""
         for nodeClass, Class in self.nodesByClass.items():
             enum += "First{},\n".format(nodeClass)

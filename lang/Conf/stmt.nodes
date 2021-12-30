@@ -65,7 +65,7 @@ file Stmt {
   node RangeStmt<Stmt> {
     parents: [Stmt];
     children: [
-      VarDecl decl,
+      VariableDecl decl,
       DeclRefExpr variable,
       RangeExpr range
     ];
