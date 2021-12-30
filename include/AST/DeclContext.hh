@@ -8,7 +8,10 @@
 #include "ASTCommon.hh"
 
 namespace _astnp_ {
-template <typename> struct reference{};
+template <typename T>
+struct reference {
+  T *data {};
+};
 struct DeclContext {
   std::list<std::unique_ptr<Decl>>& operator*() {
     return decls;

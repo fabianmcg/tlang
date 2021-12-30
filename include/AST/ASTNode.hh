@@ -32,6 +32,9 @@ public:
   bool isNot(node_kind_t k) const {
     return classOf() != k;
   }
+  virtual bool isClass(node_kind_t k) const {
+    return kind == k;
+  }
   using children_t = children_container<>;
   ASTNode() = default;
   ASTNode(const SourceRange &range) :

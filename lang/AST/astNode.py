@@ -152,7 +152,12 @@ class Node(Struct):
         src += "using node_kind_t = NodeClass;\nstatic constexpr node_kind_t kind = node_kind_t::{};\n".format(
             self.identifier
         )
-        return src + "virtual node_kind_t classOf() const { return kind; }\n"
+        src += "virtual node_kind_t classOf() const { return kind; }\n"
+        # tmp = ""
+        # for parent in self.parents:
+        #     tmp += " || {}::isClass(k)".format(parent)
+        # src += "virtual bool isClass(node_kind_t k) const {{ return kind == k{}; }}\n".format(tmp)
+        return src
 
     def cxxPreMembers(self):
         return generateSectionComment("Children opetors") + (

@@ -8,8 +8,12 @@ public:
   Visitor() {
   }
   bool visitASTNode(_astnp_::ASTNode *node, bool isFirst) {
+    if (node->is(tlang::NodeClass::ASTNodeList))
+      return true;
     if (isFirst) {
       std::cerr << std::string(ident, '-') + _astnp_::to_string(node->classOf());
+      if (!dynamic_cast<tlang::NamedDecl*>(node) && node->isNot(tlang::NodeClass::QualType))
+        std::cerr << std::endl;
       ident++;
     } else {
       ident--;
@@ -19,6 +23,11 @@ public:
   bool visitNamedDecl(_astnp_::NamedDecl *node, bool isFirst) {
     if (isFirst)
       std::cerr << ": " << node->getIdentifier() << std::endl;
+    return true;
+  }
+  bool visitQualType(_astnp_::QualType *node, bool isFirst) {
+    if (isFirst)
+      std::cerr << ": " << node->getQualifiers() << std::endl;
     return true;
   }
   size_t ident { };

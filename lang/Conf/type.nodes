@@ -11,6 +11,7 @@ file Type {
       Type type
     ];
     enum cvr_qualifiers {
+      None = 0,
       Reference = 1,
       Const = 2
     };
@@ -21,19 +22,48 @@ file Type {
   node AutoType<Type> {
     parents: [DeducedType];
   };
-  /*node BuiltinType<Type> {
+  node BuiltinType<Type> {
     parents: [Type];
   };
+  node VoidType<Type> {
+    parents: [BuiltinType];
+  };
+  node BoolType<Type> {
+    parents: [BuiltinType];
+  };
+  node StringType<Type> {
+    parents: [BuiltinType];
+  };
   node IntType<Type> {
+    parents: [BuiltinType];
+    members: [
+      numeric_precision precision,
+      numeric_sign sign
+    ];
+    enum numeric_precision {
+      Default,
+      P_8,
+      P_16,
+      P_32,
+      P_64
+    };
+    enum numeric_sign {
+      Signed,
+      Unsigned
+    };
+  };
+  node FloatType<Type> {
     parents: [BuiltinType];
     members: [
       numeric_precision precision
     ];
     enum numeric_precision {
+      Default,
       P_8,
       P_16,
       P_32,
-      P_64
+      P_64,
+      P_128
     };
   };
   node PtrType<Type> {
@@ -72,5 +102,5 @@ file Type {
   };
   node TypedefType<Type> {
     parents: [DefinedType];
-  };*/
+  };
 };

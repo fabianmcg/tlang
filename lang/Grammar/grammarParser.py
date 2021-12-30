@@ -30,7 +30,7 @@ class GrammarParser:
         if rule.isEmpty() and production.attributes.kind != ProductionKind.Regular:
             return "return _r;"
         if rule.isEmpty():
-            return "return return_t::empty();"
+            return "return_t _r;" + production[ruleId].instruction.cxx() + "return _r;"
         src = ""
         for i, symbol in enumerate(production[ruleId]):
             if isinstance(symbol, Terminal):
