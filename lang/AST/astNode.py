@@ -123,11 +123,13 @@ class Node(Struct):
         node.setBody(**kwargs)
         return node
 
-    def cxxSpecialConstructor(self, init=False):
+    def cxxNodeConstructor(self, const: bool, skipASTNode=True):
         src = "template <typename...Args> {}(".format(self.identifier)
         i = ""
         addComma = False
         for parent in self.parents:
+            if skipASTNode and parent == "ASTNode":
+                continue
             src += "," if addComma else ""
             i += "," if addComma else ""
             src += "{}&& __{}".format(parent, str(parent).lower())
@@ -136,12 +138,23 @@ class Node(Struct):
         for member in self.members:
             src += "," if addComma else ""
             i += "," if addComma else ""
-            src += "{}&& _{}".format(member.T, str(member.identifier).lower())
-            i += "{}(std::move(_{}))".format(member.varName(), str(member.identifier).lower())
+            if const:
+                src += "const {}& _{}".format(member.T, str(member.identifier).lower())
+                i += "{}(_{})".format(member.varName(), str(member.identifier).lower())
+            else:
+                src += "{}&& _{}".format(member.T, str(member.identifier).lower())
+                i += "{}(std::move(_{}))".format(member.varName(), str(member.identifier).lower())
             addComma = True
         i += "," if addComma else ""
         i += "__children(std::forward<Args>(args)...)"
-        return src + ", Args&&...args) {} {{}}".format(": " + i if len(i) else "")
+        src = src + "{}Args&&...args) {} {{}}".format(", " if addComma else "", ": " + i if len(i) else "")
+        return src
+
+    def cxxSpecialConstructor(self, init=False):
+        tmp = ""
+        if len(self.members) or "ASTNode" in self.parents:
+            tmp = self.cxxNodeConstructor(True, False)
+        return self.cxxNodeConstructor(False, True) + tmp
 
     def cxxPostHeader(self):
         enum = ", ".join(map(lambda x: x.identifier + "Offset", self.children))
@@ -153,10 +166,6 @@ class Node(Struct):
             self.identifier
         )
         src += "virtual node_kind_t classOf() const { return kind; }\n"
-        # tmp = ""
-        # for parent in self.parents:
-        #     tmp += " || {}::isClass(k)".format(parent)
-        # src += "virtual bool isClass(node_kind_t k) const {{ return kind == k{}; }}\n".format(tmp)
         return src
 
     def cxxPreMembers(self):
@@ -167,9 +176,18 @@ class Node(Struct):
             "const children_t& operator*() const { return __children; }\n"
         )
 
+    def cxxClone(self):
+        parents = ", ".join(["{}::clone()".format(parent) for parent in self.parents]) + ", "
+        members = ", ".join(map(lambda x: x.varName(), self.members))
+        members += ", " if len(members) else ""
+        src = "return {}({}{}__children.clone());".format(self.identifier, parents, members)
+        tmp = "virtual std::unique_ptr<ASTNode> clonePtr() const {{ return std::make_unique<{}>(clone()); }}".format(self.identifier)
+        return "{} clone() const {{\n{}}}\n{}\n".format(self.identifier, src, tmp)
+
     def cxxPostMembers(self):
         src = self.addComment("Children accessors", "\n".join(map(lambda x: x.getCxx(), self.children)))
         src += self.addComment("Has methods", "\n".join(map(lambda x: x.hasCxx(), self.children)))
+        src += self.addComment("Clone", self.cxxClone())
         return src
 
     def cxxProtectedSectionBody(self):

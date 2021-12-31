@@ -78,7 +78,20 @@ public:
   ASTNode* rend() const {
     return nullptr;
   }
+  children_container_helper clone() const {
+    return children_container_helper { };
+  }
 };
+template <typename T>
+struct is_unique_ptr {
+  static constexpr bool value = false;
+};
+template <typename T>
+struct is_unique_ptr<std::unique_ptr<T>> {
+  static constexpr bool value = true;
+};
+template <typename T>
+inline constexpr bool is_unique_ptr_v = is_unique_ptr<T>::value;
 template <typename ASTNode, typename ASTNodeList, typename ...T>
 class children_container_helper {
 public:
@@ -96,13 +109,18 @@ public:
   template <int offset, access_kind kind>
   using return_t = return_helper_t<kind, children_t<offset>>;
   template <typename V>
-  static std::unique_ptr<ASTNode> to_node(std::unique_ptr<V>&& ptr) {
+  static std::unique_ptr<ASTNode> to_node(std::unique_ptr<V> &&ptr) {
     return std::move(ptr);
+  }
+  template <typename V, std::enable_if_t<!is_unique_ptr_v<V>, int> = 0>
+  static std::unique_ptr<ASTNode> to_node(V &&value) {
+    return std::make_unique<V>(std::forward<V>(value));
   }
   template <typename ...Args>
   children_container_helper(Args &&...args) :
-      data({to_node(std::forward<Args>(args))...}) {
+      data( { to_node(std::forward<Args>(args))... }) {
   }
+  children_container_helper(children_container_helper &&) = default;
   auto begin() {
     return data.begin();
   }
@@ -192,6 +210,13 @@ public:
   template <int offset>
   bool has() const {
     return data[offset].get();
+  }
+  children_container_helper clone() const {
+    auto tmp = children_container_helper { };
+    for (size_t i = 0 ; i < size ;++i)
+      if (data[i])
+        tmp.data[i] = data[i]->clonePtr();
+    return tmp;
   }
 private:
   std::array<std::unique_ptr<ASTNode>, size> data;

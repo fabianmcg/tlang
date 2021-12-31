@@ -22,6 +22,9 @@ struct DeclContext {
   void add(std::unique_ptr<Decl> &&decl) {
     decls.push_back(std::forward<std::unique_ptr<Decl>>(decl));
   }
+  DeclContext clone() const {
+    return DeclContext();
+  }
   std::list<std::unique_ptr<Decl>> decls;
 };
 }

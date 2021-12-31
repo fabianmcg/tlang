@@ -41,6 +41,9 @@ file Decl {
   };
   node TypeDecl<Decl> {
     parents: [NamedDecl];
+    .{
+      TypeDecl(const Identifier& identifier): NamedDecl(Decl(), identifier) {}
+    }.
   };
   node ContextDecl<Decl> {
     parents: [TypeDecl, DeclContext];
@@ -59,6 +62,9 @@ file Decl {
   };
   node StructDecl<Decl> {
     parents: [TagDecl];
+    .{
+      StructDecl(const Identifier& identifier, DeclContext&& context): TagDecl(TypeDecl(identifier), std::move(context)) {}
+    }.
   };
   node EnumDecl<Decl> {
     parents: [TagDecl];
