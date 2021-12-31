@@ -100,12 +100,13 @@ file Expr {
     #include "AST/Stmt.hh"
     #include "AST/Operators.hh"
   }.
-  node Expr<Stmt> {
+  node Expr<Stmt, noDefault> {
     parents: [ValueStmt];
     children: [
       QualType type
     ];
     .{
+      Expr(): Expr(UnresolvedType()) {}
       template <typename T, std::enable_if_t<!std::is_same_v<T, QualType>, int> = 0>
       Expr(T&& type) : __children(QualType(QualType::None, std::forward<T>(type))) {}
       Expr(QualType&& type) : __children(std::forward<QualType>(type)) {}
@@ -175,6 +176,10 @@ file Expr {
       Expr lhs,
       Expr rhs
     ];
+    .{
+      BinaryOperation(OperatorKind op, std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs): 
+        Expr(), __operator(op), __children(std::forward<std::unique_ptr<Expr>>(lhs), std::forward<std::unique_ptr<Expr>>(rhs)) {}
+    }.
   };
   node DeclRefExpr<Stmt> {
     parents: [Expr];

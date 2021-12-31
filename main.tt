@@ -3,7 +3,7 @@ function int saxpy() {
 
 function void saxpy2(int s, const float*& x, Class k, bool l) {
   if ( 0 )
-  	if ( (2) ) {} else {} else {}
+  	if ( (2 + 2) ) {} else {} else {}
 }
 
 struct Hi {

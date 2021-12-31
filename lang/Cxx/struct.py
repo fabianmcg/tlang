@@ -149,7 +149,7 @@ class EnumList(CxxList):
 
 
 class Struct:
-    def __init__(self, identifier, isDefinition=False) -> None:
+    def __init__(self, identifier, isDefinition=False, noDefault=False) -> None:
         self.identifier = identifier
         self.parents = ParentList()
         self.members = MemberList()
@@ -157,6 +157,7 @@ class Struct:
         self.headerSection = HeaderSection("")
         self.epilogueSection = CodeSection("")
         self.isDefinition = isDefinition
+        self.noDefault = noDefault
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -244,14 +245,12 @@ class Struct:
         return src + ") {} {{}}".format(": " + i if len(i) else "")
 
     def cxxConstructorsAndOperators(self):
+        src = "" if self.noDefault else "{0:}() = default;\n".format(self.identifier)
         if self.parents.notEmpty():
-            src = "{0:}() = default;\nvirtual ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(
-                self.identifier
-            )
+            src += "virtual ~{0:}() = default;".format(self.identifier)
         else:
-            src = "{0:}() = default;\n ~{0:}() = default;\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(
-                self.identifier
-            )
+            src += "\n ~{0:}() = default;".format(self.identifier)
+        src += "\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(self.identifier)
         src += self.cxxSpecialConstructor()
         src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = delete;\n".format(self.identifier)
         return src
