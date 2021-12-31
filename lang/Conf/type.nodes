@@ -1,5 +1,8 @@
 file Type {
-    node Type<Type> {
+  node Type<Type> {
+    parents: [ASTNode];
+  };
+  node UnresolvedType<Type> {
     parents: [ASTNode];
   };
   node QualType<Type> {

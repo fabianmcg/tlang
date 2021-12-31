@@ -138,16 +138,16 @@ class GrammarParser:
         add(".")
         add("::")
         tokToOperator = "\n".join(
-            ["case tok_k::{}: return Operator::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
+            ["case tok_k::{}: return OperatorKind::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
         )
-        tokToOperator = "inline Operator tokToOperator(tok_k kind) {{ switch(kind) {{{}default: return Operator::unknown;}} }}".format(
+        tokToOperator = "inline OperatorKind tokToOperator(tok_k kind) {{ switch(kind) {{{}default: return OperatorKind::unknown;}} }}".format(
             tokToOperator
         )
         tokPrecedence = "\n".join(
-            ["case Operator::{}: return {};".format(tok[0].name, tok[1]) for tok in precedenceMap]
+            ["case OperatorKind::{}: return {};".format(tok[0].name, tok[1]) for tok in precedenceMap]
         )
         tokPrecedence = (
-            "inline int operatorPrecedence(Operator kind) {{ switch(kind) {{{}default: return -1;}} }}".format(
+            "inline int operatorPrecedence(OperatorKind kind) {{ switch(kind) {{{}default: return -1;}} }}".format(
                 tokPrecedence
             )
         )

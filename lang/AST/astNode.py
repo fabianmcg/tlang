@@ -93,8 +93,8 @@ class ChildrenList(CxxList):
 
 
 class Node(Struct):
-    def __init__(self, identifier, classOf=None) -> None:
-        super().__init__(identifier, True)
+    def __init__(self, identifier, classOf=None, noDefault=False) -> None:
+        super().__init__(identifier, True, noDefault)
         self.classOf = classOf
         self.children = ChildrenList()
 
@@ -118,8 +118,10 @@ class Node(Struct):
         Struct.setBody(self, **kwargs)
 
     @staticmethod
-    def createFromParse(identifier, classOf=None, **kwargs):
-        node = Node(identifier=identifier, classOf=classOf)
+    def createFromParse(identifier, header=None, **kwargs):
+        classOf = header[0] if header[0] else None
+        noDefault = header[1] == "noDefault"
+        node = Node(identifier=identifier, classOf=classOf, noDefault=noDefault)
         node.setBody(**kwargs)
         return node
 

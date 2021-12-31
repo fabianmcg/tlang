@@ -141,7 +141,8 @@ class parseNode:
     @staticmethod
     def createHeader():
         langle, rangle = suppressChars("<>")
-        return parseGroup(langle + P.identifier + rangle)
+        header = langle + P.identifier + parseOptional(P.comma + P.identifier, default="") + rangle
+        return parseGroup(header)
 
 
 class Parser:
@@ -170,7 +171,7 @@ class Parser:
         def nodeAction(x):
             x = x[0]
             y = x[2]
-            classOf = x[1][0] if objetOrNone(x[1]) else None
+            header = x[1]
             parents = objetOrNone(y[0])
             members = objetOrNone(y[1])
             children = objetOrNone(y[2])
@@ -179,7 +180,7 @@ class Parser:
             epilogueSection = objetOrNone(y[5])
             return Node.createFromParse(
                 x[0],
-                classOf=classOf,
+                header=header,
                 parents=parents,
                 members=members,
                 children=children,
@@ -188,7 +189,7 @@ class Parser:
                 epilogueSection=epilogueSection,
             )
 
-        return parseGroup(node + P.identifier + parseOptional(header) + body, nodeAction)
+        return parseGroup(node + P.identifier + header + body, nodeAction)
 
     @staticmethod
     def createStruct():
