@@ -247,6 +247,7 @@ class Parser:
     @staticmethod
     def parse(filename, db: ASTDatabase):
         pp._enable_all_warnings()
+        print("Parsing:", filename)
         Parser.createTop(db).ignore(pp.cStyleComment).parseFile(filename, parseAll=True)
 
 

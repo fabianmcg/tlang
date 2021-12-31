@@ -10,7 +10,7 @@ Created on Oct Sun 31 11:09:00 2021
 #   Header
 #
 # ******************************************************************************
-from Lexer.token import Punctuation, Keyword, Rule
+from Lexer.token import Punctuation, Keyword, Rule, Operator
 from Lexer.lexer import Lexer
 
 
@@ -109,38 +109,42 @@ def makeLexer():
     db.addToken(Rule, "Identifier", r"{L}{A}*")
     # ******************************************************************************
     #
-    #   Operands
+    #   Punctuation
     #
     # ******************************************************************************
-    db.addToken(Punctuation, "And", "&&")
-    db.addToken(Punctuation, "Or", "||")
-    db.addToken(Punctuation, "Equal", "==")
-    db.addToken(Punctuation, "NEQ", "!=")
-    db.addToken(Punctuation, "LEQ", "<=")
-    db.addToken(Punctuation, "GEQ", ">=")
-    db.addToken(Punctuation, "LShift", "<<")
-    db.addToken(Punctuation, "RShift", ">>")
-    db.addToken(Punctuation, "Pow", "^^")
-    db.addToken(Punctuation, "NamespaceOp", "::")
+    db.addToken(Operator, "And", "&&")
+    db.addToken(Operator, "Or", "||")
+    db.addToken(Operator, "Equal", "==")
+    db.addToken(Operator, "NEQ", "!=")
+    db.addToken(Operator, "LEQ", "<=")
+    db.addToken(Operator, "GEQ", ">=")
+    db.addToken(Operator, "LShift", "<<")
+    db.addToken(Operator, "RShift", ">>")
+    db.addToken(Operator, "Pow", "^^")
+    db.addToken(Operator, "Namespace", "::")
+    db.addToken(Operator, "Increment", "++")
+    db.addToken(Operator, "Decrement", "--")
     # ******************************************************************************
     #   Characters
     # ******************************************************************************
-    db.addToken(Punctuation, "Not", "!")
-    db.addToken(Punctuation, "Band", "&")
-    db.addToken(Punctuation, "Bor", "|")
-    db.addToken(Punctuation, "Less", "<")
-    db.addToken(Punctuation, "Greater", ">")
-    db.addToken(Punctuation, "Assign", "=")
-    db.addToken(Punctuation, "Plus", "+")
-    db.addToken(Punctuation, "Minus", "-")
-    db.addToken(Punctuation, "Multiply", "*")
-    db.addToken(Punctuation, "Divide", "/")
-    db.addToken(Punctuation, "At", "@")
-    db.addToken(Punctuation, "Dot", ".")
-    db.addToken(Punctuation, "Comma", ",")
-    db.addToken(Punctuation, "Colon", ":")
-    db.addToken(Punctuation, "Semicolon", ";")
-    db.addToken(Punctuation, "Ternary", "?")
+    db.addToken(Operator, "Not", "!")
+    db.addToken(Operator, "Band", "&")
+    db.addToken(Operator, "Bor", "|")
+    db.addToken(Operator, "Less", "<")
+    db.addToken(Operator, "Greater", ">")
+    db.addToken(Operator, "Assign", "=")
+    db.addToken(Operator, "Plus", "+")
+    db.addToken(Operator, "Minus", "-")
+    db.addToken(Operator, "Multiply", "*")
+    db.addToken(Operator, "Divide", "/")
+    db.addToken(Operator, "Modulo", "%")
+    db.addToken(Operator, "At", "@")
+    db.addToken(Operator, "Dot", ".")
+    db.addToken(Operator, "Comma", ",")
+    db.addToken(Operator, "Colon", ":")
+    db.addToken(Operator, "Semicolon", ";")
+    db.addToken(Operator, "Ternary", "?")
+    db.addToken(Operator, "Sim", "~")
     db.addToken(Punctuation, "LBrace", "{")
     db.addToken(Punctuation, "RBrace", "}")
     db.addToken(Punctuation, "LParen", "(")

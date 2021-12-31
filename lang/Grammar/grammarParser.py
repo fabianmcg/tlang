@@ -8,7 +8,7 @@ Created on Oct Sun 31 11:09:00 2021
 
 from Grammar.grammar import Grammar, grammarForAnalysis
 from Grammar.parseElements import EmptyString, NonTerminal, Production, ProductionKind, Rule, Terminal
-from Utility.util import jinjaTemplate, pathJoin, format
+from Utility.util import jinjaTemplate, pathJoin, format, readFile
 
 
 class GrammarParser:
@@ -18,6 +18,7 @@ class GrammarParser:
         self.grammar.consolidate()
         self.analysisGrammar.consolidate()
         self.analysisGrammar.analysis()
+        self.expr = ""
 
     def predictSet(self, rule: Rule, production: Production):
         predict = rule.firstSet.copy()
@@ -100,6 +101,8 @@ class GrammarParser:
         return returnType, "{}{}{}".format(header, body, epilogue)
 
     def cxxTop(self, production: Production):
+        if production.identifier == "Expr":
+            return self.expr
         if production.isTop():
             body = "return Parse{}();".format(str(production[0][0]))
             return "auto ParseTop() {{{}}}".format(body)
@@ -125,7 +128,7 @@ class GrammarParser:
         def add(*tok):
             for t in tok:
                 precedenceMap.append((tokens[t], precedence[0]))
-                precedence[0] += 100
+            precedence[0] += 100
 
         add("=")
         add("<", ">", "<=", ">=")
@@ -134,11 +137,27 @@ class GrammarParser:
         add("*", "/", "%")
         add(".")
         add("::")
+        tokToOperator = "\n".join(
+            ["case tok_k::{}: return Operator::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
+        )
+        tokToOperator = "inline Operator tokToOperator(tok_k kind) {{ switch(kind) {{{}default: return Operator::unknown;}} }}".format(
+            tokToOperator
+        )
+        tokPrecedence = "\n".join(
+            ["case Operator::{}: return {};".format(tok[0].name, tok[1]) for tok in precedenceMap]
+        )
+        tokPrecedence = (
+            "inline int operatorPrecedence(Operator kind) {{ switch(kind) {{{}default: return -1;}} }}".format(
+                tokPrecedence
+            )
+        )
+        return tokToOperator + tokPrecedence
 
     def generateParser(self, outputPath, templatePath):
+        self.expr = readFile(pathJoin(templatePath, "ParseExpr.cc"))
         jinjaTemplate(
             pathJoin(outputPath, "ParserHandler.cc"),
             pathJoin(templatePath, "Parser.cc.j2"),
-            {"PARSE_METHODS": self.cxx()},
+            {"PARSE_METHODS": self.cxx() + self.binOp()},
         )
         format(pathJoin(outputPath, "ParserHandler.cc"))

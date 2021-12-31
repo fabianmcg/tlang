@@ -69,7 +69,7 @@ def main():
         tokens.generateLexer(args.output_dir, args.template_dir)
     if genAST:
         ast = makeAST(args.config_dir)
-        ast.generateASTNodes(args.output_dir, args.output_dir, str(pathJoin(args.template_dir, "header.hh.j2")))
+        ast.generateASTNodes(args.output_dir, args.output_dir, str(pathJoin(args.template_dir, "header.hh.j2")), tokens)
         ast.generateRecursiveASTVisitor(args.output_dir, args.template_dir)
     if genParser:
         grammar = makeParser(str(pathJoin(args.config_dir, "grammar.conf")), tokens)

@@ -78,7 +78,7 @@ class Parser:
 
     def createProduction(self):
         pipe = suppressChars("|")
-        equal = suppressLiterals(":=")
+        equal = suppressLiterals(":")
         attributes = parseOptional(
             self.createProductionAttributes(), default=ProductionAttributes("", False, Instruction(""))
         )
