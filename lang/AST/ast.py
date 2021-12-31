@@ -151,11 +151,11 @@ class ASTDatabase:
                 for p in node.parents:
                     if p != "DeclContext":
                         walkups += "WALKUP_MACRO({1:}, {0:})\n".format(node.typename(), p)
-                walkup += "bool walkUpTo{0:}({0:}* node, bool firstQ = true) {{ {1:} }}\n".format(node.typename(), walkups)
-                traverse += (
-                    "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
-                        node.typename()
-                    )
+                walkup += "bool walkUpTo{0:}({0:}* node, bool firstQ = true) {{ {1:} }}\n".format(
+                    node.typename(), walkups
+                )
+                traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
+                    node.typename()
                 )
                 traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node.first->template getAsPtr<{0:}>(), stack, node.second);\n".format(
                     node.typename()

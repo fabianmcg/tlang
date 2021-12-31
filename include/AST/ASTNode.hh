@@ -49,6 +49,14 @@ public:
   }
   ASTNode(const ASTNode&) = delete;
   virtual ~ASTNode() = default;
+  ASTNode clone() const {
+    auto node = ASTNode(__range);
+    node.__parent = __parent;
+    return node;
+  }
+  virtual std::unique_ptr<ASTNode> clonePtr() const {
+    return std::make_unique<ASTNode>(clone());
+  }
   children_t* operator->() {
     return &__children;
   }
@@ -122,8 +130,22 @@ struct ASTNodeList: public ASTNode, std::vector<std::unique_ptr<ASTNode>> {
   using vector_t = std::vector<std::unique_ptr<ASTNode>>;
   using parents_t = parent_container<ASTNode>;
   static constexpr node_kind_t kind = node_kind_t::ASTNodeList;
+  ASTNodeList(ASTNode &&node) :
+      ASTNode(std::move(node)) {
+  }
   virtual node_kind_t classOf() const {
     return kind;
+  }
+  ASTNodeList clone() const {
+    auto node = ASTNodeList(ASTNode::clone());
+    node.resize(this->size());
+    for (size_t i = 0; i < this->size(); ++i)
+      if ((*this)[i])
+        node[i] = (*this)[i]->clonePtr();
+    return node;
+  }
+  virtual std::unique_ptr<ASTNode> clonePtr() const {
+    return std::make_unique<ASTNode>(clone());
   }
   using std::vector<std::unique_ptr<ASTNode>>::vector;
   using vector_t::operator=;

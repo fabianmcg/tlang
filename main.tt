@@ -1,5 +1,11 @@
-function saxpy() {
+function int saxpy() {
 }
 
-function saxy2() {
+function void saxpy2(int s, const float*& x, Class k, bool l) {
+  if ( 0 )
+  	if ( (2) ) {} else {} else {}
 }
+
+struct Hi {
+int l;
+};

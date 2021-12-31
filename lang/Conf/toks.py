@@ -104,7 +104,7 @@ def makeLexer():
     # ******************************************************************************
     db.addToken(Keyword, "True")
     db.addToken(Keyword, "False")
-    db.addToken(Rule, "IntLiteral", r"{NZ}{D}*")
+    db.addToken(Rule, "IntLiteral", r"{NZ}{D}*", r'"0"')
     db.addToken(Rule, "FloatLiteral", r"{D}+{E}", r'{D}*"."{D}+{E}?')
     db.addToken(Rule, "Identifier", r"{L}{A}*")
     # ******************************************************************************
