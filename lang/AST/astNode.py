@@ -181,7 +181,9 @@ class Node(Struct):
         members = ", ".join(map(lambda x: x.varName(), self.members))
         members += ", " if len(members) else ""
         src = "return {}({}{}__children.clone());".format(self.identifier, parents, members)
-        tmp = "virtual std::unique_ptr<ASTNode> clonePtr() const {{ return std::make_unique<{}>(clone()); }}".format(self.identifier)
+        tmp = "virtual std::unique_ptr<ASTNode> clonePtr() const {{ return std::make_unique<{}>(clone()); }}".format(
+            self.identifier
+        )
         return "{} clone() const {{\n{}}}\n{}\n".format(self.identifier, src, tmp)
 
     def cxxPostMembers(self):

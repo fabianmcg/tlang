@@ -15,6 +15,7 @@ class Lexer:
     def __init__(self):
         self.definitions = DotDict()
         self.tokens = DotDict()
+        self.operators = {}
 
     def __getattr__(self, attr):
         return self.tokens.__getattr__(attr)
@@ -28,6 +29,8 @@ class Lexer:
 
     def addToken(self, kind, identifier, *rules):
         self.tokens[identifier] = kind(identifier, *rules)
+        if kind == Operator:
+            self.operators[identifier] = self.tokens[identifier]
 
     def addDefinition(self, identifier, *rules):
         self.definitions[identifier] = Definition(identifier, *rules)

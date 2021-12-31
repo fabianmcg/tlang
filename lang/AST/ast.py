@@ -18,6 +18,7 @@ from Utility.util import (
     printToFile,
 )
 from Cxx.struct import HeaderSection, Struct
+from Lexer.lexer import Lexer
 
 
 class FileNamespace:
@@ -94,6 +95,23 @@ class ASTDatabase:
                 elif isinstance(decl, Struct):
                     self.structs[decl.identifier] = decl
 
+    def generateOperators(self, lexer: Lexer):
+        enum = ", ".join([operator.name for operator in lexer.operators.values()])
+        enum = "enum class OperatorKind {{unknown,{},}};".format(enum)
+        to_string = "\n ".join(
+            [
+                'case OperatorKind::{}: return "{}";'.format(operator.name, operator.rules[0])
+                for operator in lexer.operators.values()
+            ]
+        )
+        to_string = (
+            'inline std::string to_string(OperatorKind kind) {{switch(kind) {{{}default: return "unknown";}}}}'.format(
+                to_string
+            )
+        )
+        src = "#ifndef __AST_OPERATORS__\n#define __AST_OPERATORS__\n{}\n#endif".format(enum + to_string)
+        return src
+
     def generateMain(self):
         enum = ""
         fwd = "\n".join(map(lambda x: "class {};".format(x), list(self.nodes.keys()) + list(self.structs.keys())))
@@ -128,7 +146,10 @@ class ASTDatabase:
             incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ["<string>"]})
         return incSrc, libSrc
 
-    def generateASTNodes(self, includeOutdir, libOutdir, templatePath):
+    def generateASTNodes(self, includeOutdir, libOutdir, templatePath, lexer: Lexer):
+        operatorFile = pathJoin(includeOutdir, "Operators.hh")
+        printToFile(self.generateOperators(lexer), operatorFile)
+        format(operatorFile)
         for namespace in self.fileNamespaces.values():
             print(namespace.getId() + ".hh")
             inc, lib = self.generateNamespace(namespace, templatePath)

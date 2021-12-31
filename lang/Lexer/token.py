@@ -47,6 +47,15 @@ class Punctuation(Token):
         return '"{}"'.format(self.rules[0])
 
 
+class Operator(Punctuation):
+    def __init__(self, identifier, character, name=None):
+        super().__init__(identifier, character)
+        self.name = name if name else identifier
+
+    def parseStr(self):
+        return '"{}"'.format(self.rules[0])
+
+
 class Rule(Token):
     def __init__(self, identifier, *rules):
         super().__init__(identifier, *rules)

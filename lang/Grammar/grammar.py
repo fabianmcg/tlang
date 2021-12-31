@@ -22,6 +22,7 @@ from copy import deepcopy
 
 class Grammar:
     def __init__(self, lexer=None, tokens=None):
+        self.lexer = lexer
         self.tokens = {tok.parseRepr(): tok for tok in lexer.tokens.values()} if lexer else tokens
         self.terminals = {}
         self.nonTerminals = {}

@@ -13,8 +13,11 @@ from copy import deepcopy
 
 class Instruction:
     def __init__(self, instruction: str = "", lDelimiter=":{", rDelimiter="}:") -> None:
+        format_str = False
         if isinstance(instruction, str):
             instruction = instruction.strip()
+            if len(instruction) and format_str:
+                instruction = indentTxt(formatStr(instruction), 4)
         self.instruction = instruction
         self.lDelimiter = lDelimiter
         self.rDelimiter = rDelimiter
@@ -32,7 +35,7 @@ class Instruction:
         return not self.empty()
 
     def parseStr(self):
-        return "{} {} {}".format(self.lDelimiter, self.instruction, self.rDelimiter) if len(self.instruction) else ""
+        return "{}\n{}\n{}".format(self.lDelimiter, self.instruction, self.rDelimiter) if len(self.instruction) else ""
 
     def cxx(self):
         return self.instruction
@@ -138,7 +141,7 @@ class Rule:
     def parseStr(self):
         instruction = "{}".format(self.instruction) if self.hasInstruction() else ""
         if len(instruction):
-            instruction = " " + instruction
+            instruction = indentTxt("\n" + instruction, 9)
         rule = " ".join(map(str, self.rule)) if len(self.rule) else "E"
         return "{}{}".format(rule, instruction)
 
@@ -174,7 +177,7 @@ class ProductionAttributes:
         return len(self.returnType) > 0
 
     def parseStr(self):
-        text = " @< {} >@".format(self.returnType) if len(self.returnType) else ""
+        text = " @<{}>@".format(self.returnType) if len(self.returnType) else ""
         text += "" if self.isDynamic else " static"
         if self.kind != ProductionKind.Regular:
             text += " {}".format(self.kind.name)
@@ -250,8 +253,8 @@ class Production:
             rules = indentTxt(rules + "\n;", 7)
             rules = "\n" + rules
         else:
-            rules = " {};".format(self.rules[0])
-        return "{:}{:}:={}\n".format(self.identifier, self.attributes, rules)
+            rules = "\n" + indentTxt("{}\n;".format(indentTxt(" " + str(self.rules[0]), 8)), 7)
+        return "{:}{:}:{}\n".format(self.identifier, self.attributes, rules)
 
     def shortRepr(self):
         n = len(self.rules)

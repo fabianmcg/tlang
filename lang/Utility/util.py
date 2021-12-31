@@ -70,3 +70,9 @@ def getJinjaTemplate(inputFile, templateDict):
 def printToFile(data, outputFile):
     with open(outputFile, "w") as file:
         print(data, file=file)
+
+
+def readFile(inputFile):
+    with open(inputFile, "r") as file:
+        return file.read()
+    return ""

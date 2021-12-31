@@ -98,6 +98,7 @@ file Stmt {
 file Expr {
   .{
     #include "AST/Stmt.hh"
+    #include "AST/Operators.hh"
   }.
   node Expr<Stmt> {
     parents: [ValueStmt];
@@ -156,14 +157,20 @@ file Expr {
       }
     }.
   };
-  node UnaryOp<Stmt> {
+  node UnaryOperation<Stmt> {
     parents: [Expr];
+    members: [
+      bool postfix
+    ];
     children: [
       Expr expr
     ];
   };
-  node BinaryOp<Stmt> {
+  node BinaryOperation<Stmt> {
     parents: [Expr];
+    members: [
+      OperatorKind operator
+    ];
     children: [
       Expr lhs,
       Expr rhs
