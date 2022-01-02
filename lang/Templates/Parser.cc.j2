@@ -17,6 +17,7 @@ template <typename T, return_kind kind>
 struct parse_result {
   using data_type = std::conditional_t<kind == return_kind::Dynamic, std::unique_ptr<T>, std::optional<T>>;
   data_type data { };
+  SourceRange __range { };
   result_status status { result_status::Empty };
   parse_result(result_status status) :
       status(status) {
@@ -75,6 +76,23 @@ struct parse_result {
   void init() {
     if (!data)
       (*this) = make();
+  }
+  inline auto begin() const {
+    return __range.begin;
+  }
+  inline auto end() const {
+    return __range.end;
+  }
+  template <bool setLoc = false>
+  inline void setSourceRange(const SourceLocation& begin, const SourceLocation& end) {
+    __range = SourceRange(begin, end);
+    if constexpr (setLoc)
+      if (isSuccess() && data)
+        data->getSourceRange() = __range;
+  }
+  template <bool setLoc = false>
+  inline void range(const SourceLocation& begin, const SourceLocation& end) {
+    setSourceRange<setLoc>(begin, end);
   }
 };
 class ParserHelper {

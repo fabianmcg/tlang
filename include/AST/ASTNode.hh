@@ -87,6 +87,9 @@ public:
   auto getEndLoc() const {
     return __range.end;
   }
+  auto& getSourceRange() {
+    return __range;
+  }
   auto getSourceRange() const {
     return __range;
   }
@@ -154,9 +157,5 @@ inline std::ostream& operator<<(std::ostream &ost, const ASTNode &node) {
   ost << node.to_string();
   return ost;
 }
-template <typename T>
-struct Reference {
-
-};
 }
 #endif

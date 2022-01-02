@@ -53,6 +53,7 @@ def makeLexer():
     db.addToken(Keyword, "Typeof")
     db.addToken(Keyword, "Function")
     db.addToken(Keyword, "Struct")
+    db.addToken(Keyword, "Let")
     db.addToken(Keyword, "Enum")
     db.addToken(Keyword, "Loop")
     db.addToken(Keyword, "For")

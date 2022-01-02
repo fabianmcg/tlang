@@ -34,6 +34,24 @@ struct token {
   inline std::string value() const {
     return text;
   }
+  inline SourceLocation begin() const {
+    return getBeginLoc();
+  }
+  inline SourceLocation end() const {
+    return getEndLoc();
+  }
+  inline SourceRange range() const {
+    return getSourceRange();
+  }
+  inline SourceLocation getBeginLoc() const {
+    return loc;
+  }
+  inline SourceLocation getEndLoc() const {
+    return SourceLocation { loc.line, loc.column + static_cast<int>(text.size()) };
+  }
+  inline SourceRange getSourceRange() const {
+    return SourceRange { getBeginLoc(), getEndLoc() };
+  }
 };
 inline std::ostream& operator<<(std::ostream &ost, const token &tok) {
   ost << tok.to_string();

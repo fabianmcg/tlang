@@ -1,9 +1,11 @@
-function int saxpy() {
+function int saxpy(auto x) {
 }
 
-function void saxpy2(int s, const float*& x, Class k, bool l) {
-  if ( 0 )
-  	if ( (2 + 2) ) {} else {} else {}
+function void saxpy2(int s, const float*& x, Hi k, bool l) {
+  let int x = 0;
+  if ( 0 + x )
+  	if ( (2 + 2 - x.x) ) {} else {} else {let float x = 1; x = x + 1;}
+  	x(2, 3 + saxpy() + saxpy(2));
 }
 
 struct Hi {

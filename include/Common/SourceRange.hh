@@ -44,6 +44,9 @@ struct SourceLocation {
   std::string to_string() const {
     return "[" + std::to_string(line) + ":" + std::to_string(column) + "]";
   }
+  std::string str() const {
+    return std::to_string(line) + ":" + std::to_string(column);
+  }
   bool compatible(const SourceLocation &end) const {
     return valid() && end.valid() && (*this) <= end;
   }

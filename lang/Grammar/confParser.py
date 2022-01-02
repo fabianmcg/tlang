@@ -57,6 +57,7 @@ class Parser:
         returnType = parseOptional(lat + ... + rat, lambda x: ("returnType", x[0]), "")
         dynamic = parseOptional(pp.Keyword("static"), lambda x: ("isDynamic", True if x[0] == True else False), True)
         kind = pp.Keyword("ZeroOrMore") | pp.Keyword("OneOrMore") | pp.Keyword("Optional")
+        mode = pp.Keyword("LL1") | pp.Keyword("Predictive") | pp.Keyword("OperatorParsing")
 
         def getKind(x):
             x = x[0]
@@ -69,12 +70,24 @@ class Parser:
                 kind = ProductionKind.Optional
             return ("kind", kind)
 
+        def getMode(x):
+            x = x[0]
+            kind = ParsingMode.Deduced
+            if x == "LL1":
+                kind = ParsingMode.LL1
+            elif x == "Predictive":
+                kind = ParsingMode.Predictive
+            elif x == "OperatorParsing":
+                kind = ParsingMode.OperatorParsing
+            return ("mode", kind)
+
         kind = parseOptional(kind, getKind, None)
+        mode = parseOptional(mode, getMode, None)
 
         def action(x):
             return ProductionAttributes(**{k: v for k, v in x})
 
-        return parseElement(returnType + dynamic + kind, action)
+        return parseElement(returnType + dynamic + kind + mode, action)
 
     def createProduction(self):
         pipe = suppressChars("|")

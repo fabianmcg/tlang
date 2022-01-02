@@ -71,6 +71,11 @@ class ChildNode(Variable):
         const = src.format(self.identifier, self.identifier.capitalize(), "", "", "")
         no_const = src.format(self.identifier, self.identifier.capitalize(), "const", "", "")
         if isinstance(self.T, (StaticList, DynamicList)):
+            src = (
+                "template <access_kind kind = access_kind::pointer>"
+                + "{2:} auto get{1:}({3:}) {2:} "
+                + "{{ return __children.template get<{0:}Offset, kind>({4:});}}\n"
+            )
             const += src.format(self.identifier, self.identifier.capitalize(), "", "size_t i", "i")
             no_const += src.format(self.identifier, self.identifier.capitalize(), "const", "size_t i", "i")
         return const + no_const

@@ -167,12 +167,14 @@ class ASTDatabase:
         traverse_cases = ""
         for node in self.nodes.values():
             if isinstance(node, Node):
-                visit += "bool visit{0:}({0:}* node, bool firstQ = true) {{ return true; }}\n".format(node.typename())
+                visit += "visit_t visit{0:}({0:}* node, bool firstQ = true) {{ return visit_value; }}\n".format(
+                    node.typename()
+                )
                 walkups = ""
                 for p in node.parents:
                     if p != "DeclContext":
-                        walkups += "WALKUP_MACRO({1:}, {0:})\n".format(node.typename(), p)
-                walkup += "bool walkUpTo{0:}({0:}* node, bool firstQ = true) {{ {1:} }}\n".format(
+                        walkups += "WALKUP_MACRO({1:}, {0:});\n".format(node.typename(), p)
+                walkup += "visit_t walkUpTo{0:}({0:}* node, bool firstQ = true) {{ {1:} }}\n".format(
                     node.typename(), walkups
                 )
                 traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
