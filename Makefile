@@ -16,6 +16,10 @@ ast:
 parser:
 	python3 lang/langGen.py parser -c lang/Conf -t lang/Templates -o lib/Parser
 
+.PHONY: run
+run:
+	./build/Debug/tlang
+
 .PHONY: clean
 clean:
 	rm -v *.hh *.yy

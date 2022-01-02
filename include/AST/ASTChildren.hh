@@ -107,20 +107,23 @@ public:
   template <access_kind kind, typename V>
   using return_helper_t = typename access_type<ASTNode, kind>::template type<V>;
   template <int offset, access_kind kind>
-  using return_t = return_helper_t<kind, children_t<offset>>;
+  using return_t = return_helper_t<kind, std::conditional_t<children_kinds[offset] == child_kind::dynamic_list, ASTNodeList, children_t<offset>>>;
   template <typename V>
   static std::unique_ptr<ASTNode> to_node(std::unique_ptr<V> &&ptr) {
     return std::move(ptr);
   }
   template <typename V, std::enable_if_t<!is_unique_ptr_v<V>, int> = 0>
   static std::unique_ptr<ASTNode> to_node(V &&value) {
-    return std::make_unique<V>(std::forward<V>(value));
+    if constexpr (std::is_same_v<V, nullptr_t>)
+      return nullptr;
+    else
+      return std::make_unique<V>(std::forward<V>(value));
   }
   template <typename ...Args>
   children_container_helper(Args &&...args) :
       data( { to_node(std::forward<Args>(args))... }) {
   }
-  children_container_helper(children_container_helper &&) = default;
+  children_container_helper(children_container_helper&&) = default;
   auto begin() {
     return data.begin();
   }
@@ -168,7 +171,7 @@ public:
       return data[offset];
   }
   template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  return_helper_t<kind, ASTNodeList> get() {
+  return_t<offset, kind> get() {
     if constexpr (kind == access_kind::pointer)
       return static_cast<ASTNodeList*>(data[offset].get());
     else if constexpr (kind == access_kind::reference)
@@ -177,7 +180,7 @@ public:
       return data[offset];
   }
   template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  const return_helper_t<kind, ASTNodeList> get() const {
+  const return_t<offset, kind> get() const {
     if constexpr (kind == access_kind::pointer)
       return static_cast<ASTNodeList*>(data[offset].get());
     else if constexpr (kind == access_kind::reference)
@@ -185,8 +188,8 @@ public:
     else if constexpr (kind == access_kind::container)
       return data[offset];
   }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] != child_kind::dynamic_list, int> = 0>
-  return_t<offset, kind> get(size_t i) {
+  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
+  return_helper_t<kind, children_t<offset>> get(size_t i) {
     if constexpr (kind == access_kind::pointer)
       return static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
     else if constexpr (kind == access_kind::reference)
@@ -194,8 +197,8 @@ public:
     else if constexpr (kind == access_kind::container)
       return static_cast<ASTNodeList*>(data[offset].get())->at(i);
   }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] != child_kind::dynamic_list, int> = 0>
-  const return_t<offset, kind> get(size_t i) const {
+  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
+  const return_helper_t<kind, children_t<offset>> get(size_t i) const {
     if constexpr (kind == access_kind::pointer)
       return static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
     else if constexpr (kind == access_kind::reference)
@@ -213,7 +216,7 @@ public:
   }
   children_container_helper clone() const {
     auto tmp = children_container_helper { };
-    for (size_t i = 0 ; i < size ;++i)
+    for (size_t i = 0; i < size; ++i)
       if (data[i])
         tmp.data[i] = data[i]->clonePtr();
     return tmp;

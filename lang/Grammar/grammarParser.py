@@ -7,7 +7,7 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from Grammar.grammar import Grammar, grammarForAnalysis
-from Grammar.parseElements import EmptyString, NonTerminal, Production, ProductionKind, Rule, Terminal
+from Grammar.parseElements import EmptyString, NonTerminal, ParsingMode, Production, ProductionKind, Rule, Terminal
 from Utility.util import jinjaTemplate, pathJoin, format, readFile
 
 
@@ -94,7 +94,7 @@ class GrammarParser:
         epilogue = "return return_t::fail();"
         if production.attributes.kind != ProductionKind.Regular:
             body = "{{return_t _r; while(true) {{{}}}}}"
-        if aProduction.isLL1:
+        if aProduction.isLL1 and ((production.mode() == ParsingMode.Deduced) or (production.mode() == ParsingMode.LL1)):
             body = body.format(self.cxxProductionLL1(production, aProduction))
         else:
             body = body.format(self.cxxProductionNLL1(production, aProduction))

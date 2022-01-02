@@ -187,15 +187,27 @@ file Expr {
       Identifier identifier,
       reference<Decl> decl
     ];
+    .{
+      DeclRefExpr(const Identifier& identifier): Expr(), __identifier(identifier) {}
+    }.
   };
   node CallExpr<Stmt> {
     parents: [Expr];
     children: [
       Expr callee,
-      Expr args
+      list Expr args
     ];
+    .{
+      CallExpr(std::unique_ptr<ASTNodeList>&& args): __children(nullptr, std::forward<std::unique_ptr<ASTNodeList>>(args)) {}
+    }.
   };
   node CastExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr expr
+    ];
+  };
+  node ImplicitCastExpr<Stmt> {
     parents: [Expr];
     children: [
       Expr expr

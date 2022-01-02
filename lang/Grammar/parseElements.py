@@ -156,9 +156,20 @@ class ProductionKind(Enum):
     Optional = 3
 
 
+class ParsingMode(Enum):
+    Deduced = 0
+    LL1 = 1
+    Predictive = 2
+    OperatorParsing = 3
+
+
 class ProductionAttributes:
     def __init__(
-        self, returnType: str = "", isDynamic: bool = False, kind: ProductionKind = ProductionKind.Regular
+        self,
+        returnType: str = "",
+        isDynamic: bool = False,
+        kind: ProductionKind = ProductionKind.Regular,
+        mode: ParsingMode = ParsingMode.Deduced,
     ) -> None:
         returnType = returnType.strip()
         if len(returnType):
@@ -166,6 +177,7 @@ class ProductionAttributes:
         self.returnType = returnType
         self.isDynamic = isDynamic
         self.kind = kind
+        self.mode = mode
 
     def __str__(self) -> str:
         return self.parseStr()
@@ -181,6 +193,8 @@ class ProductionAttributes:
         text += "" if self.isDynamic else " static"
         if self.kind != ProductionKind.Regular:
             text += " {}".format(self.kind.name)
+        if self.mode != ParsingMode.Deduced:
+            text += " {}".format(self.mode.name)
         return text
 
     def shortRepr(self):
@@ -242,6 +256,9 @@ class Production:
             and len(self.rules[0]) == 1
             and isinstance(self.rules[0][0], NonTerminal)
         )
+
+    def mode(self):
+        return self.attributes.mode
 
     def hasEmpty(self):
         return any([r.isEmpty() for r in self.rules])

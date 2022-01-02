@@ -10,6 +10,11 @@ file Decl {
     members: [
       Identifier identifier
     ];
+    :{
+      virtual std::string usr() const {
+        return __identifier;
+      }
+    }:
   };
   node ModuleDecl<Decl> {
     parents: [NamedDecl, DeclContext];
