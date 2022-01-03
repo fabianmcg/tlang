@@ -4,10 +4,33 @@ function int saxpy(auto x) {
 function void saxpy2(int s, const float*& x, Hi k, bool l) {
   let int x = 0;
   if ( 0 + x )
-  	if ( (2 + 2 - x.x) ) {} else {} else {let float x = 1; x = x + 1;}
-  	x(2, 3 + saxpy() + saxpy(2));
+    if ( (2 + 2) ) {
+  	} else {
+  	} else {
+  		let float x = 1; x = x + 1;
+  	}
+  saxpy();
+  k.x.l;
+  k.bar().foo();
+  ccall::printf("sss", 3, l);
+  {
+  	let int x;
+  	let Hi y;
+  }
+  k.foo();
 }
 
 struct Hi {
 int l;
+  A x;
+  function float foo() {
+  }
+  function A bar() {
+  }
+};
+
+struct A {
+string l;
+  function float foo() {
+  }
 };

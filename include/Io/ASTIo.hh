@@ -22,6 +22,11 @@ public:
       ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "");
     return visit_value;
   }
+  visit_t visitCType(CType *node, bool isFirst) {
+    if (isFirst)
+      ost << "__ctype__";
+    return visit_t::skip;
+  }
   visit_t visitAutoType(AutoType *node, bool isFirst) {
     if (isFirst)
       ost << "auto";
@@ -69,7 +74,7 @@ public:
       } else if (isDecl(kind))
         push_color(Color::AquaGreen());
       if (!isType(kind)) {
-        cst() << std::string(indent, '-') + "+" << to_string(kind) + " ";
+        cst() << std::string(indent, '-') + "+" << to_string(kind) + " " << node << " ";
         extentInfo(node);
         cst() << " ";
       }
@@ -78,6 +83,12 @@ public:
       indent--;
       pop_color();
       cst();
+    }
+    return visit_value;
+  }
+  visit_t visitCCallExpr(CCallExpr *node, bool isFirst) {
+    if (isFirst) {
+      ost << node->getCalleeidentifier() << " ";
     }
     return visit_value;
   }

@@ -2,9 +2,6 @@ file Type {
   node Type<Type> {
     parents: [ASTNode];
   };
-  node UnresolvedType<Type> {
-    parents: [ASTNode];
-  };
   node QualType<Type> {
     parents: [ASTNode];
     members: [
@@ -19,11 +16,17 @@ file Type {
       Const = 2
     };
   };
-  node DeducedType<Type> {
+  node UnresolvedType<Type> {
+    parents: [Type];
+  };
+  node DependentType<Type> {
     parents: [Type];
   };
   node AutoType<Type> {
-    parents: [DeducedType];
+    parents: [DependentType];
+  };
+  node CType<Type> {
+    parents: [DependentType];
   };
   node BuiltinType<Type> {
     parents: [Type];
@@ -91,19 +94,52 @@ file Type {
     parents: [Type];
     members: [
       Identifier identifier,
-      reference<TagDecl> decl
+      reference<NamedDecl> decl
     ];
+    .{
+      DefinedType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       __identifier(identifier), __decl(decl) {
+       }
+    }.
   };
   node TagType<Type> {
     parents: [DefinedType];
+    .{
+      TagType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       DefinedType(identifier, decl) {
+       }
+    }.
   };
   node StructType<Type> {
     parents: [TagType];
+    .{
+      StructType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       TagType(identifier, decl) {
+       }
+    }.
   };
   node EnumType<Type> {
     parents: [TagType];
+    .{
+      EnumType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       TagType(identifier, decl) {
+       }
+    }.
   };
   node TypedefType<Type> {
     parents: [DefinedType];
+    .{
+      TypedefType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       DefinedType(identifier, decl) {
+       }
+    }.
+  };
+  node FunctionType<Type> {
+    parents: [DefinedType];
+    .{
+      FunctionType(const Identifier& identifier, reference<NamedDecl> decl = {}):
+       DefinedType(identifier, decl) {
+       }
+    }.
   };
 };

@@ -119,11 +119,13 @@ public:
     else
       return std::make_unique<V>(std::forward<V>(value));
   }
+  children_container_helper() = default;
   template <typename ...Args>
   children_container_helper(Args &&...args) :
       data( { to_node(std::forward<Args>(args))... }) {
   }
   children_container_helper(children_container_helper&&) = default;
+  children_container_helper& operator=(children_container_helper&&) = default;
   auto begin() {
     return data.begin();
   }

@@ -26,6 +26,7 @@ def makeLexer():
     db.addDefinition("L", r"[a-zA-Z_]")
     db.addDefinition("A", r"[a-zA-Z_0-9]")
     db.addDefinition("E", r"([Ee][+-]?{D}+)")
+    db.addDefinition("ES", r"(\\(['\"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))")
     db.addDefinition("WS", r"[ \t\v\f]")
     # ******************************************************************************
     #
@@ -107,6 +108,7 @@ def makeLexer():
     db.addToken(Keyword, "False")
     db.addToken(Rule, "IntLiteral", r"{NZ}{D}*", r'"0"')
     db.addToken(Rule, "FloatLiteral", r"{D}+{E}", r'{D}*"."{D}+{E}?')
+    db.addToken(Rule, "StringLiteral", r'\"([^"\\\n]|{ES})*\"')
     db.addToken(Rule, "Identifier", r"{L}{A}*")
     # ******************************************************************************
     #

@@ -48,6 +48,12 @@ public:
     __parent = std::exchange(other.__parent, nullptr);
   }
   ASTNode(const ASTNode&) = delete;
+  ASTNode& operator =(ASTNode &&other) {
+    __range = std::exchange(other.__range, SourceRange { });
+    __parent = std::exchange(other.__parent, nullptr);
+    return *this;
+  }
+  ASTNode& operator =(const ASTNode&) = delete;
   virtual ~ASTNode() = default;
   ASTNode clone() const {
     auto node = ASTNode(__range);
@@ -56,6 +62,15 @@ public:
   }
   virtual std::unique_ptr<ASTNode> clonePtr() const {
     return std::make_unique<ASTNode>(clone());
+  }
+  template <typename T>
+  std::unique_ptr<T> cloneAsPtr() const {
+    std::unique_ptr<ASTNode> clone = clonePtr();
+    T *data = dynamic_cast<T*>(clone.get());
+    if (data)
+      clone.release();
+    std::unique_ptr<T> ptr { data };
+    return ptr;
   }
   children_t* operator->() {
     return &__children;
