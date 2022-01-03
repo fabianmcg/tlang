@@ -142,6 +142,9 @@ file Expr {
   };
   node StringLiteral<Stmt> {
     parents: [LiteralExpr];
+    .{
+      StringLiteral(std::string value) : LiteralExpr(StringType(), value) {}
+    }.
   };
   node ThisExpr<Stmt> {
     parents: [Expr];
@@ -181,6 +184,17 @@ file Expr {
         Expr(), __operator(op), __children(std::forward<std::unique_ptr<Expr>>(lhs), std::forward<std::unique_ptr<Expr>>(rhs)) {}
     }.
   };
+  node MemberExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr owner,
+      MemberRefExpr member
+    ];
+    .{
+      MemberExpr(std::unique_ptr<Expr>&& lhs, std::unique_ptr<MemberRefExpr>&& rhs): 
+        Expr(), __children(std::forward<std::unique_ptr<Expr>>(lhs), std::forward<std::unique_ptr<MemberRefExpr>>(rhs)) {}
+    }.
+  };
   node DeclRefExpr<Stmt> {
     parents: [Expr];
     members: [
@@ -189,6 +203,22 @@ file Expr {
     ];
     .{
       DeclRefExpr(const Identifier& identifier): Expr(), __identifier(identifier) {}
+      bool isResolved() const {
+        return __decl;
+      }
+    }.
+  };
+  node MemberRefExpr<Stmt> {
+    parents: [Expr];
+    members: [
+      reference<Expr> owner
+    ];
+    children: [
+      Expr member
+    ];
+    .{
+      MemberRefExpr(reference<Expr> owner, std::unique_ptr<Expr>&& expr):
+        Expr(), __owner(owner), __children(std::forward<std::unique_ptr<Expr>>(expr)) {}
     }.
   };
   node CallExpr<Stmt> {
@@ -199,6 +229,19 @@ file Expr {
     ];
     .{
       CallExpr(std::unique_ptr<ASTNodeList>&& args): __children(nullptr, std::forward<std::unique_ptr<ASTNodeList>>(args)) {}
+    }.
+  };
+  node CCallExpr<Stmt> {
+    parents: [Expr];
+    members: [
+      Identifier calleeIdentifier
+    ];
+    children: [
+      list Expr args
+    ];
+    .{
+      CCallExpr(const Identifier& callee, std::unique_ptr<ASTNodeList>&& args): 
+        Expr(CType()), __calleeIdentifier(callee), __children(std::forward<std::unique_ptr<ASTNodeList>>(args)) {}
     }.
   };
   node CastExpr<Stmt> {

@@ -17,6 +17,12 @@ struct reference {
   }
   reference(reference&&) = default;
   reference(const reference&) = default;
+  reference(T &value) {
+    __data = &value;
+  }
+  reference(T *value) {
+    __data = value;
+  }
   reference& operator=(reference&&) = default;
   reference& operator=(const reference&) = default;
   reference& operator=(T &value) {
@@ -55,6 +61,14 @@ struct reference {
     __data = nullptr;
   }
 };
+template <typename T>
+reference<T> make_ref(T &val) {
+  return reference<T> { val };
+}
+template <typename T>
+reference<T> make_ref(T *val) {
+  return reference<T> { val };
+}
 struct DeclContext {
   std::list<std::unique_ptr<Decl>>& operator*() {
     return decls;
