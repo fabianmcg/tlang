@@ -15,9 +15,8 @@
 
 namespace _astnp_ {
 class ASTNode;
-class ASTNodeList;
 template <typename ...T>
-using children_container = children_container_helper<ASTNode, ASTNodeList, T...>;
+using children_container = children_container_helper<ASTNode, T...>;
 class ASTNode {
 public:
   using parents_t = parent_container<>;
@@ -47,30 +46,18 @@ public:
     __range = std::exchange(other.__range, SourceRange { });
     __parent = std::exchange(other.__parent, nullptr);
   }
-  ASTNode(const ASTNode&) = delete;
+  ASTNode(const ASTNode&) = default;
   ASTNode& operator =(ASTNode &&other) {
     __range = std::exchange(other.__range, SourceRange { });
     __parent = std::exchange(other.__parent, nullptr);
     return *this;
   }
-  ASTNode& operator =(const ASTNode&) = delete;
+  ASTNode& operator =(const ASTNode&) = default;
   virtual ~ASTNode() = default;
   ASTNode clone() const {
     auto node = ASTNode(__range);
     node.__parent = __parent;
     return node;
-  }
-  virtual std::unique_ptr<ASTNode> clonePtr() const {
-    return std::make_unique<ASTNode>(clone());
-  }
-  template <typename T>
-  std::unique_ptr<T> cloneAsPtr() const {
-    std::unique_ptr<ASTNode> clone = clonePtr();
-    T *data = dynamic_cast<T*>(clone.get());
-    if (data)
-      clone.release();
-    std::unique_ptr<T> ptr { data };
-    return ptr;
   }
   children_t* operator->() {
     return &__children;
@@ -82,12 +69,6 @@ public:
     return __children;
   }
   const children_t& operator*() const {
-    return __children;
-  }
-  children_t& children() {
-    return __children;
-  }
-  const children_t& children() const {
     return __children;
   }
   ASTNode*& parent() {
@@ -102,10 +83,10 @@ public:
   auto getEndLoc() const {
     return __range.end;
   }
-  auto& getSourceRange() {
+  SourceRange& getSourceRange() {
     return __range;
   }
-  auto getSourceRange() const {
+  const SourceRange& getSourceRange() const {
     return __range;
   }
   template <typename T>
@@ -143,30 +124,6 @@ protected:
   SourceRange __range { };
   ASTNode *__parent { };
   children_container<> __children;
-};
-struct ASTNodeList: public ASTNode, std::vector<std::unique_ptr<ASTNode>> {
-  using vector_t = std::vector<std::unique_ptr<ASTNode>>;
-  using parents_t = parent_container<ASTNode>;
-  static constexpr node_kind_t kind = node_kind_t::ASTNodeList;
-  ASTNodeList(ASTNode &&node) :
-      ASTNode(std::move(node)) {
-  }
-  virtual node_kind_t classOf() const {
-    return kind;
-  }
-  ASTNodeList clone() const {
-    auto node = ASTNodeList(ASTNode::clone());
-    node.resize(this->size());
-    for (size_t i = 0; i < this->size(); ++i)
-      if ((*this)[i])
-        node[i] = (*this)[i]->clonePtr();
-    return node;
-  }
-  virtual std::unique_ptr<ASTNode> clonePtr() const {
-    return std::make_unique<ASTNode>(clone());
-  }
-  using std::vector<std::unique_ptr<ASTNode>>::vector;
-  using vector_t::operator=;
 };
 inline std::ostream& operator<<(std::ostream &ost, const ASTNode &node) {
   ost << node.to_string();

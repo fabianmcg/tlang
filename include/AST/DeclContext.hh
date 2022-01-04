@@ -5,84 +5,25 @@
 #include <memory>
 #include <type_traits>
 #include "Common/Macros.hh"
+#include "Common/Reference.hh"
 #include "ASTCommon.hh"
 
 namespace _astnp_ {
-template <typename T>
-struct reference {
-  T *__data { };
-  reference() = default;
-  ~reference() {
-    __data = nullptr;
-  }
-  reference(reference&&) = default;
-  reference(const reference&) = default;
-  reference(T &value) {
-    __data = &value;
-  }
-  reference(T *value) {
-    __data = value;
-  }
-  reference& operator=(reference&&) = default;
-  reference& operator=(const reference&) = default;
-  reference& operator=(T &value) {
-    __data = &value;
-    return *this;
-  }
-  reference& operator=(T *value) {
-    __data = value;
-    return *this;
-  }
-  operator bool() const {
-    return __data;
-  }
-  T* operator*() {
-    return __data;
-  }
-  const T* operator*() const {
-    return __data;
-  }
-  T* data() {
-    return __data;
-  }
-  const T* data() const {
-    return __data;
-  }
-  T& ref() {
-    return *__data;
-  }
-  const T& ref() const {
-    return *__data;
-  }
-  inline bool valid() const {
-    return __data;
-  }
-  void reset() {
-    __data = nullptr;
-  }
-};
-template <typename T>
-reference<T> make_ref(T &val) {
-  return reference<T> { val };
-}
-template <typename T>
-reference<T> make_ref(T *val) {
-  return reference<T> { val };
-}
 struct DeclContext {
-  std::list<std::unique_ptr<Decl>>& operator*() {
-    return decls;
+  std::list<Decl*>& operator*() {
+    return __decls;
   }
-  const std::list<std::unique_ptr<Decl>>& operator*() const {
-    return decls;
+  const std::list<Decl*>& operator*() const {
+    return __decls;
   }
-  void add(std::unique_ptr<Decl> &&decl) {
-    decls.push_back(std::forward<std::unique_ptr<Decl>>(decl));
+  void add(Decl *decl) {
+    __decls.push_back(decl);
   }
   DeclContext clone() const {
     return DeclContext();
   }
-  std::list<std::unique_ptr<Decl>> decls;
+protected:
+  std::list<Decl*> __decls;
 };
 }
 #endif

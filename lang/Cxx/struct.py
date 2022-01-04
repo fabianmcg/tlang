@@ -216,7 +216,6 @@ class Struct:
 
     def cxxHeader(self):
         src = "public:\n" + generateSectionComment("Header")
-        src += "using class_type = {};".format(self.identifier)
         src += "using parents_t = parent_container<{}>;\n".format(", ".join(map(str, self.parents)))
         enums = ""
         if self.enums.notEmpty():
@@ -250,9 +249,9 @@ class Struct:
             src += "virtual ~{0:}() = default;".format(self.identifier)
         else:
             src += "\n ~{0:}() = default;".format(self.identifier)
-        src += "\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = delete;".format(self.identifier)
+        src += "\n{0:}({0:}&&) = default;\n{0:}(const {0:}&) = default;".format(self.identifier)
         src += self.cxxSpecialConstructor()
-        src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = delete;\n".format(self.identifier)
+        src += "{0:}& operator=({0:}&&) = default;\n{0:}& operator=(const {0:}&) = default;\n".format(self.identifier)
         return src
 
     def cxxPreMembers(self):

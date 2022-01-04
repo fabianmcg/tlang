@@ -115,7 +115,7 @@ class ASTDatabase:
     def generateMain(self):
         enum = ""
         fwd = "\n".join(map(lambda x: "class {};".format(x), list(self.nodes.keys()) + list(self.structs.keys())))
-        to_string = 'case NodeClass::ASTNode:\nreturn "ASTNode";case NodeClass::ASTNodeList:\nreturn "ASTNodeList";'
+        to_string = 'case NodeClass::ASTNode:\nreturn "ASTNode";'
         is_methods = ""
         for nodeClass, Class in self.nodesByClass.items():
             enum += "First{},\n".format(nodeClass)
@@ -126,7 +126,7 @@ class ASTDatabase:
             is_methods += "inline constexpr bool is{0:}(NodeClass kind) {{ return (NodeClass::First{0:} < kind) && (kind < NodeClass::Last{0:});}}".format(
                 nodeClass
             )
-        enum = "enum class NodeClass {{\nASTNode,\nASTNodeList,\n{}}};".format(enum)
+        enum = "enum class NodeClass {{\nASTNode,\n{}}};".format(enum)
         to_string = 'inline std::string to_string(NodeClass kind) {{switch(kind){{{}default: return "Unknown NodeClass";}}}}'.format(
             to_string
         )
@@ -139,7 +139,8 @@ class ASTDatabase:
         if not namespace.isMain():
             incSrc = namespace.cxx("_astnp_")
             incSrc = getJinjaTemplate(
-                templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"']}
+                templatePath,
+                {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"', '"Common/Reference.hh"']},
             )
         else:
             incSrc = namespace.cxx("_astnp_", self.generateMain())

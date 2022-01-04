@@ -66,8 +66,8 @@ public:
   }
   visit_t visitASTNode(ASTNode *node, bool isFirst) {
     auto kind = node->classOf();
-    if (kind == NodeClass::ASTNodeList)
-      return visit_value;
+//    if (kind == NodeClass::ASTNodeList)
+//      return visit_value;
     if (isFirst) {
       if (isStmt(kind)) {
         push_color(Color::Magenta());
@@ -111,31 +111,32 @@ public:
     return visit_value;
   }
   visit_t visitFunctionDecl(FunctionDecl *node, bool isFirst) {
-    if (isFirst) {
-      if (auto type = node->getReturntype()) {
+    if (isFirst) {auto& type = node->getReturntype();
+      if (true) {
         ost << "'";
-        dumpType(type);
+        dumpType(&type);
         ost << " (";
-        if (auto args = node->getParameters()) {
-          for (size_t i = 0; i < args->size(); ++i) {
-            if (auto t = node->getParameters(i)->getType())
-              dumpType(t);
-            if ((i + 1) < args->size())
-              ost << ", ";
-          }
-        }
+//        if (auto args = node->getParameters()) {
+//          for (size_t i = 0; i < args->size(); ++i) {
+//            if (auto t = node->getParameters(i)->getType())
+//              dumpType(t);
+//            if ((i + 1) < args->size())
+//              ost << ", ";
+//          }
+//        }
         ost << ")'";
       }
     }
     return visit_value;
   }
   visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
-    if (isFirst)
-      if (auto type = node->getType()) {
+    if (isFirst) {auto& type = node->getType();
+      if (true) {
         ost << "'";
-        dumpType(type);
+        dumpType(&type);
         ost << "'";
       }
+    }
     return visit_value;
   }
   visit_t visitLiteralExpr(LiteralExpr *node, bool isFirst) {
@@ -148,12 +149,11 @@ public:
   }
   template <typename T>
   visit_t postWalk(T *node, bool isFirst) {
-    if (any(std::is_same_v<T, ASTNodeList>, isType(T::kind)))
+    if (isType(T::kind))
       return visit_value;
     if (isFirst) {
       if (auto expr = dynamic_cast<Expr*>(node))
-        if (expr->getType())
-          dumpType(expr->getType());
+          dumpType(&(expr->getType()));
       ost << std::endl;
     }
     return visit_value;

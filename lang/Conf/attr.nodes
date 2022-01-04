@@ -1,4 +1,7 @@
 file Attr {
+  .{
+    #include "AST/Type.hh"
+  }.
   node Attr<Attr> {
     parents: [ASTNode];
   };

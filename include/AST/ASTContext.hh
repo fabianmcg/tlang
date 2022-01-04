@@ -3,23 +3,55 @@
 
 #include "Common/Macros.hh"
 #include "ASTCommon.hh"
+#include <cstdint>
+#include <map>
 
 namespace _astnp_ {
 struct ASTContext {
-  std::unique_ptr<ModuleDecl> translation_unit;
-  static ASTContext create(const Identifier &id) {
-    ASTContext ctx;
-    ctx.translation_unit = std::make_unique<ModuleDecl>();
-    ctx.translation_unit->getIdentifier() = id;
-    return ctx;
+  ASTContext() {
   }
+  ~ASTContext() {
+    __module == nullptr;
+  }
+  ASTContext(ASTContext&&) = default;
+  ASTContext(const ASTContext&) = delete;
+  ASTContext& operator=(ASTContext&&) = default;
+  ASTContext& operator=(const ASTContext&) = delete;
   ModuleDecl* operator*() const {
-    return translation_unit.get();
+    return __module;
   }
-  ASTContext& operator=(std::unique_ptr<ModuleDecl> &&module) {
-    translation_unit = std::move(module);
-    return *this;
+  template <typename T, typename ...Args>
+  T* make(Args &&...args) {
+    return add_node(std::make_unique<T>(std::forward<Args>(args)...));
   }
+  template <typename T, typename V>
+  T* create(V &&value) {
+    return add_node(std::make_unique<T>(std::forward<V>(value)));
+  }
+  template <typename T>
+  T* add_type(T &&value) {
+    return add_node(std::make_unique<T>(std::forward<T>(value)));
+  }
+  template <typename T>
+  T* add_node(std::unique_ptr<T> &&value) {
+    if (value) {
+      auto &node = __nodes[reinterpret_cast<std::uintptr_t>(value.get())] = std::forward<std::unique_ptr<T> >(value);
+      return static_cast<T*>(node.get());
+    }
+    return nullptr;
+  }
+  template <typename T>
+  void remove_node(T *node) {
+    auto it = __nodes.find(static_cast<uint64_t>(node));
+    if (it != __nodes.end())
+      __nodes.erase(it);
+  }
+  void set_module(ModuleDecl *module) {
+    __module = module;
+  }
+protected:
+  std::map<uint64_t, std::unique_ptr<ASTNode>> __nodes;
+  ModuleDecl *__module { };
 };
 }
 #endif
