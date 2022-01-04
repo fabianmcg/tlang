@@ -165,11 +165,11 @@ public:
   }
   template <bool reversed = false, typename V = int>
   void traverse(V &&function) {
-    visit_tuple(__data, std::forward<V>(function));
+    visit_tuple<reversed>(__data, std::forward<V>(function));
   }
   template <bool reversed = false, typename V = int>
   void traverse(V &&function) const {
-    visit_tuple(__data, std::forward<V>(function));
+    visit_tuple<reversed>(__data, std::forward<V>(function));
   }
 private:
   children_container_types __data { };

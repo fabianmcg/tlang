@@ -144,9 +144,9 @@ public:
     else
       return R::success(std::make_optional<type>(std::forward<Args>(args)...));
   }
-  template <typename R, typename T>
+  template <typename R, bool asReturn = true, typename T = void>
   R create(T &&value) {
-    using type = typename R::type;
+    using type = std::conditional_t<asReturn, typename R::type, T>;
     constexpr return_kind kind = R::kind;
     if constexpr (kind == return_kind::Dynamic)
       return R::success(ctx.template create<type>(std::forward<T>(value)));
