@@ -84,20 +84,11 @@ public:
   visit_t visitASTNode(ASTNode *node, bool firstQ = true) {
     return visit_value;
   }
-  visit_t visitASTNodeList(ASTNodeList *node, bool firstQ = true) {
-    return visit_value;
-  }
   {{ VISIT }}visit_t walkUpToASTNode(ASTNode *node, bool firstQ = true) {
     return getDerived().visitASTNode(node, firstQ);
   }
-  visit_t walkUpToASTNodeList(ASTNodeList *node, bool firstQ = true) {
-    WALKUP_MACRO(ASTNode, ASTNodeList);
-  }
   {{ WALK_UP }}bool traverseASTNode(ASTNode *node, stack_t *stack = nullptr, bool firstQ = true) {
     return getDerived().walkUpToASTNode(node) != terminate_value;
-  }
-  bool traverseASTNodeList(ASTNodeList *node, stack_t *stack = nullptr, bool firstQ = true) {
-    TRAVERSE_MACRO(ASTNodeList)
   }
   {{ TRAVERSE }}bool dynamicTraverse(ASTNode *node) {
     return selectTraverse(node_t{node, true}, nullptr);
@@ -120,8 +111,6 @@ public:
     switch (kind) {
     case NodeClass::ASTNode:
       return derived.traverseASTNode(node.first, stack, node.second);
-    case NodeClass::ASTNodeList:
-      return derived.traverseASTNodeList(node.first->template getAsPtr<ASTNodeList>(), stack, node.second);
     {{ TRAVERSE_CASES }}default:
       break;
     }

@@ -6,6 +6,7 @@
 #include <tuple>
 #include <type_traits>
 #include "ASTCommon.hh"
+#include <Common/StaticFor.hh>
 
 namespace _astnp_ {
 template <typename ...T>
@@ -22,211 +23,164 @@ struct parent_container<> {
   using type_t = void;
 };
 
-template <typename ASTNode, access_kind kind = access_kind::pointer>
-struct access_type;
-template <typename ASTNode>
-struct access_type<ASTNode, access_kind::pointer> {
-  template <typename T>
-  using type = T*;
-};
-template <typename ASTNode>
-struct access_type<ASTNode, access_kind::reference> {
-  template <typename T>
-  using type = T&;
-};
-template <typename ASTNode>
-struct access_type<ASTNode, access_kind::container> {
-  template <typename T>
-  using type = std::unique_ptr<ASTNode>&;
-};
-
 enum class child_kind {
   static_node,
   dynamic_node,
   static_list,
   dynamic_list
 };
+template <child_kind K>
+constexpr bool is_list() {
+  return K == child_kind::static_list || K == child_kind::dynamic_list;
+}
+template <child_kind K>
+constexpr bool is_dynamic() {
+  return K == child_kind::dynamic_node || K == child_kind::dynamic_list;
+}
+template <typename T, child_kind K>
+struct child_container_type {
+  using type = T;
+  using value_type = T;
+  using return_type = type&;
+};
+template <typename T>
+struct child_container_type<T, child_kind::dynamic_node> {
+  using type = T*;
+  using value_type = T*;
+  using return_type = type&;
+};
+template <typename T>
+struct child_container_type<T, child_kind::static_list> {
+  using type = std::vector<T>;
+  using value_type = T;
+  using return_type = type&;
+};
+template <typename T>
+struct child_container_type<T, child_kind::dynamic_list> {
+  using type = std::vector<T*>;
+  using value_type = T*;
+  using return_type = type&;
+};
+template <typename T, child_kind K>
+using child_container_t = child_container_type<T, K>;
+
 template <child_kind K, typename T, int O, bool V = true>
 struct child_node {
   static constexpr child_kind kind = K;
   using type = T;
+  using value_type = typename child_container_t<type, K>::value_type;
+  using return_type = typename child_container_t<type, K>::return_type;
+  using container_type = typename child_container_t<type, K>::type;
   static constexpr int offset = O;
   static constexpr bool visit = V;
+  static constexpr bool dynamic = is_dynamic<kind>();
+  static constexpr bool list = is_list<kind>();
 };
 
-template <typename ASTNode, typename ASTNodeList, typename ...T>
+template <typename ASTNode, typename ...T>
 class children_container_helper;
-template <typename ASTNode, typename ASTNodeList>
-class children_container_helper<ASTNode, ASTNodeList> {
+template <typename ASTNode>
+class children_container_helper<ASTNode> {
 public:
   static constexpr bool is_trivial = true;
   static constexpr size_t size = 0;
-  template <int offset, access_kind kind>
-  using return_t = typename access_type<ASTNode, kind>::template type<ASTNode>;
+  template <int offset>
+  using return_t = ASTNode*;
   template <typename ...Args>
   children_container_helper(Args &&...args) {
   }
-  ASTNode* begin() const {
-    return nullptr;
+  template <bool reversed = false, typename T = int>
+  void traverse(T &&function) {
   }
-  ASTNode* end() const {
-    return nullptr;
-  }
-  ASTNode* rbegin() const {
-    return nullptr;
-  }
-  ASTNode* rend() const {
-    return nullptr;
-  }
-  children_container_helper clone() const {
-    return children_container_helper { };
+  template <bool reversed = false, typename T = int>
+  void traverse(T &&function) const {
   }
 };
-template <typename T>
-struct is_unique_ptr {
-  static constexpr bool value = false;
-};
-template <typename T>
-struct is_unique_ptr<std::unique_ptr<T>> {
-  static constexpr bool value = true;
-};
-template <typename T>
-inline constexpr bool is_unique_ptr_v = is_unique_ptr<T>::value;
-template <typename ASTNode, typename ASTNodeList, typename ...T>
+template <typename ASTNode, typename ...T>
 class children_container_helper {
 public:
   static constexpr bool is_trivial = false;
   static constexpr size_t size = sizeof...(T);
   using children_nodes_t = std::tuple<T...>;
   static constexpr child_kind children_kinds[size] = { T::kind... };
-  using children_types_t = std::tuple<typename T::type...>;
+  using children_types = std::tuple<typename T::type...>;
+  using children_value_types = std::tuple<typename T::value_type...>;
+  using children_return_types = std::tuple<typename T::return_type...>;
+  using children_container_types = std::tuple<typename T::container_type...>;
   static constexpr int children_offsets[size] = { T::offset... };
   static constexpr bool children_visits[size] = { T::visit... };
   template <int offset>
-  using children_t = std::tuple_element_t<offset, children_types_t>;
-  template <access_kind kind, typename V>
-  using return_helper_t = typename access_type<ASTNode, kind>::template type<V>;
-  template <int offset, access_kind kind>
-  using return_t = return_helper_t<kind, std::conditional_t<children_kinds[offset] == child_kind::dynamic_list, ASTNodeList, children_t<offset>>>;
-  template <typename V>
-  static std::unique_ptr<ASTNode> to_node(std::unique_ptr<V> &&ptr) {
-    return std::move(ptr);
-  }
-  template <typename V, std::enable_if_t<!is_unique_ptr_v<V>, int> = 0>
-  static std::unique_ptr<ASTNode> to_node(V &&value) {
-    if constexpr (std::is_same_v<V, nullptr_t>)
-      return nullptr;
-    else
-      return std::make_unique<V>(std::forward<V>(value));
-  }
+  using children_t = std::tuple_element_t<offset, children_types>;
+  template <int offset>
+  using container_t = std::tuple_element_t<offset, children_container_types>;
+  template <int offset>
+  using return_t = std::tuple_element_t<offset, children_return_types>;
+  template <int offset>
+  using value_t = std::tuple_element_t<offset, children_value_types>&;
   children_container_helper() = default;
   template <typename ...Args>
   children_container_helper(Args &&...args) :
-      data( { to_node(std::forward<Args>(args))... }) {
+      __data(std::forward<Args>(args)...) {
   }
   children_container_helper(children_container_helper&&) = default;
+  children_container_helper(const children_container_helper&) = default;
   children_container_helper& operator=(children_container_helper&&) = default;
-  auto begin() {
-    return data.begin();
-  }
-  auto begin() const {
-    return data.begin();
-  }
-  auto rbegin() {
-    return data.rbegin();
-  }
-  auto rbegin() const {
-    return data.rbegin();
-  }
-  auto end() {
-    return data.end();
-  }
-  auto end() const {
-    return data.end();
-  }
-  auto rend() {
-    return data.rend();
-  }
-  auto rend() const {
-    return data.rend();
-  }
-  template <int offset, typename V>
+  children_container_helper& operator=(const children_container_helper&) = default;
+  template <int offset, typename V = container_t<offset>, std::enable_if_t<!is_list<children_kinds[offset]>(), int> = 0>
   V* getAs() const {
-    return dynamic_cast<V*>(data[offset].get());
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] != child_kind::dynamic_list, int> = 0>
-  return_t<offset, kind> get() {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<children_t<offset>*>(data[offset].get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<children_t<offset>*>(data[offset].get());
-    else if constexpr (kind == access_kind::container)
-      return data[offset];
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] != child_kind::dynamic_list, int> = 0>
-  const return_t<offset, kind> get() const {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<children_t<offset>*>(data[offset].get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<children_t<offset>*>(data[offset].get());
-    else if constexpr (kind == access_kind::container)
-      return data[offset];
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  return_t<offset, kind> get() {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<ASTNodeList*>(data[offset].get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<ASTNodeList*>(data[offset].get());
-    else if constexpr (kind == access_kind::container)
-      return data[offset];
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  const return_t<offset, kind> get() const {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<ASTNodeList*>(data[offset].get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<ASTNodeList*>(data[offset].get());
-    else if constexpr (kind == access_kind::container)
-      return data[offset];
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  return_helper_t<kind, children_t<offset>> get(size_t i) {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
-    else if constexpr (kind == access_kind::container)
-      return static_cast<ASTNodeList*>(data[offset].get())->at(i);
-  }
-  template <int offset, access_kind kind, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  const return_helper_t<kind, children_t<offset>> get(size_t i) const {
-    if constexpr (kind == access_kind::pointer)
-      return static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
-    else if constexpr (kind == access_kind::reference)
-      return *static_cast<children_t<offset>*>(static_cast<ASTNodeList*>(data[offset].get())->at(i).get());
-    else if constexpr (kind == access_kind::container)
-      return static_cast<ASTNodeList*>(data[offset].get())->at(i);
-  }
-  template <int offset, std::enable_if_t<children_kinds[offset] == child_kind::dynamic_list, int> = 0>
-  size_t getSize() const {
-    return data[offset].get() ? getAs<offset, ASTNodeList>()->size() : 0;
+    if constexpr (children_kinds[offset] == child_kind::dynamic_node)
+      return dynamic_cast<V*>(data<offset>());
+    else
+      return dynamic_cast<V*>(const_cast<container_t<offset>*>(&data<offset>()));
   }
   template <int offset>
-  bool has() const {
-    return data[offset].get();
+  inline return_t<offset> get() {
+    return data<offset>();
   }
-  children_container_helper clone() const {
-    auto tmp = children_container_helper { };
-    for (size_t i = 0; i < size; ++i)
-      if (data[i])
-        tmp.data[i] = data[i]->clonePtr();
-    return tmp;
+  template <int offset>
+  inline const return_t<offset> get() const {
+    return data<offset>();
+  }
+  template <int offset, std::enable_if_t<is_list<children_kinds[offset]>(), int> = 0>
+  inline value_t<offset> get(size_t i) {
+    return get<offset>()[i];
+  }
+  template <int offset, std::enable_if_t<is_list<children_kinds[offset]>(), int> = 0>
+  inline const value_t<offset> get(size_t i) const {
+    return get<offset>()[i];
+  }
+  template <int offset, std::enable_if_t<!is_list<children_kinds[offset]>(), int> = 0>
+  inline size_t getSize() const {
+    return 1;
+  }
+  template <int offset, std::enable_if_t<is_list<children_kinds[offset]>(), int> = 0>
+  inline size_t getSize() const {
+    return data<offset>().size();
+  }
+  template <int offset>
+  inline bool has() const {
+    if constexpr (children_kinds[offset] == child_kind::dynamic_node)
+      return data<offset>();
+    return true;
+  }
+  template <bool reversed = false, typename V = int>
+  void traverse(V &&function) {
+    visit_tuple(__data, std::forward<V>(function));
+  }
+  template <bool reversed = false, typename V = int>
+  void traverse(V &&function) const {
+    visit_tuple(__data, std::forward<V>(function));
   }
 private:
-  std::array<std::unique_ptr<ASTNode>, size> data;
+  children_container_types __data { };
+  template <int offset>
+  return_t<offset> data() {
+    return std::get<offset>(__data);
+  }
+  template <int offset>
+  const return_t<offset> data() const {
+    return const_cast<const return_t<offset>>(std::get<offset>(__data));
+  }
 };
-
 }
-
 #endif

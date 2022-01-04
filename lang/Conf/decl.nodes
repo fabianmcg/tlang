@@ -1,4 +1,7 @@
 file Decl {
+  .{
+    #include "AST/Type.hh"
+  }.
   node Decl<Decl> {
     parents: [ASTNode];
     children: [
@@ -22,7 +25,7 @@ file Decl {
   node FunctorDecl<Decl> {
     parents: [NamedDecl, DeclContext];
     children: [
-      QualType returnType,
+      static QualType returnType,
       list ParameterDecl parameters,
       CompoundStmt body
     ];
@@ -59,7 +62,7 @@ file Decl {
   node TypedefDecl<Decl> {
     parents: [TypeDecl];
     children: [
-      QualType type
+      static QualType type
     ];
   };
   node TagDecl<Decl> {
@@ -74,7 +77,7 @@ file Decl {
   node EnumDecl<Decl> {
     parents: [TagDecl];
     children: [
-      QualType type
+      static QualType type
     ];
   };
   node MethodDecl<Decl> {
@@ -83,12 +86,13 @@ file Decl {
   node VariableDecl<Decl> {
     parents: [NamedDecl];
     children: [
-      QualType type,
+      static QualType type,
       Expr init
     ];
   };
   node ParameterDecl<Decl> {
     parents: [VariableDecl];
+
   };
   node MemberDecl<Decl> {
     parents: [VariableDecl];

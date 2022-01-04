@@ -36,24 +36,40 @@ reverse_wrapper<T> make_reverse(T &container) {
   return reverse_wrapper<T> { container };
 }
 template <typename T, typename S>
+struct addChildrenVisitor {
+  T *node { };
+  S *stack { };
+  template <int it, typename V>
+  void operator()(V &value) {
+    using children_t =typename T::children_t;
+    constexpr child_kind kind = children_t::children_kinds[it];
+    if constexpr (is_list<kind>()) {
+      if constexpr (is_dynamic<kind>()) {
+        for (auto child : make_reverse(value))
+          if (child)
+            stack->push_front( { child, true });
+      } else {
+        for (auto child : make_reverse(value))
+          if (child)
+            stack->push_front( { &child, true });
+      }
+    } else {
+      if constexpr (is_dynamic<kind>()) {
+        if (value)
+          stack->push_front( { value, true });
+      } else {
+        stack->push_front( { &value, true });
+      }
+    }
+  }
+};
+template <typename T, typename S>
 void addChildren(T *node, S *stack) {
   constexpr NodeClass kind = T::kind;
   if constexpr (kind == NodeClass::ASTNode)
     return;
-  else if constexpr (kind == NodeClass::ASTNodeList) {
-    auto n = make_reverse(node->template getAs<ASTNodeList>());
-    for (auto &child : n)
-      if (child)
-        stack->push_front( { child.get(), true });
-    return;
-  } else {
-    using children_t = typename T::children_t;
-    if constexpr (children_t::size > 0) {
-      for (auto &child : make_reverse(**node))
-        if (child)
-          stack->push_front( { child.get(), true });
-    }
-  }
+  auto visitor = addChildrenVisitor<T, S> { node, stack };
+  (**node).template traverse<true>(visitor);
 }
 template <typename T, typename S>
 struct addChildrenFunction {
@@ -85,7 +101,7 @@ struct addChildrenFunction<DeclContext, S> {
   void init() {
     for (auto &child : make_reverse(**node))
       if (child) {
-        stack->push_front( { child.get(), true });
+        stack->push_front( { child, true });
       }
   }
 };

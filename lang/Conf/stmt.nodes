@@ -1,4 +1,7 @@
 file Stmt {
+  .{
+    #include "AST/Type.hh"
+  }.
   node Stmt<Stmt> {
     parents: [ASTNode];
   };
@@ -52,14 +55,14 @@ file Stmt {
     parents: [Stmt];
     children: [
       Expr condition,
-      CompoundStmt body
+      Stmt body
     ];
   };
   node LoopStmt<Stmt> {
     parents: [AttributedStmt];
     children: [
       RangeStmt ranges,
-      CompoundStmt body
+      Stmt body
     ];
   };
   node RangeStmt<Stmt> {
@@ -100,15 +103,12 @@ file Expr {
     #include "AST/Stmt.hh"
     #include "AST/Operators.hh"
   }.
-  node Expr<Stmt, noDefault> {
+  node Expr<Stmt> {
     parents: [ValueStmt];
     children: [
-      QualType type
+      static QualType type
     ];
     .{
-      Expr(): Expr(UnresolvedType()) {}
-      template <typename T, std::enable_if_t<!std::is_same_v<T, QualType>, int> = 0>
-      Expr(T&& type) : __children(QualType(QualType::None, std::forward<T>(type))) {}
       Expr(QualType&& type) : __children(std::forward<QualType>(type)) {}
     }.
   };
@@ -118,8 +118,7 @@ file Expr {
       string value
     ];
     .{
-      template <typename T>
-      LiteralExpr(T&& type, std::string value) : Expr(std::forward<T>(type)), __value(value) {}
+      LiteralExpr(QualType&& type, std::string value) : Expr(std::forward<QualType>(type)), __value(value) {}
     }.
   };
   node BooleanLiteral<Stmt> {
@@ -128,13 +127,13 @@ file Expr {
   node IntegerLiteral<Stmt> {
     parents: [LiteralExpr];
     .{
-      IntegerLiteral(IntType&& type, std::string value) : LiteralExpr(std::forward<IntType>(type), value) {}
+      IntegerLiteral(QualType&& type, std::string value) : LiteralExpr(std::forward<QualType>(type), value) {}
     }.
   };
   node FloatLiteral<Stmt> {
     parents: [LiteralExpr];
     .{
-      FloatLiteral(FloatType&& type, std::string value) : LiteralExpr(std::forward<FloatType>(type), value) {}
+      FloatLiteral(QualType&& type, std::string value) : LiteralExpr(std::forward<QualType>(type), value) {}
     }.
   };
   node ComplexLiteral<Stmt> {
@@ -143,7 +142,7 @@ file Expr {
   node StringLiteral<Stmt> {
     parents: [LiteralExpr];
     .{
-      StringLiteral(std::string value) : LiteralExpr(StringType(), value) {}
+      StringLiteral(QualType&& type, std::string value) : LiteralExpr(std::forward<QualType>(type), value) {}
     }.
   };
   node ThisExpr<Stmt> {
@@ -155,9 +154,7 @@ file Expr {
       Expr expr
     ];
     .{
-      ParenExpr(std::unique_ptr<Expr>&& expr): __children(std::forward<std::unique_ptr<Expr>>(expr)) {
-        if (hasExpr())
-          getType<access_kind::container>() = getExpr()->getType()->clonePtr();
+      ParenExpr(Expr* expr): __children(expr) {
       }
     }.
   };
@@ -180,8 +177,8 @@ file Expr {
       Expr rhs
     ];
     .{
-      BinaryOperation(OperatorKind op, std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs): 
-        Expr(), __operator(op), __children(std::forward<std::unique_ptr<Expr>>(lhs), std::forward<std::unique_ptr<Expr>>(rhs)) {}
+      BinaryOperation(OperatorKind op, Expr* lhs, Expr* rhs): 
+        Expr(), __operator(op), __children(lhs, rhs) {}
     }.
   };
   node MemberExpr<Stmt> {
@@ -191,8 +188,8 @@ file Expr {
       MemberRefExpr member
     ];
     .{
-      MemberExpr(std::unique_ptr<Expr>&& lhs, std::unique_ptr<MemberRefExpr>&& rhs): 
-        Expr(), __children(std::forward<std::unique_ptr<Expr>>(lhs), std::forward<std::unique_ptr<MemberRefExpr>>(rhs)) {}
+      MemberExpr(Expr* lhs, MemberRefExpr* rhs): 
+        Expr(), __children(lhs, rhs) {}
     }.
   };
   node DeclRefExpr<Stmt> {
@@ -217,8 +214,8 @@ file Expr {
       Expr member
     ];
     .{
-      MemberRefExpr(reference<Expr> owner, std::unique_ptr<Expr>&& expr):
-        Expr(), __owner(owner), __children(std::forward<std::unique_ptr<Expr>>(expr)) {}
+      MemberRefExpr(reference<Expr> owner, Expr* expr):
+        Expr(), __owner(owner), __children(expr) {}
     }.
   };
   node CallExpr<Stmt> {
@@ -228,7 +225,8 @@ file Expr {
       list Expr args
     ];
     .{
-      CallExpr(std::unique_ptr<ASTNodeList>&& args): __children(nullptr, std::forward<std::unique_ptr<ASTNodeList>>(args)) {}
+      CallExpr(std::vector<Expr*>&& args):
+        __children(nullptr, std::forward<std::vector<Expr*>>(args)) {}
     }.
   };
   node CCallExpr<Stmt> {
@@ -240,8 +238,8 @@ file Expr {
       list Expr args
     ];
     .{
-      CCallExpr(const Identifier& callee, std::unique_ptr<ASTNodeList>&& args): 
-        Expr(CType()), __calleeIdentifier(callee), __children(std::forward<std::unique_ptr<ASTNodeList>>(args)) {}
+      CCallExpr(QualType&& type, const Identifier& callee, std::vector<Expr*>&& args): 
+        Expr(std::forward<QualType>(type)), __calleeIdentifier(callee), __children(std::forward<std::vector<Expr*>>(args)) {}
     }.
   };
   node CastExpr<Stmt> {

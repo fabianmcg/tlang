@@ -15,6 +15,9 @@ file Type {
       Reference = 1,
       Const = 2
     };
+    .{
+      QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
+    }.
   };
   node UnresolvedType<Type> {
     parents: [Type];
@@ -139,7 +142,7 @@ file Type {
     .{
       FunctionType(const Identifier& identifier, reference<NamedDecl> decl = {}):
        DefinedType(identifier, decl) {
-       }
+      }
     }.
   };
 };

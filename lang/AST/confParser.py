@@ -232,7 +232,11 @@ class Parser:
     @staticmethod
     def createTopDecl():
         top = Parser.createNode() | Parser.createStruct() | parseEnum.createEnum()
-        return Optional(parseNode.createHeaderSection()) + pp.OneOrMore(top) + Optional(parseNode.createSection())
+        return (
+            Optional(parseNode.createHeaderSection())
+            + Optional(pp.OneOrMore(top))
+            + Optional(parseNode.createSection())
+        )
 
     @staticmethod
     def createTop(db: ASTDatabase):
@@ -242,7 +246,9 @@ class Parser:
         def action(x):
             return db.addFileNamespace(FileNamespace(str(x[0]), x[1:]))
 
-        fileNamespace = parseElement(file + P.identifier + ld + Parser.createTopDecl() + rd, action)
+        fileNamespace = parseElement(
+            file + P.identifier + ld + parseOptional(Parser.createTopDecl(), default=[]) + rd, action
+        )
         return pp.OneOrMore(fileNamespace).ignore(pp.cStyleComment)
 
     @staticmethod
