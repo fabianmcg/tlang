@@ -70,7 +70,7 @@ class ChildNode(Variable):
         const = src.format(self.identifier, self.identifier.capitalize(), "", "", "")
         no_const = src.format(self.identifier, self.identifier.capitalize(), "const", "", "")
         if isinstance(self.T, (StaticList, DynamicList)):
-            src = "{2:} auto get{1:}({3:}) {2:} " + "{{ return __children.template get<{0:}Offset>({4:});}}\n"
+            src = "{2:} child_value_t<{0:}Offset> get{1:}({3:}) {2:} " + "{{ return __children.template getElem<{0:}Offset>({4:});}}\n"
             const += src.format(self.identifier, self.identifier.capitalize(), "", "size_t i", "i")
             no_const += src.format(self.identifier, self.identifier.capitalize(), "const", "size_t i", "i")
         return const + no_const
@@ -167,6 +167,7 @@ class Node(Struct):
         src = "enum {{{} endOffset}};".format(enum + ("," if len(enum) else ""))
         src += "using children_t = children_container<{}>;\n".format(", ".join(map(getCxx, self.children)))
         src += "template <int offset> using child_return_t = typename children_t::template return_t<offset>;\n"
+        src += "template <int offset> using child_value_t = typename children_t::template value_t<offset>;\n"
         src += 'static_assert(children_t::size == endOffset, "Incongruent number of children.");\n'
         src += "using node_kind_t = NodeClass;\nstatic constexpr node_kind_t kind = node_kind_t::{};\n".format(
             self.identifier

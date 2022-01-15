@@ -19,9 +19,6 @@ file Type {
       QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
     }.
   };
-  node UnresolvedType<Type> {
-    parents: [Type];
-  };
   node DependentType<Type> {
     parents: [Type];
   };
@@ -30,6 +27,17 @@ file Type {
   };
   node CType<Type> {
     parents: [DependentType];
+  };
+  node UnresolvedType<Type> {
+    parents: [DependentType];
+    members: [
+      Identifier identifier
+    ];
+    .{
+      UnresolvedType(const Identifier& identifier):
+       __identifier(identifier) {
+       }
+    }.
   };
   node BuiltinType<Type> {
     parents: [Type];
@@ -60,6 +68,9 @@ file Type {
       Signed,
       Unsigned
     };
+    .{
+      IntType(numeric_precision p, numeric_sign s): __precision(p), __sign(s) {}
+    }.
   };
   node FloatType<Type> {
     parents: [BuiltinType];
@@ -74,6 +85,15 @@ file Type {
       P_64,
       P_128
     };
+    .{
+      FloatType(numeric_precision p): __precision(p) {}
+    }.
+  };
+  node VariadicType<Type> {
+    parents: [Type];
+    children: [
+      Type underlying
+    ];
   };
   node PtrType<Type> {
     parents: [Type];
@@ -86,11 +106,9 @@ file Type {
   };
   node ArrayType<Type> {
     parents: [Type];
-    members: [
-      size_t size
-    ];
     children: [
-      Type underlying
+      Type underlying,
+      Expr size
     ];
   };
   node DefinedType<Type> {

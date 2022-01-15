@@ -27,19 +27,26 @@ public:
       ost << "__ctype__";
     return visit_t::skip;
   }
+  visit_t visitVariadicType(VariadicType *node, bool isFirst) {
+    if (isFirst) {
+      dynamicTraverse(node->getUnderlying());
+      ost << "...";
+    }
+    return visit_t::skip;
+  }
   visit_t visitAutoType(AutoType *node, bool isFirst) {
     if (isFirst)
       ost << "auto";
     return visit_t::skip;
   }
+  visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
+    if (isFirst)
+      ost << "#" << node->getIdentifier() << "#";
+    return visit_t::skip;
+  }
   visit_t visitBuiltinType(BuiltinType *node, bool isFirst) {
     if (isFirst)
       ost << _astnp_::to_string(node->classOf());
-    return visit_t::skip;
-  }
-  visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
-    if (isFirst)
-      ost << "UnresolvedType";
     return visit_t::skip;
   }
   visit_t visitDefinedType(DefinedType *node, bool isFirst) {
@@ -66,16 +73,17 @@ public:
   }
   visit_t visitASTNode(ASTNode *node, bool isFirst) {
     auto kind = node->classOf();
-//    if (kind == NodeClass::ASTNodeList)
-//      return visit_value;
     if (isFirst) {
       if (isStmt(kind)) {
         push_color(Color::Magenta());
       } else if (isDecl(kind))
         push_color(Color::AquaGreen());
       if (!isType(kind)) {
-        cst() << std::string(indent, '-') + "+" << to_string(kind) + " " << node << " ";
+        cst() << std::string(indent, '-') + "+" << to_string(kind) << " ";
+        push_color(Color::Default());
+        cst() << node << " ";
         extentInfo(node);
+        pop_color();
         cst() << " ";
       }
       indent++;
@@ -111,31 +119,27 @@ public:
     return visit_value;
   }
   visit_t visitFunctionDecl(FunctionDecl *node, bool isFirst) {
-    if (isFirst) {auto& type = node->getReturntype();
-      if (true) {
-        ost << "'";
-        dumpType(&type);
-        ost << " (";
-//        if (auto args = node->getParameters()) {
-//          for (size_t i = 0; i < args->size(); ++i) {
-//            if (auto t = node->getParameters(i)->getType())
-//              dumpType(t);
-//            if ((i + 1) < args->size())
-//              ost << ", ";
-//          }
-//        }
-        ost << ")'";
+    if (isFirst) {
+      auto &type = node->getReturntype();
+      ost << "'";
+      dumpType(&type);
+      ost << " (";
+      auto &args = node->getParameters();
+      for (size_t i = 0; i < args.size(); ++i) {
+        dumpType(&(node->getParameters(i)->getType()));
+        if ((i + 1) < args.size())
+          ost << ", ";
       }
+      ost << ")'";
     }
     return visit_value;
   }
   visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
-    if (isFirst) {auto& type = node->getType();
-      if (true) {
-        ost << "'";
-        dumpType(&type);
-        ost << "'";
-      }
+    if (isFirst) {
+      auto &type = node->getType();
+      ost << "'";
+      dumpType(&type);
+      ost << "'";
     }
     return visit_value;
   }
@@ -153,7 +157,7 @@ public:
       return visit_value;
     if (isFirst) {
       if (auto expr = dynamic_cast<Expr*>(node))
-          dumpType(&(expr->getType()));
+        dumpType(&(expr->getType()));
       ost << std::endl;
     }
     return visit_value;
@@ -182,10 +186,12 @@ private:
     pop_color();
   }
   void extentInfo(ASTNode *node) {
+    ost << "<";
     push_color(Color::Orange());
     auto range = node->getSourceRange();
-    cst() << "<" << range.begin.str() << " " << range.end.str() << ">";
+    cst() << range.begin.str() << " " << range.end.str();
     pop_color();
+    cst() << ">";
   }
 };
 template <typename T>

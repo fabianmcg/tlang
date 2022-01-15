@@ -127,6 +127,7 @@ def makeLexer():
     db.addToken(Operator, "Namespace", "::")
     db.addToken(Operator, "Increment", "++")
     db.addToken(Operator, "Decrement", "--")
+    db.addToken(Operator, "Ellipsis", "...")
     # ******************************************************************************
     #   Characters
     # ******************************************************************************

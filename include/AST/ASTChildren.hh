@@ -86,6 +86,8 @@ public:
   static constexpr size_t size = 0;
   template <int offset>
   using return_t = ASTNode*;
+  template <int offset>
+  using value_t = ASTNode*;
   template <typename ...Args>
   children_container_helper(Args &&...args) {
   }
@@ -94,6 +96,14 @@ public:
   }
   template <bool reversed = false, typename T = int>
   void traverse(T &&function) const {
+  }
+  template <int offset>
+  inline return_t<offset> get() const {
+    return nullptr;
+  }
+  template <int offset>
+  inline value_t<offset> getElem(size_t i) const {
+    return nullptr;
   }
 };
 template <typename ASTNode, typename ...T>
@@ -142,11 +152,11 @@ public:
     return data<offset>();
   }
   template <int offset, std::enable_if_t<is_list<children_kinds[offset]>(), int> = 0>
-  inline value_t<offset> get(size_t i) {
+  inline value_t<offset> getElem(size_t i) {
     return get<offset>()[i];
   }
   template <int offset, std::enable_if_t<is_list<children_kinds[offset]>(), int> = 0>
-  inline const value_t<offset> get(size_t i) const {
+  inline const value_t<offset> getElem(size_t i) const {
     return get<offset>()[i];
   }
   template <int offset, std::enable_if_t<!is_list<children_kinds[offset]>(), int> = 0>

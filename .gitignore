@@ -21,7 +21,9 @@ include/AST/Expr.hh
 include/AST/RecursiveASTVisitor.hh
 include/AST/Stmt.hh
 include/AST/Type.hh
+include/AST/Operators.hh
 include/Lexer/tokens.hh
 include/Lexer/Tokens.hh
 lang/Conf/tmp
 lib/Parser/ParserHandler.cc
+*TODO*
