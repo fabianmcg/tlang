@@ -1,7 +1,12 @@
-function int saxpy(auto x) {
+function void fun(T& x, const float...& y) {
+	x = x + y;
 }
 
-function void saxpy2(int s, const float*& x, Hi k, bool l) {
+
+function int f1(auto x) {
+}
+
+function void fun(int s, const float*...& x, Hi k, bool l) {
   let int x = 0;
   if ( 0 + x )
     if ( (2 + 2) ) {
@@ -12,7 +17,7 @@ function void saxpy2(int s, const float*& x, Hi k, bool l) {
   saxpy();
   k.x.l;
   k.bar().foo();
-  ccall::printf("sss", 3, l);
+  ccall::printf("sss".format(2,2), 3, l);
   {
   	let int x;
   	let Hi y;
@@ -32,5 +37,8 @@ int l;
 struct A {
 string l;
   function float foo() {
+  let int x = 0;
+  while(1)
+   x = x + 1;
   }
 };
