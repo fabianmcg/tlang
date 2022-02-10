@@ -1,20 +1,16 @@
 #include "Parser/Parser.hh"
 
 namespace tlang::parser {
-ASTContext Parser::parse() {
-  ASTContext context;
-  ParseASTContext(context);
-  return context;
-}
 void Parser::consumeToken() {
-  auto tmp = current_token;
-  if (tmp != tokens.end() && (++tmp) != tokens.end()) {
-    ++current_token;
-    tok = *current_token;
-  } else {
-    tok = lexer.consume_token();
-    current_token = tokens.insert(tokens.end(), tok);
-  }
+//  auto tmp = current_token;
+//  if (tmp != tokens.end() && (++tmp) != tokens.end()) {
+//    ++current_token;
+//    tok = *current_token;
+//  } else {
+//    tok = lexer.consume_token();
+//    current_token = tokens.insert(tokens.end(), tok);
+//  }
+  tok = lexer.consume_token();
 }
 const token& Parser::peekToken() const {
   return tok;

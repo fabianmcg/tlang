@@ -181,17 +181,6 @@ file Expr {
         Expr(), __operator(op), __children(lhs, rhs) {}
     }.
   };
-  node MemberExpr<Stmt> {
-    parents: [Expr];
-    children: [
-      Expr owner,
-      MemberRefExpr member
-    ];
-    .{
-      MemberExpr(Expr* lhs, MemberRefExpr* rhs): 
-        Expr(), __children(lhs, rhs) {}
-    }.
-  };
   node DeclRefExpr<Stmt> {
     parents: [Expr];
     members: [
@@ -203,6 +192,17 @@ file Expr {
       bool isResolved() const {
         return __decl;
       }
+    }.
+  };
+  node MemberExpr<Stmt> {
+    parents: [Expr];
+    children: [
+      Expr owner,
+      Expr member
+    ];
+    .{
+      MemberExpr(Expr* lhs, Expr* rhs): 
+        Expr(), __children(lhs, rhs) {}
     }.
   };
   node MemberRefExpr<Stmt> {

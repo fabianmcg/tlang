@@ -1,22 +1,23 @@
 #ifndef __SEMA_SEMA_HH__
 #define __SEMA_SEMA_HH__
 
+#include <Sema/FirstSemaPass.hh>
+#include <Sema/SecondSemaPass.hh>
 #include "AST/Include.hh"
-#include "NameResolution.hh"
+#include "Parent.hh"
 
 namespace tlang::sema {
 struct Sema {
   Sema(ASTContext &context) :
-      context(context) {
-  }
-  void name_resolution() {
-    NameResolution resolve(context);
-    resolve.analyze();
+      context(context), sctx(*context) {
+    ScopeFillerAST { sctx }.traverseModuleDecl(*context);
   }
   void analyze() {
-    name_resolution();
+    FirstSemaPass(context, sctx);
+    SecondSemaPass(context, sctx);
   }
   ASTContext &context;
+  ScopeContext sctx;
 };
 }
 #endif

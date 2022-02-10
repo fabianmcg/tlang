@@ -165,6 +165,7 @@ class ASTDatabase:
         visit = ""
         walkup = ""
         traverse = ""
+        traverse_rec = ""
         traverse_cases = ""
         for node in self.nodes.values():
             if isinstance(node, Node):
@@ -181,7 +182,10 @@ class ASTDatabase:
                 traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
                     node.typename()
                 )
-                traverse_cases += "case NodeClass::{0:}: return derived.traverse{0:}(node.first->template getAsPtr<{0:}>(), stack, node.second);\n".format(
+                traverse_rec += "bool traverse{0:}({0:}* node) {{ TRAVERSE_MACRO({0:}) }}\n".format(
+                    node.typename()
+                )
+                traverse_cases += "case NodeClass::{0:}: return x.traverse{0:}(node->template getAsPtr<{0:}>(), std::forward<Args>(args)...);\n".format(
                     node.typename()
                 )
         jinjaTemplate(
@@ -192,6 +196,7 @@ class ASTDatabase:
                 "WALK_UP": walkup,
                 "TRAVERSE_CASES": traverse_cases,
                 "TRAVERSE": traverse,
+                "TRAVERSE_RECURSIVE": traverse_rec,
             },
         )
         format(pathJoin(outputDir, "RecursiveASTVisitor.hh"))

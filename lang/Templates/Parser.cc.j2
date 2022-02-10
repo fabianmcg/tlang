@@ -115,9 +115,10 @@ protected:
 };
 class ParserHelper {
 public:
-  ParserHelper(Parser &parser, ASTContext &ctx) : parser(parser), ctx(ctx) {} {{ PARSE_METHODS }}private:
+  ParserHelper(Parser &parser, ASTContext &ctx, const std::string &module_name) : parser(parser), ctx(ctx), module_name(module_name) {} {{ PARSE_METHODS }}private:
   Parser &parser;
   ASTContext &ctx;
+  std::string module_name;
   inline const token& peek() const { return parser.peekToken(); }
   inline auto consume() { return parser.consumeToken(); }
   inline token match(tok_k kind, const std::string& parsing_function) {
@@ -149,7 +150,7 @@ public:
     using type = std::conditional_t<asReturn, typename R::type, T>;
     constexpr return_kind kind = R::kind;
     if constexpr (kind == return_kind::Dynamic)
-      return R::success(ctx.template create<type>(std::forward<T>(value)));
+      return R::success(ctx.template make<type>(std::forward<T>(value)));
     else
       return R::success(std::make_optional<type>(std::forward<T>(value)));
   }
@@ -166,7 +167,7 @@ public:
   }
   template <typename T>
   T* create_node(T &&value) {
-    return ctx.template create<T>(std::forward<T>(value));
+    return ctx.template make<T>(std::forward<T>(value));
   }
   template <typename T>
   parse_result<T, return_kind::Dynamic> make_type(T &&value) {
@@ -182,7 +183,7 @@ public:
     return QualType(ctx.template add_type<T>(std::forward<T>(value)), qualifiers);
   }
 };
-void Parser::ParseASTContext(ASTContext& ctx) {
-  auto result = ParserHelper(*this, ctx).ParseTop();
+void Parser::parse(ASTContext& ctx, const std::string &module_name) {
+  auto result = ParserHelper(*this, ctx, module_name).ParseTop();
 }
 } // namespace _pnp_
