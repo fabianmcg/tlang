@@ -1,28 +1,6 @@
-function void fun(T& x, const float...& y) {
-	x = x + y;
-}
-
-
-function int f1(auto x) {
-}
-
-function void fun(int s, const float*...& x, Hi k, bool l) {
-  let int x = 0;
-  if ( 0 + x )
-    if ( (2 + 2) ) {
-  	} else {
-  	} else {
-  		let float x = 1; x = x + 1;
-  	}
-  saxpy();
-  k.x.l;
-  k.bar().foo();
-  ccall::printf("sss".format(2,2), 3, l);
-  {
-  	let int x;
-  	let Hi y;
-  }
-  k.foo();
+function int div(int x, int* y) {
+	print("").foo().bar();
+	return x + y.x.foo();
 }
 
 struct Hi {
@@ -35,7 +13,8 @@ int l;
 };
 
 struct A {
-string l;
+  float l;
+  int x;
   function float foo() {
   let int x = 0;
   while(1)

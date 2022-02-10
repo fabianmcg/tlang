@@ -78,6 +78,7 @@ def makeLexer():
     db.addToken(Keyword, "Auto")
     db.addToken(Keyword, "Namespace")
     db.addToken(Keyword, "This")
+    db.addToken(Keyword, "Allocate")
     # ******************************************************************************
     #   Memory Kinds
     # ******************************************************************************
@@ -155,4 +156,6 @@ def makeLexer():
     db.addToken(Punctuation, "RParen", ")")
     db.addToken(Punctuation, "LBrack", "[")
     db.addToken(Punctuation, "RBrack", "]")
+    db.addToken(Punctuation, "LArrow", "<-")
+    db.addToken(Punctuation, "RArrow", "->")
     return db

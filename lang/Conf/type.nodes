@@ -1,6 +1,16 @@
 file Type {
   node Type<Type> {
     parents: [ASTNode];
+    :{
+      virtual Type** getUnderlyingPtr() {
+        return nullptr;
+      }
+      virtual bool isDependent() const {
+        if (auto ptr = const_cast<Type*>(this)->getUnderlyingPtr())
+          return (**ptr).isDependent();
+        return true;
+      }
+    }:
   };
   node QualType<Type> {
     parents: [ASTNode];
@@ -18,9 +28,21 @@ file Type {
     .{
       QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
     }.
+    :{
+      int isDependent() const {
+        if (auto type = getType())
+          return type->isDependent();
+        return -1;
+      }
+    }:
   };
   node DependentType<Type> {
     parents: [Type];
+    :{
+      virtual bool isDependent() const {
+        return true;
+      }
+    }:
   };
   node AutoType<Type> {
     parents: [DependentType];
@@ -41,6 +63,11 @@ file Type {
   };
   node BuiltinType<Type> {
     parents: [Type];
+    :{
+      virtual bool isDependent() const {
+        return false;
+      }
+    }:
   };
   node VoidType<Type> {
     parents: [BuiltinType];
@@ -94,12 +121,25 @@ file Type {
     children: [
       Type underlying
     ];
+    :{
+      virtual Type** getUnderlyingPtr() {
+        return &(getUnderlying());
+      }
+      virtual bool isDependent() const {
+        return true;
+      }
+    }:
   };
   node PtrType<Type> {
     parents: [Type];
     children: [
       Type underlying
     ];
+    :{
+      virtual Type** getUnderlyingPtr() {
+        return &(getUnderlying());
+      }
+    }:
   };
   node SmartPtrType<Type> {
     parents: [PtrType];
@@ -110,6 +150,11 @@ file Type {
       Type underlying,
       Expr size
     ];
+    :{
+      virtual Type** getUnderlyingPtr() {
+        return &(getUnderlying());
+      }
+    }:
   };
   node DefinedType<Type> {
     parents: [Type];
@@ -121,6 +166,9 @@ file Type {
       DefinedType(const Identifier& identifier, reference<NamedDecl> decl = {}):
        __identifier(identifier), __decl(decl) {
        }
+      virtual bool isDependent() const {
+        return false;
+      }
     }.
   };
   node TagType<Type> {

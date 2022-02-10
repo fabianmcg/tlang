@@ -24,11 +24,20 @@ file Decl {
   };
   node FunctorDecl<Decl> {
     parents: [NamedDecl, DeclContext];
+    members: [
+      bool complete
+    ];
     children: [
       static QualType returnType,
       list ParameterDecl parameters,
       CompoundStmt body
     ];
+    .{
+      template <typename... Args>
+      FunctorDecl(NamedDecl &&__nameddecl, DeclContext &&__declcontext, Args &&...args)
+          : NamedDecl(std::move(__nameddecl)), DeclContext(std::move(__declcontext)), __complete(false),
+            __children(std::forward<Args>(args)...) {}
+    }.
   };
   node FunctionDecl<Decl> {
     parents: [FunctorDecl];
@@ -92,7 +101,6 @@ file Decl {
   };
   node ParameterDecl<Decl> {
     parents: [VariableDecl];
-
   };
   node MemberDecl<Decl> {
     parents: [VariableDecl];

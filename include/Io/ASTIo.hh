@@ -51,9 +51,7 @@ public:
   }
   visit_t visitDefinedType(DefinedType *node, bool isFirst) {
     if (isFirst) {
-      ost << node->getIdentifier();
-      if (auto decl = node->getDecl())
-        ost << " " << *decl;
+      ost << _astnp_::to_string(node->classOf()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
     }
     return visit_t::skip;
   }
@@ -81,6 +79,7 @@ public:
       if (!isType(kind)) {
         cst() << std::string(indent, '-') + "+" << to_string(kind) << " ";
         push_color(Color::Default());
+//        cst() << node << ":" << node->parent() << " ";
         cst() << node << " ";
         extentInfo(node);
         pop_color();
@@ -113,20 +112,31 @@ public:
       ost << to_string(node->getOperator()) << " ";
     return visit_value;
   }
+  visit_t visitImportDecl(ImportDecl *node, bool isFirst) {
+    if (isFirst)
+      ost << node->getModulename() << " " << node->getModule().data() << " ";
+    return visit_value;
+  }
   visit_t visitNamedDecl(NamedDecl *node, bool isFirst) {
     if (isFirst)
       ost << node->getIdentifier() << " ";
     return visit_value;
   }
-  visit_t visitFunctionDecl(FunctionDecl *node, bool isFirst) {
+  visit_t visitFunctorDecl(FunctorDecl *node, bool isFirst) {
     if (isFirst) {
       auto &type = node->getReturntype();
+      if (!node->getComplete()) {
+        push_color(Color::Red());
+        cst() << "I ";
+        pop_color();
+        cst();
+      }
       ost << "'";
-      dumpType(&type);
+      dumpType(&type, false);
       ost << " (";
       auto &args = node->getParameters();
       for (size_t i = 0; i < args.size(); ++i) {
-        dumpType(&(node->getParameters(i)->getType()));
+        dumpType(&(node->getParameters(i)->getType()), false);
         if ((i + 1) < args.size())
           ost << ", ";
       }
@@ -137,9 +147,7 @@ public:
   visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
     if (isFirst) {
       auto &type = node->getType();
-      ost << "'";
       dumpType(&type);
-      ost << "'";
     }
     return visit_value;
   }
@@ -180,9 +188,15 @@ private:
     ost << color_stack.top();
     return ost;
   }
-  void dumpType(QualType *node) {
+  void dumpType(QualType *node, bool quotes = true) {
     push_color(Color::Green());
-    DumpType { cst() }.traverseQualType(node);
+    if (quotes)
+      cst() << "'";
+    else
+      cst();
+    DumpType { ost }.traverseQualType(node);
+    if (quotes)
+      ost << "'";
     pop_color();
   }
   void extentInfo(ASTNode *node) {

@@ -15,4 +15,15 @@ include(lib/Parser/CMakeLists.txt)
 
 add_executable(tlang lib/Driver/Driver.cc)
 
-target_link_libraries(tlang lexer parser ${FLEX_LIBRARIES})
+set(LLVM_INC /usr/lib/llvm-13/include)
+set(LLVM_LIB /usr/lib/lib)
+
+target_include_directories(tlang PRIVATE
+    ${LLVM_INC}
+)
+target_link_directories(tlang PRIVATE
+    ${LLVM_LIB}
+)
+
+target_link_libraries(tlang lexer parser ${FLEX_LIBRARIES} LLVM-13)
+
