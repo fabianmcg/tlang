@@ -62,12 +62,6 @@ file Decl {
       TypeDecl(const Identifier& identifier): NamedDecl(Decl(), identifier) {}
     }.
   };
-  node ContextDecl<Decl> {
-    parents: [TypeDecl, DeclContext];
-  };
-  node PolicyDecl<Decl> {
-    parents: [TypeDecl, DeclContext];
-  };
   node TypedefDecl<Decl> {
     parents: [TypeDecl];
     children: [
