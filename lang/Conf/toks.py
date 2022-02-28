@@ -37,14 +37,13 @@ def makeLexer():
     #   Language constructs
     # ******************************************************************************
     db.addToken(Keyword, "Typeof")
-    db.addToken(Keyword, "Function")
+    db.addToken(Keyword, "Function", "fn")
     db.addToken(Keyword, "Struct")
     db.addToken(Keyword, "Let")
     db.addToken(Keyword, "Enum")
-    db.addToken(Keyword, "Loop")
     db.addToken(Keyword, "For")
     db.addToken(Keyword, "While")
-    db.addToken(Keyword, "Continue")
+    db.addToken(Keyword, "Continue") 
     db.addToken(Keyword, "If")
     db.addToken(Keyword, "Else")
     db.addToken(Keyword, "Switch")
@@ -56,17 +55,22 @@ def makeLexer():
     db.addToken(Keyword, "Inline")
     db.addToken(Keyword, "Using")
     db.addToken(Keyword, "Return")
-    db.addToken(Keyword, "Ccall")
     db.addToken(Keyword, "Constexpr")
     db.addToken(Keyword, "Alignment")
-    db.addToken(Keyword, "Auto")
     db.addToken(Keyword, "Namespace")
     db.addToken(Keyword, "This")
     db.addToken(Keyword, "Allocate")
+    db.addToken(Keyword, "Parallel")
+    db.addToken(Keyword, "Loop")
+    db.addToken(Keyword, "Leading")
+    db.addToken(Keyword, "Single")
+    db.addToken(Keyword, "Sync")
+    db.addToken(Keyword, "Reduce")
+    db.addToken(Keyword, "Safe")
+    db.addToken(Keyword, "Nowait")
     # ******************************************************************************
     #   Fundamental types
-    # ******************************************************************************
-    db.addToken(Keyword, "Void")
+    # *****************************************************************************
     db.addToken(Keyword, "Bool")
     db.addToken(Keyword, "Int")
     db.addToken(Keyword, "Uint")

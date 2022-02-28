@@ -41,7 +41,7 @@ file Stmt {
   node ForStmt<Stmt> {
     parents: [AttributedStmt];
     children: [
-      RangeStmt ranges,
+      list RangeStmt ranges,
       CompoundStmt body
     ];
   };
@@ -55,7 +55,7 @@ file Stmt {
   node LoopStmt<Stmt> {
     parents: [AttributedStmt];
     children: [
-      RangeStmt ranges,
+      list RangeStmt ranges,
       Stmt body
     ];
   };
@@ -77,6 +77,27 @@ file Stmt {
     parents: [ValueStmt];
     children: [
       Expr return
+    ];
+  };
+  node ParallelStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Stmt stmt
+    ];
+  };
+  node SyncStmt<Stmt> {
+    parents: [Stmt];
+  };
+  node SingleStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Stmt stmt
+    ];
+  };
+  node MainStmt<Stmt> {
+    parents: [Stmt];
+    children: [
+      Stmt stmt
     ];
   };
 };

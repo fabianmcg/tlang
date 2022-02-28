@@ -44,9 +44,6 @@ file Type {
       }
     }:
   };
-  node AutoType<Type> {
-    parents: [DependentType];
-  };
   node CType<Type> {
     parents: [DependentType];
   };
@@ -68,9 +65,6 @@ file Type {
         return false;
       }
     }:
-  };
-  node VoidType<Type> {
-    parents: [BuiltinType];
   };
   node BoolType<Type> {
     parents: [BuiltinType];
