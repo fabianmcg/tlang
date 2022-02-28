@@ -6,11 +6,31 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
+from glob import glob
 import pyparsing as pp
-from Utility.parsing import keywordList, parseOptional, suppressLiterals, suppressChars, parseElement, punctuation as P
+from Utility.parsing import (
+    parseOptional,
+    suppressKeywords,
+    suppressLiterals,
+    suppressChars,
+    parseElement,
+    punctuation as P,
+)
 from Grammar.parseElements import *
 from Grammar.grammar import Grammar
 from Lexer.lexer import Lexer
+from pathlib import Path
+
+
+class ImportDirective:
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+
+    def __str__(self) -> str:
+        return str(self.filename)
+
+    def __repr__(self) -> str:
+        return str(self)
 
 
 class Parser:
@@ -102,15 +122,49 @@ class Parser:
             lambda x: Production(*x),
         )
 
+    def createImport(self):
+        qs = pp.QuotedString('"')
+        return parseElement(suppressKeywords("import") + qs, lambda x: ImportDirective(x[0]))
+
     def createProductionList(self):
-        return pp.OneOrMore(self.createProduction())
+        return pp.OneOrMore(self.createProduction() | self.createImport())
 
     def parse(self, filename):
         pp._enable_all_warnings()
         return self.createProductionList().ignore(pp.cStyleComment).parseFile(filename, parseAll=True)
 
 
+def processFile(filename: str, grammar: Grammar):
+    print('Parsing "{}" grammar'.format(filename))
+    file = Parser(grammar.tokens).parse(filename)
+    productions = [x for x in file if type(x) != ImportDirective]
+    imports = [x.filename for x in file if type(x) == ImportDirective]
+    return productions, imports
+
+
 def makeParser(filename, lexer: Lexer):
     grammar = Grammar(lexer)
-    grammar.setProductions(Parser(grammar.tokens).parse(filename))
+    productions = []
+    imports = []
+    resolvedImports = set([filename])
+    p, i = processFile(filename, grammar)
+    productions.extend(p)
+    imports.extend(i)
+    while len(imports) > 0:
+        fn = imports.pop(0)
+        if fn in resolvedImports:
+            continue
+        resolvedImports.add(fn)
+        if "*" in fn:
+            print(glob(fn), fn)
+            imports.extend(glob(fn))
+        else:
+            path = Path(fn)
+            if not path.exists():
+                print('Cannot import "{}", path doesn\'t exist!'.format(fn))
+                continue
+            p, i = processFile(fn, grammar)
+            productions.extend(p)
+            imports.extend(i)
+    grammar.setProductions(productions)
     return grammar

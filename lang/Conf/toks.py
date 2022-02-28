@@ -34,21 +34,6 @@ def makeLexer():
     #
     # ******************************************************************************
     # ******************************************************************************
-    #   Parallel constructs
-    # ******************************************************************************
-    db.addToken(Keyword, "Task")
-    db.addToken(Keyword, "Policy")
-    db.addToken(Keyword, "Parallel")
-    db.addToken(Keyword, "Context")
-    db.addToken(Keyword, "Sync")
-    db.addToken(Keyword, "Async")
-    db.addToken(Keyword, "Wait")
-    db.addToken(Keyword, "Atomic")
-    db.addToken(Keyword, "__allocator__")
-    db.addToken(Keyword, "__deleter__")
-    db.addToken(Keyword, "__parallel__")
-    db.addToken(Keyword, "__executor__")
-    # ******************************************************************************
     #   Language constructs
     # ******************************************************************************
     db.addToken(Keyword, "Typeof")
@@ -71,7 +56,6 @@ def makeLexer():
     db.addToken(Keyword, "Inline")
     db.addToken(Keyword, "Using")
     db.addToken(Keyword, "Return")
-    db.addToken(Keyword, "Arch")
     db.addToken(Keyword, "Ccall")
     db.addToken(Keyword, "Constexpr")
     db.addToken(Keyword, "Alignment")
@@ -79,13 +63,6 @@ def makeLexer():
     db.addToken(Keyword, "Namespace")
     db.addToken(Keyword, "This")
     db.addToken(Keyword, "Allocate")
-    # ******************************************************************************
-    #   Memory Kinds
-    # ******************************************************************************
-    db.addToken(Keyword, "Global")
-    db.addToken(Keyword, "Shared")
-    db.addToken(Keyword, "Local")
-    db.addToken(Keyword, "Constant")
     # ******************************************************************************
     #   Fundamental types
     # ******************************************************************************
@@ -96,9 +73,6 @@ def makeLexer():
     db.addToken(Keyword, "Float")
     db.addToken(Keyword, "Complex")
     db.addToken(Keyword, "Array")
-    db.addToken(Keyword, "Vector")
-    db.addToken(Keyword, "Matrix")
-    db.addToken(Keyword, "Tensor")
     db.addToken(Keyword, "String")
     # ******************************************************************************
     #

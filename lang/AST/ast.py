@@ -182,9 +182,7 @@ class ASTDatabase:
                 traverse += "bool traverse{0:}({0:}* node, stack_t *stack = nullptr, bool firstQ = true) {{ TRAVERSE_MACRO({0:}) }}\n".format(
                     node.typename()
                 )
-                traverse_rec += "bool traverse{0:}({0:}* node) {{ TRAVERSE_MACRO({0:}) }}\n".format(
-                    node.typename()
-                )
+                traverse_rec += "bool traverse{0:}({0:}* node) {{ TRAVERSE_MACRO({0:}) }}\n".format(node.typename())
                 traverse_cases += "case NodeClass::{0:}: return x.traverse{0:}(node->template getAsPtr<{0:}>(), std::forward<Args>(args)...);\n".format(
                     node.typename()
                 )

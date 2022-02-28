@@ -27,12 +27,6 @@ file Stmt {
       Stmt stmt
     ];
   };
-  node PolicyStmt<Stmt> {
-    parents: [AttributedStmt];
-    members: [
-      reference<PolicyDecl> policy
-    ];
-  };
   node IfStmt<Stmt> {
     parents: [Stmt];
     members: [
@@ -83,18 +77,6 @@ file Stmt {
     parents: [ValueStmt];
     children: [
       Expr return
-    ];
-  };
-  node SyncStmt<Stmt> {
-    parents: [Stmt];
-  };
-  node AsyncStmt<Stmt> {
-    parents: [Stmt];
-  };
-  node ParallelStmt<Stmt> {
-    parents: [Stmt];
-    children: [
-      Stmt stmt
     ];
   };
 };
@@ -267,14 +249,5 @@ file Expr {
     children: [
       Expr expr
     ];
-  };
-  node ParallelExpr<Stmt> {
-    parents: [Expr];
-  };
-  node DependExpr<Stmt> {
-    parents: [Expr];
-  };
-  node ProvideExpr<Stmt> {
-    parents: [Expr];
   };
 };
