@@ -15,14 +15,14 @@ int main(int argc, char **argv) {
   Parser parser(lex);
   ASTContext context;
   parser.parse(context, "main");
-  ParentSetterAST parents;
-  parents.dynamicTraverse(*context);
-  Sema sema(context);
-  sema.analyze();
+//  ParentSetterAST parents;
+//  parents.dynamicTraverse(*context);
+//  Sema sema(context);
+//  sema.analyze();
   dump(*context);
-  codegen::CodeGen gen("main");
-  gen.gen(*context);
-  auto os = unique_fstream::open_ostream("main.ll");
-  gen.print(*os);
+//  codegen::CodeGen gen("main");
+//  gen.gen(*context);
+//  auto os = unique_fstream::open_ostream("main.ll");
+//  gen.print(*os);
   return 0;
 }
