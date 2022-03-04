@@ -145,6 +145,7 @@ file Type {
       Expr size
     ];
     :{
+      ArrayType(Type* underlying, Expr* size) : __children(underlying, size) {}
       virtual Type** getUnderlyingPtr() {
         return &(getUnderlying());
       }

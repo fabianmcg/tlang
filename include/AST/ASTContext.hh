@@ -4,6 +4,7 @@
 #include "Common/Macros.hh"
 #include "ASTCommon.hh"
 #include "TypeContext.hh"
+#include "SymbolTable.hh"
 #include <cstdint>
 #include <map>
 
@@ -38,9 +39,26 @@ struct ASTContext {
   void add_module(ModuleDecl *module) {
     __module = module;
   }
+  SymbolTable& operator[](ASTNode *node) {
+    return __tables[node];
+  }
+  auto find_table(ASTNode *node) {
+    return __tables.find(node);
+  }
+  auto find_table(ASTNode *node) const {
+    return __tables.find(node);
+  }
+  void print_symbols(std::ostream &ost) const {
+    for (auto& [k, v] : __tables) {
+      ost << to_string(k->classOf()) << ": " << k << std::endl;
+      v.print(ost);
+      ost << std::endl;
+    }
+  }
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> __nodes;
   ModuleDecl *__module { };
+  std::map<ASTNode*, SymbolTable> __tables;
   template <typename T>
   T* add_node(std::unique_ptr<T> &&value) {
     if (value) {

@@ -49,8 +49,7 @@ struct addChildrenVisitor {
           if (child)
             stack->push_front( { child, true });
       } else {
-        for (auto child : make_reverse(value))
-          if (child)
+        for (auto &child : make_reverse(value))
             stack->push_front( { &child, true });
       }
     } else {
@@ -127,8 +126,7 @@ struct visitChildrenVisitor {
           if (child)
             select(child);
       } else {
-        for (auto child : value)
-          if (child)
+        for (auto &child : value)
             select(&child);
       }
     } else {

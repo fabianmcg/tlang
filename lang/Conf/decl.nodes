@@ -22,6 +22,13 @@ file Decl {
   node ModuleDecl<Decl> {
     parents: [NamedDecl, DeclContext];
   };
+  node ExternFunctionDecl<Decl> {
+    parents: [NamedDecl];
+    children: [
+      static QualType returnType,
+      static list QualType parameters
+    ];
+  };
   node FunctorDecl<Decl> {
     parents: [NamedDecl, DeclContext];
     members: [
@@ -50,23 +57,19 @@ file Decl {
     ];
   };
   node UsingDecl<Decl> {
-    parents: [Decl];
-    members: [
-      Identifier declName,
-      reference<Decl> decl
+    parents: [NamedDecl];
+    children: [
+      static QualType type
     ];
+    .{
+      UsingDecl(const Identifier& identifier, QualType && type): NamedDecl(Decl(), identifier), __children(std::move(type)) {}
+    }.
   };
   node TypeDecl<Decl> {
     parents: [NamedDecl];
     .{
       TypeDecl(const Identifier& identifier): NamedDecl(Decl(), identifier) {}
     }.
-  };
-  node TypedefDecl<Decl> {
-    parents: [TypeDecl];
-    children: [
-      static QualType type
-    ];
   };
   node TagDecl<Decl> {
     parents: [TypeDecl, DeclContext];
@@ -76,12 +79,6 @@ file Decl {
     .{
       StructDecl(const Identifier& identifier, DeclContext&& context): TagDecl(TypeDecl(identifier), std::move(context)) {}
     }.
-  };
-  node EnumDecl<Decl> {
-    parents: [TagDecl];
-    children: [
-      static QualType type
-    ];
   };
   node MethodDecl<Decl> {
     parents: [FunctorDecl];
@@ -99,13 +96,25 @@ file Decl {
   node MemberDecl<Decl> {
     parents: [VariableDecl];
   };
-  node EnumMemberDecl<Decl> {
-    parents: [Decl];
-    members: [
-      Identifier identifier
+  node EnumDecl<Decl> {
+    parents: [TagDecl];
+    children: [
+      static QualType type,
+      list EnumMemberDecl members
     ];
+    .{
+      EnumDecl(const Identifier& identifier, QualType&& type, std::vector<EnumMemberDecl*>&& members): 
+        TagDecl(TypeDecl(identifier), DeclContext()), __children(std::move(type), std::move(members)) {}
+    }.
+  };
+  node EnumMemberDecl<Decl> {
+    parents: [NamedDecl];
     children: [
       Expr value
     ];
+    .{
+      EnumMemberDecl(const Identifier& identifier, Expr *value = nullptr): 
+        NamedDecl(Decl(), identifier), __children(value) {}
+    }.
   };
 };
