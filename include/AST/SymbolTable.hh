@@ -4,32 +4,39 @@
 #include "Common/Macros.hh"
 #include "ASTCommon.hh"
 #include "Decl.hh"
-#include "ASTNode.hh"
-#include "TypeContext.hh"
-#include <list>
 #include <map>
 
 namespace _astnp_ {
-
 struct SymbolTable {
-  std::map<std::string, std::list<Decl*>> context { };
+  using id_type = std::string;
+  using symbol_type = Decl*;
+  std::map<id_type, symbol_type> table { };
   SymbolTable *parent { };
   SymbolTable() = default;
   ~SymbolTable() = default;
   SymbolTable(SymbolTable *p) :
       parent(p) {
   }
-  void add(const std::string& id, Decl *node) {
-    if (node)
-      context[id].push_back(node);
+  void add(const id_type &id, symbol_type node) {
+    table[id] = node;
   }
-  void remove(const std::string& id) {
-    auto it = context.find(id);
-    if (it != context.end())
-      context.erase(id);
+  void remove(const id_type &id) {
+    auto it = table.find(id);
+    if (it != table.end())
+      table.erase(id);
   }
-  Decl* find(const std::string&, bool local) {
+  symbol_type find(const id_type &id, bool local = false) const {
+    auto it = table.find(id);
+    if (it != table.end())
+      return it->second;
+    if (!local && parent)
+      return parent->find(id, local);
     return nullptr;
+  }
+  void print(std::ostream &ost) const {
+    ost << this << ":" << parent << ":" << std::endl;
+    for (auto& [k, v] : table)
+      ost << to_string(v->classOf()) << ": " << k << " " << v << std::endl;
   }
 };
 }

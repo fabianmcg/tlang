@@ -68,16 +68,27 @@ def makeLexer():
     db.addToken(Keyword, "Reduce")
     db.addToken(Keyword, "Safe")
     db.addToken(Keyword, "Nowait")
+    db.addToken(Keyword, "In")
+    db.addToken(Keyword, "Extern")
     # ******************************************************************************
     #   Fundamental types
     # *****************************************************************************
     db.addToken(Keyword, "Bool")
     db.addToken(Keyword, "Int")
+    db.addToken(Keyword, "I8")
+    db.addToken(Keyword, "I16")
+    db.addToken(Keyword, "I32")
+    db.addToken(Keyword, "I64")
     db.addToken(Keyword, "Uint")
+    db.addToken(Keyword, "U8")
+    db.addToken(Keyword, "U16")
+    db.addToken(Keyword, "U32")
+    db.addToken(Keyword, "U64")
     db.addToken(Keyword, "Float")
-    db.addToken(Keyword, "Complex")
-    db.addToken(Keyword, "Array")
-    db.addToken(Keyword, "String")
+    db.addToken(Keyword, "F8")
+    db.addToken(Keyword, "F16")
+    db.addToken(Keyword, "F32")
+    db.addToken(Keyword, "F64")
     # ******************************************************************************
     #
     #   Literals & Identifiers

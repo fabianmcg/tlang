@@ -29,14 +29,10 @@ public:
   }
   visit_t visitVariadicType(VariadicType *node, bool isFirst) {
     if (isFirst) {
-      dynamicTraverse(node->getUnderlying());
+      if (node->getUnderlying())
+        dynamicTraverse(node->getUnderlying());
       ost << "...";
     }
-    return visit_t::skip;
-  }
-  visit_t visitAutoType(AutoType *node, bool isFirst) {
-    if (isFirst)
-      ost << "auto";
     return visit_t::skip;
   }
   visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
@@ -57,7 +53,12 @@ public:
   }
   visit_t visitPtrType(PtrType *node, bool isFirst) {
     if (!isFirst)
-      ost << " *";
+      ost << "*";
+    return visit_t::visit;
+  }
+  visit_t visitArrayType(ArrayType *node, bool isFirst) {
+    if (!isFirst)
+      ost << "[]";
     return visit_t::visit;
   }
 private:
@@ -90,12 +91,6 @@ public:
       indent--;
       pop_color();
       cst();
-    }
-    return visit_value;
-  }
-  visit_t visitCCallExpr(CCallExpr *node, bool isFirst) {
-    if (isFirst) {
-      ost << node->getCalleeidentifier() << " ";
     }
     return visit_value;
   }
@@ -144,7 +139,30 @@ public:
     }
     return visit_value;
   }
+  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, bool isFirst) {
+    if (isFirst) {
+      auto &type = node->getReturntype();
+      ost << "'";
+      dumpType(&type, false);
+      ost << " (";
+      auto &args = node->getParameters();
+      for (size_t i = 0; i < args.size(); ++i) {
+        dumpType(&(node->getParameters(i)), false);
+        if ((i + 1) < args.size())
+          ost << ", ";
+      }
+      ost << ")'";
+    }
+    return visit_value;
+  }
   visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
+    if (isFirst) {
+      auto &type = node->getType();
+      dumpType(&type);
+    }
+    return visit_value;
+  }
+  visit_t visitUsingDecl(UsingDecl *node, bool isFirst) {
     if (isFirst) {
       auto &type = node->getType();
       dumpType(&type);
@@ -159,10 +177,13 @@ public:
   visit_t visitQualType(QualType *node, bool isFirst) {
     return visit_t::skip;
   }
+  visit_t visitType(Type *node, bool isFirst) {
+    return visit_t::skip;
+  }
   template <typename T>
   visit_t postWalk(T *node, bool isFirst) {
     if (isType(T::kind))
-      return visit_value;
+      return visit_t::skip;
     if (isFirst) {
       if (auto expr = dynamic_cast<Expr*>(node))
         dumpType(&(expr->getType()));

@@ -5,19 +5,17 @@
 #include <Sema/SecondSemaPass.hh>
 #include "AST/Include.hh"
 #include "Parent.hh"
+#include "SymbolTablePass.hh"
 
 namespace tlang::sema {
 struct Sema {
   Sema(ASTContext &context) :
-      context(context), sctx(*context) {
-    ScopeFillerAST { sctx }.traverseModuleDecl(*context);
+      context(context) {
+    SymbolTablePass(context);
   }
   void analyze() {
-    FirstSemaPass(context, sctx);
-    SecondSemaPass(context, sctx);
   }
   ASTContext &context;
-  ScopeContext sctx;
 };
 }
 #endif

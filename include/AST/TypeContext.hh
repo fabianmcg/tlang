@@ -1,5 +1,5 @@
-#ifndef __AST_SYMBOLTABLE_HH__
-#define __AST_SYMBOLTABLE_HH__
+#ifndef __AST_TYPECONTEXT_HH__
+#define __AST_TYPECONTEXT_HH__
 
 #include "Common/Macros.hh"
 #include "ASTCommon.hh"
@@ -16,10 +16,6 @@ public:
     switch (type->classOf()) {
     case NodeClass::DependentType:
       return rm_const(dependent_type);
-    case NodeClass::AutoType:
-      return rm_const(auto_type);
-    case NodeClass::VoidType:
-      return rm_const(void_type);
     case NodeClass::BoolType:
       return rm_const(bool_type);
     case NodeClass::StringType:
@@ -44,8 +40,6 @@ public:
   }
 protected:
   DependentType dependent_type { };
-  AutoType auto_type { };
-  VoidType void_type { };
   BoolType bool_type { };
   CType c_type { };
   StringType string_type { };
