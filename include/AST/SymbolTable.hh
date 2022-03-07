@@ -18,6 +18,9 @@ struct SymbolTable {
       parent(p) {
   }
   void add(const id_type &id, symbol_type node) {
+    auto &symbol = table[id];
+    if (symbol && symbol != node)
+      throw(std::runtime_error("Symbol redefinition:" + id));
     table[id] = node;
   }
   void remove(const id_type &id) {

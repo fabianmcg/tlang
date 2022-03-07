@@ -12,11 +12,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 include(include/Lexer/CMakeLists.txt) 
 include(lib/Parser/CMakeLists.txt)
+include(lib/CodeGen/CMakeLists.txt)
 
 add_executable(tlang lib/Driver/Driver.cc)
-
-set(LLVM_INC /usr/lib/llvm-13/include)
-set(LLVM_LIB /usr/lib/lib)
 
 target_include_directories(tlang PRIVATE
     ${LLVM_INC}
@@ -25,5 +23,5 @@ target_link_directories(tlang PRIVATE
     ${LLVM_LIB}
 )
 
-target_link_libraries(tlang lexer parser ${FLEX_LIBRARIES} LLVM-13)
+target_link_libraries(tlang lexer parser codegen ${FLEX_LIBRARIES} LLVM-13)
 

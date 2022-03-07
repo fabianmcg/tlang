@@ -2,13 +2,13 @@ file Type {
   node Type<Type> {
     parents: [ASTNode];
     :{
-      virtual Type** getUnderlyingPtr() {
-        return nullptr;
+      virtual bool isSame(const Type& y) const {
+        if (this == &y)
+          return true;
+        return false;
       }
-      virtual bool isDependent() const {
-        if (auto ptr = const_cast<Type*>(this)->getUnderlyingPtr())
-          return (**ptr).isDependent();
-        return true;
+      QualType getQual(QualType::cvr_qualifiers_t qualifiers = QualType::None) const {
+        return QualType((QualType::cvr_qualifiers_t)qualifiers, (Type*)this);
       }
     }:
   };
@@ -29,20 +29,18 @@ file Type {
       QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
     }.
     :{
-      int isDependent() const {
-        if (auto type = getType())
-          return type->isDependent();
-        return -1;
+      bool isSame(const QualType& y) const {
+        if (__qualifiers != y.__qualifiers)
+          return false;
+        if (auto xt = getType())
+          if (auto yt = y.getType())
+            return xt->isSame(*yt);
+        return false;
       }
     }:
   };
   node DependentType<Type> {
     parents: [Type];
-    :{
-      virtual bool isDependent() const {
-        return true;
-      }
-    }:
   };
   node CType<Type> {
     parents: [DependentType];
@@ -61,8 +59,8 @@ file Type {
   node BuiltinType<Type> {
     parents: [Type];
     :{
-      virtual bool isDependent() const {
-        return false;
+      virtual bool isSame(const Type& y) const {
+        return y.is(classOf());
       }
     }:
   };
@@ -92,6 +90,15 @@ file Type {
     .{
       IntType(numeric_precision p, numeric_sign s): __precision(p), __sign(s) {}
     }.
+    :{
+      virtual bool isSame(const Type& y) const {
+        if (y.is(classOf())) {
+          auto & t = static_cast<IntType&>(y);
+          return __sign == t.__sign && __precision == t.__precision;
+        }
+        return false;
+      }
+    }:
   };
   node FloatType<Type> {
     parents: [BuiltinType];
@@ -109,6 +116,15 @@ file Type {
     .{
       FloatType(numeric_precision p): __precision(p) {}
     }.
+    :{
+      virtual bool isSame(const Type& y) const {
+        if (y.is(classOf())) {
+          auto & t = static_cast<IntType&>(y);
+          return __precision == t.__precision;
+        }
+        return false;
+      }
+    }:
   };
   node VariadicType<Type> {
     parents: [Type];
@@ -116,11 +132,9 @@ file Type {
       Type underlying
     ];
     :{
-      virtual Type** getUnderlyingPtr() {
-        return &(getUnderlying());
-      }
-      virtual bool isDependent() const {
-        return true;
+      virtual bool isSame(const Type& y) const {
+        if (y.is(classOf()))
+          return y.is(classOf());
       }
     }:
   };
@@ -142,10 +156,10 @@ file Type {
     parents: [Type];
     children: [
       Type underlying,
-      Expr size
+      list Expr layout
     ];
     :{
-      ArrayType(Type* underlying, Expr* size) : __children(underlying, size) {}
+      ArrayType(Type* underlying, std::vector<Expr*>&& layout) : __children(underlying, std::move(layout)) {}
       virtual Type** getUnderlyingPtr() {
         return &(getUnderlying());
       }

@@ -1,0 +1,133 @@
+#include "CodeGen/CodeGen.hh"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
+
+namespace tlang::codegen {
+using namespace _astnp_;
+struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>> {
+  ExprVisitor(CGContext &context) :
+      context(context) {
+  }
+  visit_t visitIntegerLiteral(IntegerLiteral *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst)
+      return visit_value;
+    context[node] = ConstantInt::get(context.emitType(node->getType()), std::stoull(node->getValue()));
+    return visit_value;
+  }
+  visit_t visitArrayExpr(ArrayExpr *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst)
+      return visit_value;
+    context[node] = context.builder.CreateGEP(context.emitType(node->getType()), context[node->getArray()], context[node->getIndex(0)]);
+    return visit_value;
+  }
+  visit_t visitCallExpr(CallExpr *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst)
+      return visit_value;
+    if (auto ref = dynamic_cast<DeclRefExpr*>(node->getCallee())) {
+      Function *fun = context.module.getFunction(ref->getIdentifier());
+      std::vector<Value*> ArgsV;
+      for (unsigned i = 0, e = node->getArgs().size(); i != e; ++i) {
+        ArgsV.push_back(context[node->getArgs(i)]);
+        if (!ArgsV.back())
+          throw(std::runtime_error("Invalid call expr"));
+      }
+      context[node] = context.builder.CreateCall(fun, ArgsV);
+    }
+    return visit_value;
+  }
+  visit_t visitDeclRefExpr(DeclRefExpr *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst && node->getDecl()) {
+      if (auto varDecl = dynamic_cast<VariableDecl*>(node->getDecl().data())) {
+        auto *load = context.builder.CreateLoad(context.emitType(varDecl->getType()), context[varDecl], varDecl->getIdentifier().c_str());
+        context[node] = load;
+      }
+    }
+    return visit_t::skip;
+  }
+  visit_t visitBinaryOperation(BinaryOperation *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst) {
+      auto LHS = node->getLhs();
+      if (node->getOperator() != OperatorKind::Assign || LHS->isNot(NodeClass::DeclRefExpr))
+        dynamicTraverse(LHS);
+      dynamicTraverse(node->getRhs());
+    } else {
+      switch (node->getOperator()) {
+      case OperatorKind::Plus: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFAdd(LHS, RHS);
+        else
+          context[node] = context.builder.CreateAdd(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Minus: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFSub(LHS, RHS);
+        else
+          context[node] = context.builder.CreateSub(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Multiply: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFMul(LHS, RHS);
+        else
+          context[node] = context.builder.CreateMul(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Divide: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        context[node] = context.builder.CreateExactSDiv(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Assign: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS == nullptr)
+          if (auto ref = dynamic_cast<DeclRefExpr*>(node->getLhs()))
+            if (auto varDecl = dynamic_cast<VariableDecl*>(ref->getDecl().data())) {
+              LHS = context.builder.CreateStore(context[varDecl], RHS);
+              context[node] = LHS;
+            } else
+              context[node] = context.builder.CreateStore(LHS, RHS);
+        break;
+      }
+      default:
+        break;
+      }
+    }
+    return visit_t::skip;
+  }
+  llvm::Value* emit(Expr *node) {
+    dynamicTraverse(node);
+    return context[node];
+  }
+  CGContext &context;
+};
+llvm::Value* CGContext::emitExpr(Expr *expr) {
+  return ExprVisitor { *this }.emit(expr);
+}
+}
