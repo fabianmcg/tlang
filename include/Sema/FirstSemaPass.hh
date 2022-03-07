@@ -9,10 +9,10 @@
 #include <string>
 
 namespace tlang::sema {
-//struct FirstSemaPassAST: RecursiveASTVisitor<FirstSemaPassAST, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>, false, true> {
-//  FirstSemaPassAST(ScopeContext &context, ASTContext &ctx) :
-//      context(context), ctx(ctx) {
-//  }
+struct FirstSemaPassAST: RecursiveASTVisitor<FirstSemaPassAST, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>, false, true> {
+  FirstSemaPassAST(ASTContext &context) :
+      context(context) {
+  }
 //  visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
 //    auto parent = node->parent();
 //    auto kind = parent->classOf();
@@ -35,54 +35,53 @@ namespace tlang::sema {
 //    }
 //    return visit_value;
 //  }
-//  visit_t visitFunctorDecl(FunctorDecl *node, bool isFirst) {
-//    add_scope(node, isFirst);
-//    bool is_complete = true;
-//    if (!isFirst) {
-//      for (auto param : node->getParameters()) {
-//        if (param->getType().isDependent() == 1)
-//          is_complete = false;
-//      }
-//      if (node->getReturntype().isDependent() == 1)
-//        is_complete = false;
-//      node->getComplete() = is_complete;
-//    }
-//    return visit_t::visit;
-//  }
-//  visit_t visitModuleDecl(ModuleDecl *node, bool isFirst) {
-//    return add_scope(node, isFirst);
-//  }
-//  visit_t visitTagDecl(TagDecl *node, bool isFirst) {
-//    return add_scope(node, isFirst);
-//  }
-//  visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
-//    return add_scope(node, isFirst);
-//  }
-//  visit_t visitCompoundStmt(CompoundStmt *node, bool isFirst) {
-//    return add_scope(node, isFirst);
-//  }
-//  visit_t add_scope(ASTNode *node, bool isFirst) {
-//    if (isFirst)
-//      context.push(node);
-//    else
-//      context.pop();
-//    return visit_t::visit;
-//  }
-//  Type* make_type(Decl *decl) {
-//    if (auto tag = dynamic_cast<TagDecl*>(decl)) {
-//      auto kind = decl->classOf();
-//      if (kind == NodeClass::StructDecl) {
-//        return ctx.add_type(StructType(tag->getIdentifier(), make_ref(dynamic_cast<NamedDecl*>(decl))));
-//      } else if (kind == NodeClass::EnumDecl)
-//        return ctx.add_type(EnumType(tag->getIdentifier(), make_ref(dynamic_cast<NamedDecl*>(decl))));
-//    }
-//    throw(std::runtime_error("Invalid decl for type"));
-//  }
-//  ScopeContext &context;
-//  ASTContext &ctx;
-//};
-//inline void FirstSemaPass(ASTContext &ctx, ScopeContext &sctx) {
-//  FirstSemaPassAST { sctx, ctx }.traverseModuleDecl(*ctx);
-//}
+  visit_t visitDeclRefExpr(DeclRefExpr *node, bool isFirst) {
+    if (isFirst && table_stack.size()) {
+      auto &ctx = *table_stack.front();
+      if (auto decl = ctx.find(node->getIdentifier(), false)) {
+        node->getDecl() = decl;
+        if (auto dk = dynamic_cast<VariableDecl*>(decl)) {
+          node->getType() = dk->getType();
+        } else if (auto dk = dynamic_cast<FunctorDecl*>(decl)) {
+          node->getType() = dk->getReturntype();
+        } else if (auto dk = dynamic_cast<ExternFunctionDecl*>(decl)) {
+          node->getType() = dk->getReturntype();
+        }
+      } else
+        std::cerr << "Symbol: " << node->getIdentifier() << " doesn't exists." << std::endl;
+    }
+    return visit_value;
+  }
+  visit_t visitFunctorDecl(FunctorDecl *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t visitForStmt(ForStmt *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t visitLoopStmt(LoopStmt *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t visitModuleDecl(ModuleDecl *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t visitTagDecl(TagDecl *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t visitCompoundStmt(CompoundStmt *node, bool isFirst) {
+    return add_scope(node, isFirst);
+  }
+  visit_t add_scope(ASTNode *node, bool isFirst) {
+    if (isFirst)
+      table_stack.push_front(&context[node]);
+    else
+      table_stack.pop_front();
+    return visit_t::visit;
+  }
+  ASTContext &context;
+  std::deque<SymbolTable*> table_stack;
+};
+inline void FirstSemaPass(ASTContext &ctx) {
+  FirstSemaPassAST { ctx }.traverseModuleDecl(*ctx);
+}
 }
 #endif

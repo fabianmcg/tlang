@@ -9,5 +9,6 @@
 #include "Expr.hh"
 #include "DeclContext.hh"
 #include "ASTContext.hh"
+#include "RecursiveASTVisitor.hh"
 
 #endif

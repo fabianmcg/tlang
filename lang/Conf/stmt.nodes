@@ -232,17 +232,15 @@ file Expr {
         __children(nullptr, std::forward<std::vector<Expr*>>(args)) {}
     }.
   };
-  node CCallExpr<Stmt> {
+  node ArrayExpr<Stmt> {
     parents: [Expr];
-    members: [
-      Identifier calleeIdentifier
-    ];
     children: [
-      list Expr args
+      Expr array,
+      list Expr index
     ];
     .{
-      CCallExpr(QualType&& type, const Identifier& callee, std::vector<Expr*>&& args): 
-        Expr(std::forward<QualType>(type)), __calleeIdentifier(callee), __children(std::forward<std::vector<Expr*>>(args)) {}
+      ArrayExpr(std::vector<Expr*>&& index):
+        __children(nullptr, std::forward<std::vector<Expr*>>(index)) {}
     }.
   };
   node CastExpr<Stmt> {
