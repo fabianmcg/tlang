@@ -17,7 +17,7 @@ file Stmt {
   node DeclStmt<Stmt> {
     parents: [Stmt];
     children: [
-      Decl decl
+      list VariableDecl decl
     ];
   };
   node AttributedStmt<Stmt> {
@@ -164,11 +164,19 @@ file Expr {
   node UnaryOperation<Stmt> {
     parents: [Expr];
     members: [
-      bool postfix
+      bool postfix,
+      operator_kind operator
     ];
     children: [
       Expr expr
     ];
+    enum operator_kind {
+      None = 0,
+      Address = 1,
+      Dereference = 2,
+      Plus = 3,
+      Minus = 4
+    };
   };
   node BinaryOperation<Stmt> {
     parents: [Expr];

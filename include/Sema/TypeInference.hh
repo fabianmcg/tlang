@@ -27,12 +27,20 @@ struct TypeInferenceAST: RecursiveASTVisitor<TypeInferenceAST, VisitorPattern::p
           throw(std::runtime_error("Invalid index for array"));
         Type *t = type->getUnderlying();
         node->getType() = QualType((QualType::cvr_qualifiers_t) qtype.getQualifiers(), std::move(t));
-      }
-      else if (auto type = dynamic_cast<PtrType*>(qtype.getType())) {
+      } else if (auto type = dynamic_cast<PtrType*>(qtype.getType())) {
         if (node->getIndex().size() != 1)
           throw(std::runtime_error("Invalid index for array"));
         Type *t = type->getUnderlying();
         node->getType() = QualType((QualType::cvr_qualifiers_t) qtype.getQualifiers(), std::move(t));
+      }
+    }
+    return visit_value;
+  }
+  visit_t visitUnaryOperation(UnaryOperation *node, bool isFirst) {
+    if (!isFirst) {
+      auto op = node->getOperator();
+      if (op == UnaryOperation::Dereference) {
+        node->getType() = QualType(QualType::None, context.add_type(PtrType(Type(), node->getExpr()->getType().getType())));
       }
     }
     return visit_value;
@@ -42,7 +50,6 @@ struct TypeInferenceAST: RecursiveASTVisitor<TypeInferenceAST, VisitorPattern::p
       auto op = node->getOperator();
       if (op == OperatorKind::Assign) {
         node->getType() = node->getLhs()->getType();
-
       }
     }
     return visit_value;
