@@ -1,16 +1,6 @@
 file Type {
   node Type<Type> {
     parents: [ASTNode];
-    :{
-      virtual bool isSame(const Type& y) const {
-        if (this == &y)
-          return true;
-        return false;
-      }
-      QualType getQual(QualType::cvr_qualifiers_t qualifiers = QualType::None) const {
-        return QualType((QualType::cvr_qualifiers_t)qualifiers, (Type*)this);
-      }
-    }:
   };
   node QualType<Type> {
     parents: [ASTNode];
@@ -28,16 +18,6 @@ file Type {
     .{
       QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
     }.
-    :{
-      bool isSame(const QualType& y) const {
-        if (__qualifiers != y.__qualifiers)
-          return false;
-        if (auto xt = getType())
-          if (auto yt = y.getType())
-            return xt->isSame(*yt);
-        return false;
-      }
-    }:
   };
   node DependentType<Type> {
     parents: [Type];
@@ -58,11 +38,6 @@ file Type {
   };
   node BuiltinType<Type> {
     parents: [Type];
-    :{
-      virtual bool isSame(const Type& y) const {
-        return y.is(classOf());
-      }
-    }:
   };
   node BoolType<Type> {
     parents: [BuiltinType];
@@ -90,15 +65,6 @@ file Type {
     .{
       IntType(numeric_precision p, numeric_sign s): __precision(p), __sign(s) {}
     }.
-    :{
-      virtual bool isSame(const Type& y) const {
-        if (y.is(classOf())) {
-          auto & t = static_cast<IntType&>(y);
-          return __sign == t.__sign && __precision == t.__precision;
-        }
-        return false;
-      }
-    }:
   };
   node FloatType<Type> {
     parents: [BuiltinType];
@@ -116,27 +82,12 @@ file Type {
     .{
       FloatType(numeric_precision p): __precision(p) {}
     }.
-    :{
-      virtual bool isSame(const Type& y) const {
-        if (y.is(classOf())) {
-          auto & t = static_cast<IntType&>(y);
-          return __precision == t.__precision;
-        }
-        return false;
-      }
-    }:
   };
   node VariadicType<Type> {
     parents: [Type];
     children: [
       Type underlying
     ];
-    :{
-      virtual bool isSame(const Type& y) const {
-        if (y.is(classOf()))
-          return y.is(classOf());
-      }
-    }:
   };
   node PtrType<Type> {
     parents: [Type];

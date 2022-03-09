@@ -46,7 +46,7 @@ struct TypeVisitor: RecursiveASTVisitor<TypeVisitor, VisitorPattern::prePostOrde
     using namespace llvm;
     if (isFirst)
       return visit_value;
-    type = llvm::Type::getFloatTy(context.context);
+    type = llvm::Type::getDoubleTy(context.context);
     return visit_value;
   }
   visit_t visitStructType(StructType *node, bool isFirst) {

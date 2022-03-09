@@ -25,14 +25,46 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     using namespace llvm;
     if (isFirst)
       return visit_value;
-    context[node] = ConstantInt::get(context.emitType(node->getType()), std::stoull(node->getValue()));
+    context[node] = ConstantInt::get(context.emitType(node->getType()), std::stoull(node->getValue()), true);
+    return visit_value;
+  }
+  visit_t visitFloatLiteral(FloatLiteral *node, bool isFirst) {
+    using namespace llvm;
+    if (isFirst)
+      return visit_value;
+    context[node] = ConstantFP::get(context.emitType(node->getType()), std::stod(node->getValue()));
+    return visit_value;
+  }
+  visit_t visitUnaryOperation(UnaryOperation *node, bool isFirst) {
+    using namespace llvm;
+    auto kind = node->getOperator();
+    if (isFirst) {
+      if (kind == UnaryOperation::Minus)
+        if (auto expr = dynamic_cast<LiteralExpr*>(node->getExpr()))
+          expr->getValue() = "-" + expr->getValue();
+      if (kind == UnaryOperation::Address)
+        return visit_t::skip;
+      return visit_value;
+    }
+    if (kind == UnaryOperation::Address) {
+      if (auto dr = static_cast<DeclRefExpr*>(node->getExpr())) {
+        context[node] = context[dr->getDecl().data()];
+      } else
+        context[node] = context[node->getExpr()];
+    } else
+      context[node] = context[node->getExpr()];
     return visit_value;
   }
   visit_t visitArrayExpr(ArrayExpr *node, bool isFirst) {
     using namespace llvm;
     if (isFirst)
       return visit_value;
-    context[node] = context.builder.CreateGEP(context.emitType(node->getType()), context[node->getArray()], context[node->getIndex(0)]);
+    auto type = context.emitType(node->getType());
+    auto tmp = context.builder.CreateGEP(type, context[node->getArray()], context[node->getIndex(0)]);
+    if (load)
+      context[node] = context.builder.CreateLoad(type, tmp);
+    else
+      context[node] = tmp;
     return visit_value;
   }
   visit_t visitCallExpr(CallExpr *node, bool isFirst) {
@@ -40,10 +72,12 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     if (isFirst)
       return visit_value;
     if (auto ref = dynamic_cast<DeclRefExpr*>(node->getCallee())) {
+      std::cerr << node->getSourceRange().to_string() << " " << ref->getSourceRange().to_string() << std::endl;
       Function *fun = context.module.getFunction(ref->getIdentifier());
       std::vector<Value*> ArgsV;
       for (unsigned i = 0, e = node->getArgs().size(); i != e; ++i) {
-        ArgsV.push_back(context[node->getArgs(i)]);
+        auto arg = context[node->getArgs(i)];
+        ArgsV.push_back(arg);
         if (!ArgsV.back())
           throw(std::runtime_error("Invalid call expr"));
       }
@@ -61,13 +95,23 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     }
     return visit_t::skip;
   }
+  visit_t visitParenExpr(ParenExpr *node, bool isFirst) {
+    if (!isFirst)
+      context[node] = context[node->getExpr()];
+    return visit_value;
+  }
   visit_t visitBinaryOperation(BinaryOperation *node, bool isFirst) {
     using namespace llvm;
     if (isFirst) {
       auto LHS = node->getLhs();
-      if (node->getOperator() != OperatorKind::Assign || LHS->isNot(NodeClass::DeclRefExpr))
-        dynamicTraverse(LHS);
+      load = true;
       dynamicTraverse(node->getRhs());
+      if (node->getOperator() != OperatorKind::Assign || LHS->isNot(NodeClass::DeclRefExpr)) {
+        if (node->getOperator() == OperatorKind::Assign)
+          load = false;
+        dynamicTraverse(LHS);
+      }
+      load = true;
     } else {
       switch (node->getOperator()) {
       case OperatorKind::Plus: {
@@ -100,19 +144,59 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
       case OperatorKind::Divide: {
         auto &LHS = context[node->getLhs()];
         auto &RHS = context[node->getRhs()];
-        context[node] = context.builder.CreateExactSDiv(LHS, RHS);
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFDiv(LHS, RHS);
+        else
+          context[node] = context.builder.CreateExactSDiv(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Equal: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFCmpOEQ(LHS, RHS);
+        else
+          context[node] = context.builder.CreateICmpEQ(LHS, RHS);
+        break;
+      }
+      case OperatorKind::NEQ: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFCmpONE(LHS, RHS);
+        else
+          context[node] = context.builder.CreateICmpNE(LHS, RHS);
+        break;
+      }
+      case OperatorKind::Less: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFCmpOLT(LHS, RHS);
+        else
+          context[node] = context.builder.CreateICmpSLT(LHS, RHS);
+        break;
+      }
+      case OperatorKind::LEQ: {
+        auto &LHS = context[node->getLhs()];
+        auto &RHS = context[node->getRhs()];
+        if (LHS->getType()->isFloatingPointTy())
+          context[node] = context.builder.CreateFCmpOLE(LHS, RHS);
+        else
+          context[node] = context.builder.CreateICmpSLE(LHS, RHS);
         break;
       }
       case OperatorKind::Assign: {
         auto &LHS = context[node->getLhs()];
         auto &RHS = context[node->getRhs()];
-        if (LHS == nullptr)
+        if (LHS == nullptr) {
           if (auto ref = dynamic_cast<DeclRefExpr*>(node->getLhs()))
             if (auto varDecl = dynamic_cast<VariableDecl*>(ref->getDecl().data())) {
-              LHS = context.builder.CreateStore(context[varDecl], RHS);
+              LHS = context.builder.CreateStore(RHS, context[varDecl]);
               context[node] = LHS;
-            } else
-              context[node] = context.builder.CreateStore(LHS, RHS);
+            }
+        } else
+          context[node] = context.builder.CreateStore(RHS, LHS);
         break;
       }
       default:
@@ -126,6 +210,7 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     return context[node];
   }
   CGContext &context;
+  bool load = true;
 };
 llvm::Value* CGContext::emitExpr(Expr *expr) {
   return ExprVisitor { *this }.emit(expr);
