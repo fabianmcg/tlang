@@ -12,6 +12,8 @@
 *.dot
 /paper_results/
 *.yy
+*.ll
+main.tt
 toks.hh
 *__pycache__*
 include/AST/ASTCommon.hh

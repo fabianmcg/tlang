@@ -123,7 +123,7 @@ struct CodeGenVisitor: RecursiveASTVisitor<CodeGenVisitor, VisitorPattern::prePo
       context.builder.SetInsertPoint(ThenBB);
 
       dynamicTraverse(node->getThen());
-      if (ThenBB->getTerminator())
+//      if (ThenBB->getTerminator())
         context.builder.CreateBr(MergeBB);
       // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
       ThenBB = context.builder.GetInsertBlock();

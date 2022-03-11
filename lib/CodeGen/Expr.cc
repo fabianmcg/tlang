@@ -147,7 +147,7 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
         if (LHS->getType()->isFloatingPointTy())
           context[node] = context.builder.CreateFDiv(LHS, RHS);
         else
-          context[node] = context.builder.CreateExactSDiv(LHS, RHS);
+          context[node] = context.builder.CreateSDiv(LHS, RHS);
         break;
       }
       case OperatorKind::Equal: {
