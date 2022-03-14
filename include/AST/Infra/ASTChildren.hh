@@ -5,7 +5,6 @@
 #include <memory>
 #include <tuple>
 #include <type_traits>
-#include "ASTCommon.hh"
 #include <Common/StaticFor.hh>
 
 namespace _astnp_ {

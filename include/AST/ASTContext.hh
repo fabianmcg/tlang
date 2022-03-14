@@ -3,7 +3,7 @@
 
 #include "Common/Macros.hh"
 #include "ASTCommon.hh"
-#include "TypeContext.hh"
+//#include "TypeContext.hh"
 #include "SymbolTable.hh"
 #include <cstdint>
 #include <map>

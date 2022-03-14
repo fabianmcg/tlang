@@ -11,7 +11,7 @@
 #include "Common/SourceRange.hh"
 #include "ASTCommon.hh"
 #include "DeclContext.hh"
-#include "ASTChildren.hh"
+#include "Infra/ASTChildren.hh"
 
 namespace _astnp_ {
 class ASTNode;
