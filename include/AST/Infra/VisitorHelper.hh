@@ -2,13 +2,13 @@
 #define __AST_ADD_CHILDREN_HH__
 
 #include "Common/StaticFor.hh"
-#include "ASTNode.hh"
-#include "Attr.hh"
-#include "Decl.hh"
-#include "Type.hh"
-#include "Stmt.hh"
-#include "Expr.hh"
-#include "DeclContext.hh"
+#include "AST/ASTNode.hh"
+#include "AST/Attr.hh"
+#include "AST/Decl.hh"
+#include "AST/Type.hh"
+#include "AST/Stmt.hh"
+#include "AST/Expr.hh"
+#include "AST/DeclContext.hh"
 
 namespace _astnp_ {
 namespace __private__ {
@@ -50,7 +50,7 @@ struct addChildrenVisitor {
             stack->push_front( { child, true });
       } else {
         for (auto &child : make_reverse(value))
-            stack->push_front( { &child, true });
+          stack->push_front( { &child, true });
       }
     } else {
       if constexpr (is_dynamic<kind>()) {
@@ -98,9 +98,9 @@ struct addChildrenFunction<DeclContext, S> {
   DeclContext *node;
   S *stack;
   void init() {
-    for (auto &child : make_reverse(**node))
+    for (auto &child : make_reverse(*node))
       if (child) {
-        stack->push_front( { child, true });
+        stack->push_front(std::pair<ASTNode*, bool>(*child, true));
       }
   }
 };
@@ -127,7 +127,7 @@ struct visitChildrenVisitor {
             select(child);
       } else {
         for (auto &child : value)
-            select(&child);
+          select(&child);
       }
     } else {
       if constexpr (is_dynamic<kind>()) {
@@ -175,9 +175,9 @@ struct visitChildrenFunction<DeclContext, S> {
   DeclContext *node;
   S &select;
   void init() {
-    for (auto &child : **node)
+    for (auto &child : *node)
       if (child)
-        select(child);
+        select(*child);
   }
 };
 }

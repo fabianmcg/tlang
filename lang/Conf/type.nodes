@@ -1,7 +1,4 @@
 file Type {
-  node Type<Type> {
-    parents: [ASTNode];
-  };
   node QualType<Type> {
     parents: [ASTNode];
     members: [
@@ -19,11 +16,11 @@ file Type {
       QualType(Type* type, cvr_qualifiers qualifiers = None): __qualifiers(qualifiers), __children(type) {}
     }.
   };
+  node Type<Type> {
+    parents: [ASTNode];
+  };
   node DependentType<Type> {
     parents: [Type];
-  };
-  node CType<Type> {
-    parents: [DependentType];
   };
   node UnresolvedType<Type> {
     parents: [DependentType];
@@ -94,14 +91,6 @@ file Type {
     children: [
       Type underlying
     ];
-    :{
-      virtual Type** getUnderlyingPtr() {
-        return &(getUnderlying());
-      }
-    }:
-  };
-  node SmartPtrType<Type> {
-    parents: [PtrType];
   };
   node ArrayType<Type> {
     parents: [Type];
@@ -111,9 +100,6 @@ file Type {
     ];
     :{
       ArrayType(Type* underlying, std::vector<Expr*>&& layout) : __children(underlying, std::move(layout)) {}
-      virtual Type** getUnderlyingPtr() {
-        return &(getUnderlying());
-      }
     }:
   };
   node DefinedType<Type> {
@@ -126,9 +112,6 @@ file Type {
       DefinedType(const Identifier& identifier, reference<NamedDecl> decl = {}):
        __identifier(identifier), __decl(decl) {
        }
-      virtual bool isDependent() const {
-        return false;
-      }
     }.
   };
   node TagType<Type> {

@@ -22,11 +22,6 @@ public:
       ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "");
     return visit_value;
   }
-  visit_t visitCType(CType *node, bool isFirst) {
-    if (isFirst)
-      ost << "__ctype__";
-    return visit_t::skip;
-  }
   visit_t visitVariadicType(VariadicType *node, bool isFirst) {
     if (isFirst) {
       if (node->getUnderlying())

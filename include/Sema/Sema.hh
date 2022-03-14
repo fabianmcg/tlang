@@ -2,7 +2,6 @@
 #define __SEMA_SEMA_HH__
 
 #include <Sema/FirstSemaPass.hh>
-#include <Sema/SecondSemaPass.hh>
 #include <Sema/TypeInference.hh>
 #include "AST/Include.hh"
 #include "Parent.hh"
@@ -15,8 +14,8 @@ struct Sema {
     SymbolTablePass(context);
   }
   void analyze() {
-    FirstSemaPass(context);
-    TypeInferenceSemaPass(context);
+//    FirstSemaPass(context);
+//    TypeInferenceSemaPass(context);
   }
   ASTContext &context;
 };

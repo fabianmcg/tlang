@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <map>
 
-namespace _astnp_ {
+namespace tlang {
 class TypeContext {
 public:
   TypeContext() {
@@ -41,7 +41,6 @@ public:
 protected:
   DependentType dependent_type { };
   BoolType bool_type { };
-  CType c_type { };
   StringType string_type { };
   std::array<std::array<IntType, 5>, 2> IntTypes { };
   std::array<FloatType, 6> FloatTypes { };
