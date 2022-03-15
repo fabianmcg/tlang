@@ -33,6 +33,7 @@ protected:
 template <typename Derived, typename Key, typename UniversalSymbol, typename Symbol>
 class SymbolTable: public UniversalSymbolTable<Key, UniversalSymbol> {
 public:
+  using universal_symbol_table = UniversalSymbolTable<Key, UniversalSymbol>;
   using derived_type = Derived;
   using key_type = Key;
   using universal_symbol_type = UniversalSymbol;
@@ -85,12 +86,19 @@ public:
   inline const_reverse_iterator rend() const {
     return reverse_iterator { nullptr };
   }
+  inline bool& visit() {
+    return visitCtxt;
+  }
+  inline bool visit() const {
+    return visitCtxt;
+  }
   size_t size() const;
   void remove(const key_type &key);
   symbol_type find(const key_type &key) const;
 protected:
   symbol_type *first_symbol { };
   symbol_type *last_symbol { };
+  bool visitCtxt = true;
 };
 }
 #endif

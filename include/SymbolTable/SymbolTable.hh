@@ -7,20 +7,23 @@
 #include <map>
 #include <string>
 
+namespace tlang {
+class ASTNode;
+}
 namespace tlang::symbol_table {
-template <typename ASTNode>
+template <typename NodeType>
 struct ASTSymbol {
   using OrderedSymbolIterator = interface::OrderedSymbolIteratorInterface<ASTSymbol>;
   using ReverseOrderedSymbolIterator = interface::ReverseOrderedSymbolIteratorInterface<ASTSymbol>;
   using OverloadSymbolIterator = interface::OverloadSymbolIteratorInterface<ASTSymbol>;
   ASTSymbol() = default;
-  inline ASTSymbol(ASTNode *node) :
+  inline ASTSymbol(NodeType *node) :
       node(node) {
   }
   inline operator bool() const {
     return node;
   }
-  inline ASTNode* operator*() const {
+  inline NodeType* operator*() const {
     return node;
   }
   template <typename T>
@@ -41,26 +44,27 @@ struct ASTSymbol {
     return OverloadSymbolIterator { const_cast<ASTSymbol*>(this) };
   }
   inline void print(std::ostream &ost) const {
-    ost << node << ": " << prev << " -> " << next << " |-> " << overload;
+    ost << node << "[" << scope << "]: " << prev << " -> " << next << " |-> " << overload;
   }
   inline friend std::ostream& operator<<(std::ostream &ost, const ASTSymbol &symbol) {
     symbol.print(ost);
     return ost;
   }
-  ASTNode *node { };
+  NodeType *node { };
   ASTSymbol *prev { };
   ASTSymbol *next { };
   ASTSymbol *overload { };
-  int depth { };
+  ASTNode *scope { };
 };
 namespace interface {
-template <typename Symbol, typename ASTNode>
-class ASTSymbolTable: public interface::SymbolTable<ASTSymbolTable<Symbol, ASTNode>, std::string, ASTSymbol<ASTNode>, Symbol> {
+template <typename Symbol, typename NodeType>
+class ASTSymbolTable: public interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, ASTSymbol<NodeType>, Symbol> {
 public:
-  using parent_type = interface::SymbolTable<ASTSymbolTable<Symbol, ASTNode>, std::string, ASTSymbol<ASTNode>, Symbol>;
+  using parent_type = interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, ASTSymbol<NodeType>, Symbol>;
+  using universal_symbol_table = typename parent_type::universal_symbol_table;
   using key_type = typename parent_type::key_type;
   using universal_symbol_type = typename parent_type::universal_symbol_type;
-  using value_type = ASTNode*;
+  using value_type = NodeType*;
   using symbol_type = Symbol;
   using table_type = std::multimap<key_type, symbol_type>;
   ASTSymbolTable() = default;
@@ -99,8 +103,10 @@ public:
   }
   void print(std::ostream &ost) const {
     ost << this << "[" << this->parent << "]:" << std::endl;
-    for (auto& [k, v] : symbols)
-      ost << "\t" << k << ": [" << v << "]" << std::endl;
+    for (auto& [k, v] : symbols) {
+      ost << "\t" << k << ": [" << v << "]";
+      ost << std::endl;
+    }
   }
 protected:
   virtual universal_symbol_type search(const key_type &key) const {
@@ -109,7 +115,7 @@ protected:
   table_type symbols { };
 };
 }
-template <typename ASTNode>
-using ASTSymbolTable = interface::ASTSymbolTable<ASTSymbol<ASTNode>, ASTNode>;
+template <typename NodeType>
+using ASTSymbolTable = interface::ASTSymbolTable<ASTSymbol<NodeType>, NodeType>;
 }
 #endif

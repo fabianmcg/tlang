@@ -3,9 +3,10 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 )
 add_library(codegen STATIC
 	${CMAKE_CURRENT_LIST_DIR}/CodeGen.cc
-	${CMAKE_CURRENT_LIST_DIR}/Emit.cc
-	${CMAKE_CURRENT_LIST_DIR}/Type.cc
-	${CMAKE_CURRENT_LIST_DIR}/Expr.cc
+	${CMAKE_CURRENT_LIST_DIR}/EmitDecl.cc
+	${CMAKE_CURRENT_LIST_DIR}/EmitType.cc
+	${CMAKE_CURRENT_LIST_DIR}/EmitExpr.cc
+	${CMAKE_CURRENT_LIST_DIR}/EmitStmt.cc
 )
 link_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
