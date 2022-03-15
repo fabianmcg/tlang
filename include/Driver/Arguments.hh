@@ -5,6 +5,7 @@
 #include <string>
 #include <boost/program_options.hpp>
 
+namespace tlang::driver {
 struct arguments {
   boost::program_options::options_description opts;
   boost::program_options::positional_options_description pos_opts { };
@@ -44,8 +45,8 @@ struct arguments {
   auto& add_opt(const std::string &ids, T &&value, const std::string &help) {
     return opts.add_options()(ids.c_str(), boost::program_options::value<T>()->default_value(value), help.c_str());
   }
-  template <typename T>
-  auto& add_opt(const std::string &ids, T &storage, T value, const std::string &help) {
+  template <typename T, typename V>
+  auto& add_opt(const std::string &ids, T &storage, V value, const std::string &help) {
     return opts.add_options()(ids.c_str(), boost::program_options::value<T>(&storage)->default_value(value), help.c_str());
   }
   auto& add_popt(const std::string &ids, int count) {
@@ -100,5 +101,6 @@ struct arguments {
 };
 inline std::ostream& operator<<(std::ostream &ost, const arguments &args) {
   return args.print(ost);
+}
 }
 #endif

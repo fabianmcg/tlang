@@ -37,6 +37,7 @@ struct EmitStmt {
       incrementLabel(NodeClass::ForStmt);
       llvm::BasicBlock *tmp_block = end_for;
       std::swap(tmp_block, end_block);
+
       // Emit preamble
       emitBranch(for_preamble);
       llvm::AllocaInst *alloca = static_cast<llvm::AllocaInst*>(context[for_variable]);

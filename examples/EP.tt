@@ -1,0 +1,71 @@
+extern fn timer_start(i32);
+extern fn timer_stop(i32);
+extern fn randlc(f64*, f64) -> f64;
+extern fn vranlc(i32, f64*, f64, f64*);
+extern fn fmax(f64, f64) -> f64;
+extern fn fabs(f64) -> f64;
+extern fn sqrt(f64) -> f64;
+extern fn log(f64) -> f64;
+extern fn f2i(f64) -> i32;
+
+fn EP(x: f64*, q: f64*, A: f64, S: f64, sxC: f64*, syC: f64*, gcC: f64*, np: i32, NK: i32, MK: i32, NQ: i32, timers_enabled: i32) {
+  let t1: f64, t2: f64, t3: f64, t4: f64, x1: f64, x2: f64;
+  let sx: f64, sy: f64, an: f64, tt: f64, gc: f64;
+  let i: i32, ik: i32, kk: i32, l: i32, k: i32, nit: i32;
+  let k_offset: i32;
+  t1 = A;
+  vranlc(0, &t1, A, x);
+  t1 = A;
+  for (i in 0 : (MK + 1))   // for (i = 0; i < MK + 1; i++) 
+    t2 = randlc(&t1, t1);
+  an = t1;
+  tt = S;
+  gc = 0.0;
+  sx = 0.0;
+  sy = 0.0;
+  for (i in 0 : NQ)   // for (i = 0; i < NQ; i++) 
+    q[i] = 0.0;
+  k_offset = -1;
+  for (k in 1 : (np + 1))    /*  for (k = 1; k <= np; k++) */ {
+    kk = k_offset + k;
+    t1 = S;
+    t2 = an;
+    for (i in 1 : 101)   /* for (i = 1; i <= 100; i++) */ {
+      ik = kk / 2;
+      if ((2 * ik) != kk)
+        t3 = randlc(&t1, t2);
+      if (ik == 0)
+        break;
+      t3 = randlc(&t2, t2);
+      kk = ik;
+    }
+    if (timers_enabled)
+      timer_start(2);
+    vranlc(2 * NK, &t1, A, x);
+    if (timers_enabled)
+      timer_stop(2);
+    if (timers_enabled)
+      timer_start(1);
+    for (i in 0 : NK)     /*  for (i = 0; i < NK; i++) */ {
+      x1 = 2.0 * x[2 * i] - 1.0;
+      x2 = 2.0 * x[2 * i + 1] - 1.0;
+      t1 = x1 * x1 + x2 * x2;
+      if (t1 <= 1.0) {
+        t2 = sqrt(-2.0 * log(t1) / t1);
+        t3 = (x1 * t2);
+        t4 = (x2 * t2);
+        l = f2i(fmax(fabs(t3), fabs(t4)));
+        q[l] = q[l] + 1.0;
+        sx = sx + t3;
+        sy = sy + t4;
+      }
+    }
+    if (timers_enabled)
+      timer_stop(1);
+  }
+  for (i in 0 : NQ)   // for (i = 0; i < NQ; i++) 
+    gc = gc + q[i];
+  sxC[0] = sx;
+  syC[0] = sy;
+  gcC[0] = gc;
+}
