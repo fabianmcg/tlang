@@ -4,6 +4,7 @@
 #include <Lexer/Lexer.hh>
 #include <Parser/Parser.hh>
 #include <Sema/Sema.hh>
+#include <Analysis/Analysis.hh>
 #include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
 
@@ -16,6 +17,8 @@ int Driver::run(int argc, char **argv) {
   if (++stage && parseFiles())
     return stage;
   if (++stage && semaAnalysis(context))
+    return stage;
+  if (++stage && codeAnalysis(context))
     return stage;
   dump();
   if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
@@ -53,6 +56,11 @@ int Driver::parseFile(ASTContext &context, const std::filesystem::path &file) {
 int Driver::semaAnalysis(ASTContext &context) {
   sema::Sema sema(context);
   sema.analyze();
+  return 0;
+}
+int Driver::codeAnalysis(ASTContext &context) {
+  CodeAnalysis pass(context);
+  pass.run();
   return 0;
 }
 int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {

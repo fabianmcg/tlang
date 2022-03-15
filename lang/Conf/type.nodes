@@ -36,6 +36,9 @@ file Type {
   node BuiltinType<Type> {
     parents: [Type];
   };
+  node AddressType<Type> {
+    parents: [BuiltinType];
+  };
   node BoolType<Type> {
     parents: [BuiltinType];
   };
