@@ -14,6 +14,7 @@ include(include/Lexer/CMakeLists.txt)
 include(lib/Parser/CMakeLists.txt)
 include(lib/CodeGen/CMakeLists.txt)
 include(lib/AST/CMakeLists.txt)
+include(lib/Analysis/CMakeLists.txt)
 include(lib/Driver/CMakeLists.txt)
 
 add_executable(tlang lib/Driver/main.cxx)
@@ -27,5 +28,5 @@ if(Boost_FOUND)
 	target_link_libraries(tlang PRIVATE ${Boost_LIBRARIES})
 endif()
 
-target_link_libraries(tlang PRIVATE driver lexer parser ast codegen ${FLEX_LIBRARIES} LLVM-13)
+target_link_libraries(tlang PRIVATE driver lexer parser ast analysis codegen ${FLEX_LIBRARIES} LLVM-13)
 

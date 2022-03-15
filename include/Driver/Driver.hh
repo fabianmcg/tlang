@@ -23,6 +23,7 @@ private:
   int parseFiles();
   int parseFile(ASTContext &context, const std::filesystem::path &file);
   int semaAnalysis(ASTContext &context);
+  int codeAnalysis(ASTContext &context);
   int codeGen(ASTContext &context, const std::filesystem::path &file);
   void dump();
 };

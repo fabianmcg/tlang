@@ -1,6 +1,8 @@
 file Stmt {
   .{
+    #include <set>
     #include "AST/Type.hh"
+    #include "AST/Operators.hh"
   }.
   node Stmt<Stmt> {
     parents: [ASTNode];
@@ -52,13 +54,6 @@ file Stmt {
       Stmt body
     ];
   };
-  node LoopStmt<Stmt> {
-    parents: [Stmt];
-    children: [
-      list RangeStmt ranges,
-      Stmt body
-    ];
-  };
   node RangeStmt<Stmt> {
     parents: [Stmt];
     children: [
@@ -81,8 +76,30 @@ file Stmt {
   };
   node ParallelStmt<Stmt> {
     parents: [Stmt];
+    members: [
+      VariableList referencedPrivate,
+      VariableList referencedShared
+    ];
     children: [
+      list Expr privateVariables,
+      list Expr sharedVariables,
       Stmt stmt
+    ];
+    .{
+      using VariableList = std::set<VariableDecl*>;
+      template <typename... Args>
+      ParallelStmt(Args &&...args) : __children(std::forward<Args>(args)...) {}
+    }.
+  };
+  node LoopStmt<Stmt> {
+    parents: [Stmt];
+    members: [
+      bool noWait
+    ];
+    children: [
+      ReduceStmt reduceList,
+      list RangeStmt ranges,
+      Stmt body
     ];
   };
   node SyncStmt<Stmt> {
@@ -99,6 +116,33 @@ file Stmt {
     children: [
       Stmt stmt
     ];
+  };
+  node AtomicStmt<Stmt> {
+    parents: [Stmt];
+    members: [
+      OperatorKind operator
+    ];
+    children: [
+      Expr lhs,
+      Expr rhs
+    ];
+    .{
+      AtomicStmt(OperatorKind op, Expr* lhs, Expr* rhs): 
+        Stmt(), __operator(op), __children(lhs, rhs) {}
+    }.
+  };
+  node ReduceStmt<Stmt> {
+    parents: [Stmt];
+    members: [
+      OperatorKind operator
+    ];
+    children: [
+      list Expr exprs
+    ];
+    .{
+      ReduceStmt(OperatorKind op, std::vector<Expr*> &&exprs): 
+        Stmt(), __operator(op), __children(std::forward<std::vector<Expr*>>(exprs)) {}
+    }.
   };
 };
 file Expr {

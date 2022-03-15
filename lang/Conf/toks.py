@@ -68,6 +68,10 @@ def makeLexer():
     db.addToken(Keyword, "Reduce")
     db.addToken(Keyword, "Safe")
     db.addToken(Keyword, "Nowait")
+    db.addToken(Keyword, "Private")
+    db.addToken(Keyword, "Shared")
+    db.addToken(Keyword, "Atomic")
+    db.addToken(Keyword, "Reduce")
     db.addToken(Keyword, "In")
     db.addToken(Keyword, "Extern")
     # ******************************************************************************
@@ -89,6 +93,7 @@ def makeLexer():
     db.addToken(Keyword, "F16")
     db.addToken(Keyword, "F32")
     db.addToken(Keyword, "F64")
+    db.addToken(Keyword, "Address")
     # ******************************************************************************
     #
     #   Literals & Identifiers

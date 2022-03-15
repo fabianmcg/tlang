@@ -2,8 +2,5 @@ file main {
     :{
       using string = std::string;
       using Identifier = std::string;
-      template <typename T> std::unique_ptr<T> create_unique(T&& value) {
-        return std::make_unique<T>(std::forward<T>(value));
-      }
     }:
 };
