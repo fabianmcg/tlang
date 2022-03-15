@@ -1,4 +1,4 @@
-#ifndef __AST_ATSCONTEXT_HH__
+#ifndef __AST_ASTCONTEXT_HH__
 #define __AST_ASTCONTEXT_HH__
 
 #include "Common/Macros.hh"

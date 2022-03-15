@@ -1,3 +1,8 @@
+TC ?= ./build/Debug/tlang
+LLVMOPT ?= opt-13
+FLAGS ?= ""
+file ?= "./examples/EP.tt"
+
 .PHONY: all
 all:
 
@@ -18,8 +23,20 @@ parser:
 
 .PHONY: run
 run:
-	./build/Debug/tlang
+ifneq ($(file),)
+	$(TC) $(file) $(FLAGS) -o $(addsuffix .ll,$(basename $(file)))
+endif
+
+.PHONY: EP
+EP:
+	$(TC) ./examples/EP.tt -o EP.ll
+	$(LLVMOPT) -O3 EP.ll -o EP_opt.ll
+
+.PHONY: CG
+CG:
+	$(TC) ./examples/CG.tt -o CG.ll
+	$(LLVMOPT) -O3 CG.ll -o CG_opt.ll
 
 .PHONY: clean
 clean:
-	rm -v *.hh *.yy *.ll
+	rm -vf *.hh *.yy *.ll

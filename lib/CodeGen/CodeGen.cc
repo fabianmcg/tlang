@@ -39,6 +39,10 @@ void CodeGen::init(const std::string &module_name) {
   auto target_machine = target->createTargetMachine(target_triple, CPU, Features, opt, RM);
   module->setDataLayout(target_machine->createDataLayout());
 }
+void CodeGen::generate(ModuleDecl *module) {
+  CGContext ctx = makeContext();
+  ctx.emitModuleDecl(module);
+}
 void CodeGen::emit(ModuleDecl *m, std::ostream &ost) {
   generate(m);
   print(ost);
