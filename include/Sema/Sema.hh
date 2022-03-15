@@ -14,8 +14,8 @@ struct Sema {
     SymbolTablePass(context);
   }
   void analyze() {
-//    FirstSemaPass(context);
-//    TypeInferenceSemaPass(context);
+    FirstSemaPass(context);
+    TypeInferenceSemaPass(context);
   }
   ASTContext &context;
 };

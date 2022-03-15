@@ -22,10 +22,10 @@ int main(int argc, char **argv) {
   sema.analyze();
   (*context)->print(std::cerr);
   dump(*context);
-//  context.print_symbols(std::cerr);
-//  codegen::CodeGen gen(context, "main");
-//  auto os = unique_fstream::open_ostream("main.ll");
-//  gen.emit(*context, *os);
+  context.print_symbols(std::cerr);
+  codegen::CodeGen gen(context, "main");
+  auto os = unique_fstream::open_ostream("main.ll");
+  gen.emit(*context, *os);
   std::cerr << "**" << std::endl;
   return 0;
 }

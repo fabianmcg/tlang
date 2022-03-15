@@ -11,5 +11,6 @@ public:
   using parent_type::ASTSymbolTable;
   void add(Decl *decl);
 };
+using UniversalSymbolTable = typename DeclContext::universal_symbol_table;
 }
 #endif

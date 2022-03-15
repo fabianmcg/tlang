@@ -72,6 +72,10 @@ struct reference {
   inline void reset() {
     __data = nullptr;
   }
+  template <typename V>
+  V* getAs() const {
+    return static_cast<V*>(__data);
+  }
 };
 template <typename T>
 reference<T> make_ref(T &val) {

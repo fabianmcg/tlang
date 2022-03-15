@@ -20,8 +20,25 @@ struct CGContext {
   }
   llvm::Type* emitType(QualType &type);
   llvm::Type* emitType(Type *type);
-//  llvm::Value* emitStmt(Stmt *stmt);
+  llvm::Value* emitStmt(Stmt *stmt);
   llvm::Value* emitExpr(Expr *expr);
+  llvm::Value* emitDecl(Decl *decl);
+  void emitModuleDecl(ModuleDecl *module);
+  llvm::Type* operator()(QualType &type) {
+    return emitType(type);
+  }
+  llvm::Type* operator()(Type *type) {
+    return emitType(type);
+  }
+  llvm::Value* operator()(Stmt *stmt) {
+    return emitStmt(stmt);
+  }
+  llvm::Value* operator()(Expr *expr) {
+    return emitExpr(expr);
+  }
+  llvm::Value* operator()(Decl *decl) {
+    return emitDecl(decl);
+  }
   ASTContext &astCtx;
   llvm::LLVMContext &context;
   llvm::IRBuilder<> &builder;

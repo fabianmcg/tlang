@@ -22,4 +22,4 @@ run:
 
 .PHONY: clean
 clean:
-	rm -v *.hh *.yy
+	rm -v *.hh *.yy *.ll

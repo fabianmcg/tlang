@@ -13,6 +13,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include(include/Lexer/CMakeLists.txt) 
 include(lib/Parser/CMakeLists.txt)
 include(lib/CodeGen/CMakeLists.txt)
+include(lib/AST/CMakeLists.txt)
 
 add_executable(tlang lib/Driver/Driver.cc)
 
@@ -22,6 +23,10 @@ target_include_directories(tlang PRIVATE
 target_link_directories(tlang PRIVATE
     ${LLVM_LIB}
 )
-
-target_link_libraries(tlang lexer parser codegen ${FLEX_LIBRARIES} LLVM-13)
+#find_package(Boost 1.70.0 COMPONENTS program_options) 
+#if(Boost_FOUND)
+#	target_include_directories(tlang PRIVATE ${Boost_INCLUDE_DIRS}) 
+#	target_link_libraries(tlang PRIVATE ${Boost_LIBRARIES})
+#endif()
+target_link_libraries(tlang lexer parser ast codegen ${FLEX_LIBRARIES} LLVM-13)
 

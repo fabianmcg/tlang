@@ -235,26 +235,9 @@ struct CodeGenVisitor: RecursiveASTVisitor<CodeGenVisitor, VisitorPattern::prePo
 };
 void CodeGen::generate(ModuleDecl *module) {
   CGContext ctx = makeContext();
-  CodeGenVisitor { ctx }.traverseModuleDecl(module);
+  ctx.emitModuleDecl(module);
+//  CodeGenVisitor { ctx }.traverseModuleDecl(module);
 }
 }
 
-//  visit_t visitStructDecl(StructDecl *node, bool isFirst) {
-//    if (isFirst) {
-//      std::vector<llvm::Type*> parameters;
-//      for (auto child : **static_cast<DeclContext*>(node))
-//        if (child->is(NodeClass::MemberDecl)) {
-//          MemberDecl *decl = dynamic_cast<MemberDecl*>(child);
-//          parameters.push_back(make(decl->getType()));
-//        }
-//      llvm::StructType *Struct;
-//      auto &type = type_translation_table[node];
-//      if (!type) {
-//        Struct = llvm::StructType::create(context, node->getIdentifier());
-//        type = Struct;
-//      } else
-//        Struct = llvm::cast<llvm::StructType>(type);
-//      Struct->setBody(parameters);
-//    }
-//    return visit_value;
-//  }
+
