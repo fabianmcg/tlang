@@ -15,6 +15,9 @@ struct CGContext {
   inline llvm::LLVMContext& operator*() {
     return context;
   }
+  inline llvm::IRBuilder<>* operator->() {
+    return &builder;
+  }
   inline llvm::Value*& operator[](ASTNode *node) {
     return valueTable[node];
   }
