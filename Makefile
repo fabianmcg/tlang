@@ -4,7 +4,7 @@ LLVMOPT ?= opt-13
 OPTFLAGS ?= -O3
 TC ?= ./build/Debug/tlang
 FLAGS ?= 
-file ?= "./examples/main.tt"
+file ?= ./examples/main.tt
 
 .PHONY: all
 all:

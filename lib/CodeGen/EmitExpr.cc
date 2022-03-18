@@ -72,7 +72,6 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     if (isFirst)
       return visit_value;
     if (auto ref = dynamic_cast<DeclRefExpr*>(node->getCallee())) {
-//      std::cerr << node->getSourceRange().to_string() << " " << ref->getSourceRange().to_string() << std::endl;
       Function *fun = context.module.getFunction(ref->getIdentifier());
       std::vector<Value*> ArgsV;
       for (unsigned i = 0, e = node->getArgs().size(); i != e; ++i) {
