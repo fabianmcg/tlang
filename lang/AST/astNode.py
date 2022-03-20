@@ -6,6 +6,7 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
+from inspect import isclass
 from Cxx.type import Type
 from Cxx.type import NodeType
 from Cxx.util import CxxList
@@ -206,3 +207,29 @@ class Node(Struct):
         src = Struct.cxxProtectedSectionBody(self)
         src += "children_t __children{};"
         return src
+
+    def td(self):
+        ID = self.identifier
+        Parent = self.parents[0]
+        ExtraParents = "" if len(self.parents) == 0 else ", ".join(self.parents[1:])
+        ExtraParents = ", " + ExtraParents if len(ExtraParents) else ""
+        body = ""
+        for member in self.members:
+            body += "\n"
+            body += "  Variable {} = Variable<[{{{}}}]>;".format(member.identifier, member.T)
+        for child in self.children:
+            if isinstance(child.T, StaticNode):
+                body += "\n"
+                body += "  Child {} = Child<Static, [{{{}}}]>;".format(child.identifier, child.T.identifier)
+            elif isinstance(child.T, DynamicNode):
+                body += "\n"
+                body += "  Child {} = Child<Dynamic, [{{{}}}]>;".format(child.identifier, child.T.identifier)
+            elif isinstance(child.T, StaticList):
+                body += "\n"
+                body += "  Child {} = Child<StaticList, [{{{}}}]>;".format(child.identifier, child.T.identifier)
+            elif isinstance(child.T, DynamicList):
+                body += "\n"
+                body += "  Child {} = Child<DynamicList, [{{{}}}]>;".format(child.identifier, child.T.identifier)
+        body += "\n  ClassSection header = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(self.headerSection.code) if len(self.headerSection.code) else ""
+        body += "\n  ClassSection epilogue = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(self.epilogueSection.code) if len(self.epilogueSection.code) else ""
+        return "def {} : AbstractNode<{}, 0>{} {{{}\n}}".format(ID, Parent, ExtraParents, body)

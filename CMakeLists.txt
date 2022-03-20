@@ -30,3 +30,4 @@ endif()
 
 target_link_libraries(tlang PRIVATE driver lexer parser ast analysis codegen ${FLEX_LIBRARIES} LLVM-13)
 
+add_subdirectory(runtime)

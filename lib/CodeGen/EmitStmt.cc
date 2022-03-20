@@ -15,12 +15,12 @@ struct EmitParallel {
     return name("__parallel_section");
   }
   inline std::string getStructName() const {
-    return name("__parallel_context.type");
+    return name("threadCtxType.");
   }
   llvm::StructType* emitArgumentsStruct() {
     if (argumentsType)
       return argumentsType;
-    llvm::StructType *type = llvm::StructType::create(*context, "__tlang_thread_arguments.type");
+    llvm::StructType *type = llvm::StructType::create(*context, "threadArgType");
     std::vector<llvm::Type*> members { };
     members.push_back(llvm::Type::getInt8PtrTy(*context));
     members.push_back(llvm::Type::getInt32Ty(*context));
@@ -28,11 +28,18 @@ struct EmitParallel {
     argumentsType = type;
     return type;
   }
+  llvm::FunctionType* emitExecFunctionType() {
+    llvm::SmallVector<llvm::Type*, 1> ir_params(1, nullptr);
+    ir_params[0] = llvm::Type::getInt8PtrTy(*context, 0);
+    return llvm::FunctionType::get(llvm::Type::getInt8PtrTy(*context, 0), ir_params, false);
+  }
   llvm::Function* emitParallelCreate() {
     if (parallelCreate)
       return parallelCreate;
-    std::vector<llvm::Type*> ir_params(1, nullptr);
-    ir_params[0] = llvm::Type::getInt8PtrTy(*context, 0);
+    std::vector<llvm::Type*> ir_params(3, nullptr);
+    ir_params[0] = emitExecFunctionType();
+    ir_params[1] = llvm::Type::getInt8PtrTy(*context, 0);
+    ir_params[2] = llvm::Type::getInt32Ty(*context);
     llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getVoidTy(context.context), ir_params, false);
     parallelCreate = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_create_parallel", context.module);
     return parallelCreate;
@@ -40,11 +47,43 @@ struct EmitParallel {
   llvm::Function* emitParallelInit() {
     if (parallelInit)
       return parallelInit;
-    std::vector<llvm::Type*> ir_params(1, nullptr);
-    ir_params[0] = llvm::Type::getInt8PtrTy(*context, 0);
+    llvm::SmallVector<llvm::Type*, 1> ir_params(1, nullptr);
+    ir_params[0] = llvm::Type::getInt32Ty(*context);
     llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getVoidTy(context.context), ir_params, false);
     parallelInit = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_init_parallel", context.module);
     return parallelInit;
+  }
+  llvm::Function* emitParallelExit() {
+    if (parallelExit)
+      return parallelExit;
+    llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
+    llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getVoidTy(context.context), ir_params, false);
+    parallelExit = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_exit_parallel", context.module);
+    return parallelExit;
+  }
+  llvm::Function* emitParallelSync() {
+    if (parallelSync)
+      return parallelSync;
+    llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
+    llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getVoidTy(context.context), ir_params, false);
+    parallelSync = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_sync", context.module);
+    return parallelSync;
+  }
+  llvm::Function* emitParallelTID() {
+    if (parallelTid)
+      return parallelTid;
+    llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
+    llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), ir_params, false);
+    parallelTid = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_tid", context.module);
+    return parallelTid;
+  }
+  llvm::Function* emitParallelNT() {
+    if (parallelNT)
+      return parallelNT;
+    llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
+    llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), ir_params, false);
+    parallelNT = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_nt__tlang_nt", context.module);
+    return parallelNT;
   }
   llvm::StructType* emitStructType(ParallelStmt &stmt) {
     llvm::StructType *type = llvm::StructType::create(*context, getStructName());
@@ -54,15 +93,13 @@ struct EmitParallel {
     return type;
   }
   llvm::Function* emitParallelSection(ParallelStmt &stmt, llvm::StructType *contextType) {
-    std::vector<llvm::Type*> ir_params(1, nullptr);
-    ir_params[0] = llvm::Type::getInt8PtrTy(*context, 0);
-    llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getVoidTy(context.context), ir_params, false);
+    llvm::FunctionType *function_type = emitExecFunctionType();
     llvm::Function *function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, getSectionName(), context.module);
     context[&stmt] = function;
     llvm::BasicBlock *entry_block = llvm::BasicBlock::Create(*context, "entry_block", function);
     context.builder.SetInsertPoint(entry_block);
-    llvm::AllocaInst *argumentsAlloca = context->CreateAlloca(argumentsType, 0, "Arguments");
-    llvm::AllocaInst *contextAlloca = context->CreateAlloca(contextType, 0, "Context");
+    llvm::AllocaInst *argumentsAlloca = context->CreateAlloca(argumentsType, 0, "threadData");
+    llvm::AllocaInst *contextAlloca = context->CreateAlloca(contextType, 0, "context");
     llvm::AllocaInst *tidAlloca = context->CreateAlloca(llvm::Type::getInt32Ty(*context), 0, "tid");
     llvm::Value *bitCast = context->CreateBitCast(function->getArg(0), argumentsType);
     context->CreateStore(bitCast, argumentsAlloca);
@@ -78,17 +115,24 @@ struct EmitParallel {
     }
     {
       llvm::SmallVector<llvm::Value*, 1> args;
-//      args.push_back(Elt);
+      args.push_back(tidAlloca);
       context.builder.CreateCall(parallelInit, args);
     }
-    if (function_type->getReturnType()->isVoidTy() && !context.builder.GetInsertBlock()->getTerminator())
-      context.builder.CreateRetVoid();
+    if (!context.builder.GetInsertBlock()->getTerminator()) {
+      context->CreateCall(parallelExit);
+      llvm::Value *value = llvm::ConstantPointerNull::get(llvm::Type::getInt8PtrTy(*context, 0));
+      context.builder.CreateRet(value);
+    }
     return function;
   }
   llvm::Value* emit(ParallelStmt &stmt) {
     llvm::BasicBlock *tmpBlock = context.builder.GetInsertBlock();
     emitParallelCreate();
     emitParallelInit();
+    emitParallelExit();
+    emitParallelSync();
+    emitParallelTID();
+    emitParallelNT();
     emitArgumentsStruct();
     llvm::StructType *args_type = emitStructType(stmt);
     emitParallelSection(stmt, args_type);
@@ -102,6 +146,10 @@ private:
   size_t counter { };
   llvm::Function *parallelCreate { };
   llvm::Function *parallelInit { };
+  llvm::Function *parallelExit { };
+  llvm::Function *parallelSync { };
+  llvm::Function *parallelTid { };
+  llvm::Function *parallelNT { };
   llvm::StructType *argumentsType { };
 };
 struct EmitStmt {
