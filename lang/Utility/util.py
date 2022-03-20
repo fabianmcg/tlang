@@ -30,6 +30,12 @@ def indentTxt(txt, indentation=0):
 def getCxx(x):
     return str(x) if not hasattr(x, "cxx") else x.cxx()
 
+def getTd(x):
+    if not hasattr(x, "td"):
+        print(type(x))
+        raise RuntimeError("")
+    return x.td()
+
 
 def getParseStr(x, *args):
     return str(x) if not hasattr(x, "parseStr") else x.parseStr(*args)

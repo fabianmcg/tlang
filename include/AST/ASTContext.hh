@@ -5,6 +5,7 @@
 #include "ASTCommon.hh"
 //#include "TypeContext.hh"
 #include "SymbolTable.hh"
+#include <Analysis/AnalysisContext.hh>
 #include <cstdint>
 #include <map>
 
@@ -55,10 +56,17 @@ struct ASTContext {
       ost << std::endl;
     }
   }
+  AnalysisContext& analysisContext() {
+    return __analyis;
+  }
+  const AnalysisContext& analysisContext() const {
+    return __analyis;
+  }
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> __nodes;
-  ModuleDecl *__module { };
   std::map<ASTNode*, SymbolTable> __tables;
+  AnalysisContext __analyis { };
+  ModuleDecl *__module { };
   template <typename T>
   T* add_node(std::unique_ptr<T> &&value) {
     if (value) {

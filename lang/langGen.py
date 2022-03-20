@@ -61,20 +61,20 @@ def parseArgs():
 def main():
     args = parseArgs()
     genAST = True if args.feature == "all" or args.feature == "ast" else False
-    genLex = True if args.feature == "all" or args.feature == "lexer" else False
-    genParser = True if args.feature == "all" or args.feature == "parser" else False
+    # genLex = True if args.feature == "all" or args.feature == "lexer" else False
+    # genParser = True if args.feature == "all" or args.feature == "parser" else False
     tokens = makeLexer()
     pathJoin(args.output_dir).mkdir(parents=True, exist_ok=True)
-    if genLex:
-        tokens.generateLexer(args.output_dir, args.template_dir)
+    # if genLex:
+    #     tokens.generateLexer(args.output_dir, args.template_dir)
     if genAST:
         ast = makeAST(args.config_dir)
         ast.generateASTNodes(args.output_dir, args.output_dir, str(pathJoin(args.template_dir, "header.hh.j2")), tokens)
-        ast.generateRecursiveASTVisitor(args.output_dir, args.template_dir)
-    if genParser:
-        grammar = makeParser(str(pathJoin(args.config_dir, "grammar.conf")), tokens)
-        grammarParser = GrammarParser(grammar)
-        grammarParser.generateParser(args.output_dir, args.template_dir)
+    #     ast.generateRecursiveASTVisitor(args.output_dir, args.template_dir)
+    # if genParser:
+    #     grammar = makeParser(str(pathJoin(args.config_dir, "grammar.conf")), tokens)
+    #     grammarParser = GrammarParser(grammar)
+    #     grammarParser.generateParser(args.output_dir, args.template_dir)
         # printToFile(grammar, "grammar.conf")
 
 
