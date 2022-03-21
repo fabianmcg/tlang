@@ -70,8 +70,12 @@ void __tlang_create_parallel(void* (*exec)(void*), void *data, int hasBarrier) {
 }
 void __tlang_init_parallel(int id) {
   tid = id;
+//  std::string tmp = "I:" + std::to_string(tid) + " " + std::to_string(region.getNumThreads());
+//  std::cerr << tmp << std::endl;
 }
 void __tlang_exit_parallel() {
+//  std::string tmp = "E:" + std::to_string(tid) + " " + std::to_string(region.getNumThreads());
+//  std::cerr << tmp << std::endl;
   pthread_exit(NULL);
 }
 void __tlang_sync() {
@@ -82,4 +86,16 @@ int __tlang_tid() {
 }
 int __tlang_nt() {
   return region.getNumThreads();
+}
+__Tlang_Range    __tlang_loop_partition(int begin, int end)    {
+  int nt = region.getNumThreads();
+  int size = end - begin, start, stop;
+  size = (size + nt - 1) / nt;
+  start = tid * size + begin;
+  stop = start + size;
+  if (end <= start)
+    start = stop = 0;
+  if (end <= stop)
+    stop = end;
+  return __Tlang_Range { start, stop };
 }

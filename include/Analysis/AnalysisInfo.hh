@@ -7,26 +7,7 @@ namespace tlang {
 class AnalysisInfo {
 public:
   AnalysisInfo() = default;
-  inline AnalysisInfo(ASTNode *node, NodeClass nodeKind) :
-      node(node), nodeKind(nodeKind) {
-  }
-  inline AnalysisInfo(ASTNode *node) :
-      node(node) {
-    if (node)
-      nodeKind = node->classOf();
-  }
-  inline ASTNode* operator*() const {
-    return node;
-  }
-  inline NodeClass kind() const {
-    return nodeKind;
-  }
-  inline bool is(NodeClass kind) const {
-    return kind == nodeKind;
-  }
-  inline bool isNot(NodeClass kind) const {
-    return kind != nodeKind;
-  }
+  virtual ~AnalysisInfo() = default;
   template <typename T>
   inline T* getAs() {
     return static_cast<T*>(this);
@@ -43,9 +24,6 @@ public:
   inline const T* getDynAs() const {
     return dynamic_cast<T*>(this);
   }
-protected:
-  ASTNode *node { };
-  NodeClass nodeKind { NodeClass::ASTNode };
 };
 }
 
