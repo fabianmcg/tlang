@@ -35,6 +35,7 @@ struct EmitParallel {
     return llvm::FunctionType::get(llvm::Type::getInt8PtrTy(*context, 0), ir_params, false);
   }
   llvm::Function* emitParallelCreate() {
+    parallelCreate = context.module.getFunction("__tlang_create_parallel");
     if (parallelCreate)
       return parallelCreate;
     std::vector<llvm::Type*> ir_params(3, nullptr);
@@ -46,6 +47,7 @@ struct EmitParallel {
     return parallelCreate;
   }
   llvm::Function* emitParallelInit() {
+    parallelInit = context.module.getFunction("__tlang_init_parallel");
     if (parallelInit)
       return parallelInit;
     llvm::SmallVector<llvm::Type*, 1> ir_params(1, nullptr);
@@ -55,19 +57,18 @@ struct EmitParallel {
     return parallelInit;
   }
   llvm::Function* emitParallelPart() {
+    parallelPart = context.module.getFunction("__tlang_loop_partition");
     if (parallelPart)
       return parallelPart;
     llvm::SmallVector<llvm::Type*, 2> ir_params(2, nullptr);
     ir_params[0] = llvm::Type::getInt32Ty(*context);
     ir_params[1] = llvm::Type::getInt32Ty(*context);
-//    auto type = llvm::StructType::create(*context, "loopPartType");
-//    type->setBody(ir_params);
-//    parallelPartType = type;
     llvm::FunctionType *function_type = llvm::FunctionType::get(llvm::Type::getInt64Ty(*context), ir_params, false);
     parallelPart = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, "__tlang_loop_partition", context.module);
     return parallelPart;
   }
   llvm::Function* emitParallelExit() {
+    parallelExit = context.module.getFunction("__tlang_exit_parallel");
     if (parallelExit)
       return parallelExit;
     llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
@@ -76,6 +77,7 @@ struct EmitParallel {
     return parallelExit;
   }
   llvm::Function* emitParallelSync() {
+    parallelSync = context.module.getFunction("__tlang_sync");
     if (parallelSync)
       return parallelSync;
     llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
@@ -84,6 +86,7 @@ struct EmitParallel {
     return parallelSync;
   }
   llvm::Function* emitParallelTID() {
+    parallelTid = context.module.getFunction("__tlang_tid");
     if (parallelTid)
       return parallelTid;
     llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
@@ -92,6 +95,7 @@ struct EmitParallel {
     return parallelTid;
   }
   llvm::Function* emitParallelNT() {
+    parallelNT = context.module.getFunction("__tlang_nt");
     if (parallelNT)
       return parallelNT;
     llvm::SmallVector<llvm::Type*, 1> ir_params(0, nullptr);
@@ -344,6 +348,28 @@ struct EmitParallel {
         llvm::AtomicOrdering::SequentiallyConsistent);
     return value;
   }
+  llvm::Value* emitMainStmt(MainStmt &stmt) {
+    llvm::Function *function = context.builder.GetInsertBlock()->getParent();
+    llvm::BasicBlock *then_block = llvm::BasicBlock::Create(*context, emitter->makeLabel(NodeClass::MainStmt, "MainStmt"), function);
+    llvm::BasicBlock *endIf_block = llvm::BasicBlock::Create(*context, emitter->makeLabel(NodeClass::MainStmt, "EndMainStmt"));
+    emitter->incrementLabel(NodeClass::MainStmt);
+
+    // Emit condition
+    auto val = context->CreateCall(parallelTid);
+    auto condition = context.builder.CreateICmpEQ(val, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0));
+    context.builder.CreateCondBr(condition, then_block, endIf_block);
+
+    // Emit ThenStmt
+    context.builder.SetInsertPoint(then_block);
+    emitter->emitStmt(stmt.getStmt());
+    emitter->emitBranch(then_block, endIf_block);
+
+    // Emit EndIf
+    function->getBasicBlockList().push_back(endIf_block);
+    context.builder.SetInsertPoint(endIf_block);
+//    context->CreateCall(parallelSync);
+    return nullptr;
+  }
 private:
   CGContext &context;
   StmtEmitter *emitter;
@@ -478,6 +504,9 @@ struct EmitStmt {
   llvm::Value* emitAtomicStmt(AtomicStmt &stmt) {
     return parallelEmitter.emitAtomicStmt(stmt);
   }
+  llvm::Value* emitMainStmt(MainStmt &stmt) {
+    return parallelEmitter.emitMainStmt(stmt);
+  }
   llvm::Value* emitStmt(Stmt *stmt) {
     if (auto expr = dynamic_cast<Expr*>(stmt))
       return emitExpr(*expr);
@@ -496,6 +525,8 @@ struct EmitStmt {
       return emitSyncStmt(*static_cast<SyncStmt*>(stmt));
     else if (kind == NodeClass::AtomicStmt)
       return emitAtomicStmt(*static_cast<AtomicStmt*>(stmt));
+    else if (kind == NodeClass::MainStmt)
+      return emitMainStmt(*static_cast<MainStmt*>(stmt));
     else if (kind == NodeClass::CompoundStmt) {
       llvm::Value *last { };
       for (auto sub_stmt : static_cast<CompoundStmt*>(stmt)->getStmts())
