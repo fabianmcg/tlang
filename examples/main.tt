@@ -1,4 +1,10 @@
-fn add(x: f32*, y: f32*, n: i32) {
-  for (let i:i32 in 0 : n)
+fn add(x: f64*, y: f64*, n: i32) {
+  let tmp: f64;
+  tmp = 0.0;
+  parallel {
+  loop [reduce(+, tmp)] (let i: i32 in 0 : n) {
     x[i] = x[i] + y[i];
+    tmp = tmp + x[i];
+    }
+  }
 }

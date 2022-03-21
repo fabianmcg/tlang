@@ -40,6 +40,11 @@ endif
 EP:
 	$(TC) ./examples/EP.tt -o EP.ll
 	$(LLVMOPT) $(OPTFLAGS) -S EP.ll -o EP_opt.ll
+	
+.PHONY: EP_PAR
+EP_PAR:
+	$(TC) ./examples/EP_parallel.tt -o EP.ll
+	$(LLVMOPT) $(OPTFLAGS) -S EP.ll -o EP_opt.ll
 
 .PHONY: CG
 CG:
@@ -60,4 +65,4 @@ endif
 
 .PHONY: clean
 clean:
-	rm -vf *.hh *.yy *.ll
+	rm -vf *.hh *.yy *.ll examples/*.ll

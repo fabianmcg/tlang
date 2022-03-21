@@ -28,12 +28,14 @@ public:
     return std::make_unique<T>(std::forward<T>(value));
   }
   template <typename T, typename ...Args>
-  inline void make(ASTNode *key, Args &&... args) {
-    context[key] = makeInfo<T>(std::forward<Args>(args)...);
+  inline T* make(ASTNode *key, Args &&... args) {
+    auto &result = context[key] = makeInfo<T>(std::forward<Args>(args)...);
+    return static_cast<T*>(result.get());
   }
   template <typename T>
-  inline void create(ASTNode *key, T &&value) {
-    context[key] = createInfo<T>(std::forward<T>(value));
+  inline T* create(ASTNode *key, T &&value) {
+    auto &result = context[key] = createInfo<T>(std::forward<T>(value));
+    return static_cast<T*>(result.get());
   }
   inline std::unique_ptr<AnalysisInfo> exchange(ASTNode *key, std::unique_ptr<AnalysisInfo> &&result) {
     auto tmp = std::move(context[key]);

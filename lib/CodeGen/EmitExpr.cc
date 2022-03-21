@@ -88,8 +88,15 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     using namespace llvm;
     if (isFirst && node->getDecl()) {
       if (auto varDecl = dynamic_cast<VariableDecl*>(node->getDecl().data())) {
-        auto *load = context.builder.CreateLoad(context.emitType(varDecl->getType()), context[varDecl], varDecl->getIdentifier().c_str());
-        context[node] = load;
+        if (varDecl->isRef) {
+          auto *load = context.builder.CreateLoad(llvm::PointerType::get(context.emitType(varDecl->getType()), 0), context[varDecl],
+              varDecl->getIdentifier().c_str());
+          load = context.builder.CreateLoad(context.emitType(varDecl->getType()), load);
+          context[node] = load;
+        } else {
+          auto *load = context.builder.CreateLoad(context.emitType(varDecl->getType()), context[varDecl], varDecl->getIdentifier().c_str());
+          context[node] = load;
+        }
       }
     }
     return visit_t::skip;
@@ -191,8 +198,14 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
         if (LHS == nullptr) {
           if (auto ref = dynamic_cast<DeclRefExpr*>(node->getLhs()))
             if (auto varDecl = dynamic_cast<VariableDecl*>(ref->getDecl().data())) {
-              LHS = context.builder.CreateStore(RHS, context[varDecl]);
-              context[node] = LHS;
+              if (varDecl->isRef) {
+                auto *tmp = context.builder.CreateLoad(llvm::PointerType::get(context.emitType(varDecl->getType()), 0), context[varDecl]);
+                LHS = context.builder.CreateStore(RHS, tmp);
+                context[node] = LHS;
+              } else {
+                LHS = context.builder.CreateStore(RHS, context[varDecl]);
+                context[node] = LHS;
+              }
             }
         } else
           context[node] = context.builder.CreateStore(RHS, LHS);
@@ -204,14 +217,15 @@ struct ExprVisitor: RecursiveASTVisitor<ExprVisitor, VisitorPattern::prePostOrde
     }
     return visit_t::skip;
   }
-  llvm::Value* emit(Expr *node) {
+  llvm::Value* emit(Expr *node, bool load = true) {
+    this->load = load;
     dynamicTraverse(node);
     return context[node];
   }
   CGContext &context;
   bool load = true;
 };
-llvm::Value* CGContext::emitExpr(Expr *expr) {
-  return ExprVisitor { *this }.emit(expr);
+llvm::Value* CGContext::emitExpr(Expr *expr, bool load) {
+  return ExprVisitor { *this }.emit(expr, load);
 }
 }

@@ -85,6 +85,13 @@ struct EmitDecl {
 protected:
   CGContext &context;
 };
+llvm::Value* CGContext::emitDecl(Decl *decl) {
+  if (auto varDecl = dynamic_cast<VariableDecl*>(decl)) {
+    EmitDecl emitter { *this };
+    return  emitter.emitVariableDecl(*varDecl);
+  }
+  return nullptr;
+}
 void CGContext::emitModuleDecl(ModuleDecl *module) {
   EmitDecl emitter { *this };
   for (auto &symbol : *module)
