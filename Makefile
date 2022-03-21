@@ -51,6 +51,11 @@ CG:
 	$(TC) ./examples/CG.tt -o CG.ll
 	$(LLVMOPT) $(OPTFLAGS) -S CG.ll -o CG_opt.ll
 
+.PHONY: CG_PAR
+CG_PAR:
+	$(TC) ./examples/CG_parallel.tt -o CG.ll
+	$(LLVMOPT) $(OPTFLAGS) -S CG.ll -o CG_opt.ll
+
 .PHONY: emit
 emit:
 ifneq ($(file),)
