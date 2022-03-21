@@ -36,7 +36,7 @@ fn EP(x: f64*, q: f64*, A: f64, S: f64, sxC: f64*, syC: f64*, gcC: f64*, np: i32
   let qq: f64*, xx: f64*;
   qq = getQP();
   xx = getXP();
-  loop [reduce(+, sx, sy)] (k in 1 : (np + 1))    /*  for (k = 1; k <= np; k++) */ {
+  loop [reduce(+, sx, sy) nowait] (k in 1 : (np + 1))    /*  for (k = 1; k <= np; k++) */ {
     kk = k_offset + k;
     t1 = S;
     t2 = an;
