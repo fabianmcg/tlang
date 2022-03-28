@@ -18,7 +18,7 @@ lexer:
 
 .PHONY: ast
 ast:
-	python3 lang/langGen.py ast -c lang/Conf -t lang/Templates -o include/AST
+	$(MAKE) -f tblgen.make
 
 .PHONY: parser
 parser:

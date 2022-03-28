@@ -2,7 +2,7 @@
 #define __AST_ASTCONTEXT_HH__
 
 #include "Common/Macros.hh"
-#include "ASTCommon.hh"
+#include "Common.hh"
 //#include "TypeContext.hh"
 #include "SymbolTable.hh"
 #include <Analysis/AnalysisContext.hh>
@@ -51,7 +51,7 @@ struct ASTContext {
   }
   void print_symbols(std::ostream &ost) const {
     for (auto& [k, v] : __tables) {
-      ost << to_string(k->classOf()) << ": " << k << std::endl;
+      ost << to_string(k->classof()) << ": " << k << std::endl;
       v.print(ost);
       ost << std::endl;
     }

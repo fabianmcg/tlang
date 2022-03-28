@@ -36,7 +36,7 @@ struct StmtVisitor: RecursiveASTVisitor<StmtVisitor> {
       context(context) {
   }
   visit_t visitStmt(Stmt *node, bool isFirst) {
-    auto kind = node->classOf();
+    auto kind = node->classof();
     StmtAnalysis *analysis { };
     if (kind == NodeClass::ParallelStmt)
       analysis = context.make<ParallelStmtAnalysis>(node, *node);

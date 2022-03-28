@@ -3,18 +3,23 @@
 include "ASTNode.td"
 include "Stmt.td"
 
+def ExprHeader : CodeSection<Header, [{
+#include <AST/Stmt.hh>
+#include <AST/Type.hh>
+}]>;
+
 def Expr : AbstractNode<ValueStmt, /* Abstract = */ 1, /* Implicit = */ 0> {
   Child type = Child<Static, [{QualType}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    Expr(QualType &&type) : __children(std::forward<QualType>(type)) {
+    Expr(QualType &&type) : children(std::forward<QualType>(type)) {
     }
   }]>;
 }
 
-def LiteralExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable value = Var<[{string}]>;
+def LiteralExpr : AbstractNode<Expr, /* Abstract = */ 1, /* Implicit = */ 0> {
+  Variable value = Var<[{std::string}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    LiteralExpr(QualType &&type, std::string value) : Expr(std::forward<QualType>(type)), __value(value) {
+    LiteralExpr(QualType &&type, std::string value) : Expr(std::forward<QualType>(type)), value(value) {
     }
   }]>;
 }
@@ -51,37 +56,58 @@ def ThisExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
 
 def ParenExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child expr = Child<Dynamic, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    ParenExpr(Expr *expr) : __children(expr) {
-    }
-  }]>;
 }
 
-def UnaryOperation : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+def UnaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Operator = Enum<[EM<"None", [{0}]>, EM<"Address", [{1}]>, EM<"Dereference", [{2}]>, EM<"Plus", [{3}]>, EM<"Minus", [{4}]>]>;
   Variable postfix = Var<[{bool}]>;
-  Variable operator = Var<[{operator_kind}]>;
+  Variable op = EVar<[{Operator}]>;
   Child expr = Child<Dynamic, [{Expr}]>;
-  Enum operator_kind = Enum<[EM<"None", [{0}]>, EM<"Address", [{1}]>, EM<"Dereference", [{2}]>, EM<"Plus", [{3}]>, EM<"Minus", [{4}]>]>;
 }
 
-def BinaryOperation : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable operator = Var<[{OperatorKind}]>;
+def BinaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Operator = Enum<[EM<"And">,
+    EM<"Or">,
+    EM<"Equal">,
+    EM<"NEQ">,
+    EM<"LEQ">,
+    EM<"GEQ">,
+    EM<"LShift">,
+    EM<"RShift">,
+    EM<"Pow">,
+    EM<"Increment">,
+    EM<"Decrement">,
+    EM<"Ellipsis">,
+    EM<"Not">,
+    EM<"Band">,
+    EM<"Bor">,
+    EM<"Less">,
+    EM<"Greater">,
+    EM<"Assign">,
+    EM<"Plus">,
+    EM<"Minus">,
+    EM<"Multiply">,
+    EM<"Divide">,
+    EM<"Modulo">,
+    EM<"At">,
+    EM<"Dot">,
+    EM<"Comma">,
+    EM<"Colon">,
+    EM<"Semicolon">
+  ]>;
+  Variable op = EVar<[{Operator}]>;
   Child lhs = Child<Dynamic, [{Expr}]>;
   Child rhs = Child<Dynamic, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    BinaryOperation(OperatorKind op, Expr *lhs, Expr *rhs) : Expr(), __operator(op), __children(lhs, rhs) {
-    }
-  }]>;
 }
 
 def DeclRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable identifier = Var<[{Identifier}]>;
   Variable decl = Var<[{reference<Decl>}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    DeclRefExpr(const Identifier &identifier) : Expr(), __identifier(identifier) {
+    DeclRefExpr(const Identifier &identifier) : Expr(), identifier(identifier) {
     }
     bool isResolved() const {
-      return __decl;
+      return decl;
     }
   }]>;
 }
@@ -89,26 +115,18 @@ def DeclRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
 def MemberExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child owner = Child<Dynamic, [{Expr}]>;
   Child member = Child<Dynamic, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    MemberExpr(Expr *lhs, Expr *rhs) : Expr(), __children(lhs, rhs) {
-    }
-  }]>;
 }
 
 def MemberRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable owner = Var<[{reference<Expr>}]>;
   Child member = Child<Dynamic, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    MemberRefExpr(reference<Expr> owner, Expr *expr) : Expr(), __owner(owner), __children(expr) {
-    }
-  }]>;
 }
 
 def CallExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child callee = Child<Dynamic, [{Expr}]>;
   Child args = Child<DynamicList, [{Expr}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    CallExpr(std::vector<Expr *> &&args) : __children(nullptr, std::forward<std::vector<Expr *>>(args)) {
+    CallExpr(std::vector<Expr *> &&args) : children(nullptr, std::forward<std::vector<Expr *>>(args)) {
     }
   }]>;
 }
@@ -117,7 +135,7 @@ def ArrayExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child array = Child<Dynamic, [{Expr}]>;
   Child index = Child<DynamicList, [{Expr}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    ArrayExpr(std::vector<Expr *> &&index) : __children(nullptr, std::forward<std::vector<Expr *>>(index)) {
+    ArrayExpr(std::vector<Expr *> &&index) : children(nullptr, std::forward<std::vector<Expr *>>(index)) {
     }
   }]>;
 }

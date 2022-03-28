@@ -37,7 +37,7 @@ static std::string fwdConstructor(CXXFunction::Kind kind, const std::string &ide
   auto init = sjoin(arguments, [](auto &e) -> std::string {
     return e.first.empty() ? std::string { } : frmt("{}", e.second.asInit());
   });
-  return frmt("{}: {}(kind, {}){{{}}}\n", header, identifier, init, body);
+  return frmt("{}::{}: {}(kind, {}){{{}}}\n", identifier, header, identifier, init, body);
 }
 std::string makeConstructor(CXXFunction::Kind kind, ASTNode &node, const std::string &body, bool withKind, bool isConst, bool ignoreBase) {
   auto &parents = node.parents();
@@ -57,8 +57,11 @@ std::string makeConstructor(CXXFunction::Kind kind, ASTNode &node, const std::st
   for (auto &var : variables)
     elements.push_back( { var.name.str(), CXXVariable(CXXType(var.type().str(), argQuals), frmt("{}{}", var.name.str(), i++)) });
   i = 0;
-  for (auto &var : children)
-    elements.push_back( { var.name.str(), CXXVariable(CXXType(var.cxxType(), argQuals), frmt("{}{}", var.name.str(), i++)) });
+  for (auto &var : children) {
+    auto kind = var.childKind();
+    auto quals = kind.isDynamic() ? CXXType::None : argQuals;
+    elements.push_back( { "children", CXXVariable(CXXType(var.cxxType(), quals), frmt("{}{}", var.name.str(), i++)) });
+  }
   if (withKind)
     return CXXFunction::constructor(kind, node.name(), elements, body);
   return fwdConstructor(kind, node.name(), elements, body);
@@ -67,8 +70,6 @@ std::string makeConstructor(CXXFunction::Kind kind, ASTNode &node, const std::st
 
 std::string CXXFunction::constructor(Kind kind, ASTNode &node, const std::string &body, bool withKind, bool isConst) {
   auto tmp = makeConstructor(kind, node, body, withKind, isConst, false);
-  if (withKind)
-    return tmp;
   auto &parents = node.parents();
   auto &children = node.children();
   auto &variables = node.members();

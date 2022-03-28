@@ -15,7 +15,7 @@ struct FirstSemaPassAST: RecursiveASTVisitor<FirstSemaPassAST, VisitorPattern::p
   }
 //  visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
 //    auto parent = node->parent();
-//    auto kind = parent->classOf();
+//    auto kind = parent->classof();
 //    if (isFirst) {
 //      auto decl = context.find(node->getIdentifier());
 //      auto tdecl = dynamic_cast<NamedDecl*>(decl);

@@ -13,7 +13,7 @@ public:
     init_numeric();
   }
   Type* base_types(Type *type) const {
-    switch (type->classOf()) {
+    switch (type->classof()) {
     case NodeClass::DependentType:
       return rm_const(dependent_type);
     case NodeClass::BoolType:
@@ -32,7 +32,7 @@ public:
     return nullptr;
   }
   Type* static_types(Type *type) {
-    switch (type->classOf()) {
+    switch (type->classof()) {
     case NodeClass::PtrType:
       return rm_const(dependent_type);
     }

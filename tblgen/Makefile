@@ -2,9 +2,13 @@ TG ?= ./build/tlang-tblgen
 FLAGS ?= "-I td/ -I nodes/"
 OUTPUT_DIR ?= tmp
 
+.PHONY: build
 build:
 	mkdir -pv build
 	cd build/ && cmake ../ && $(MAKE) -j4
+
+.PHONY: clean_build
+clean_build: purge build
 
 .PHONY: all
 all: ast common traits inc

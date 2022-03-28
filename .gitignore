@@ -1,3 +1,4 @@
+./tblgen/build/
 /build/
 *.graphml
 *.dot
@@ -26,6 +27,17 @@ include/AST/Type.hh
 include/AST/Operators.hh
 include/Lexer/tokens.hh
 include/Lexer/Tokens.hh
+include/AST/Common.hh
+include/AST/Nodes.inc
+include/AST/Traits.hh
+include/CodeGen/Emitable.inc
+include/CodeGen/RecursiveVisitor.hh
+lib/AST/Attr.cc
+lib/AST/Common.cc
+lib/AST/Decl.cc
+lib/AST/Expr.cc
+lib/AST/Stmt.cc
+lib/AST/Type.cc
 lang/Conf/tmp
 lib/Parser/ParserHandler.cc
 *TODO*

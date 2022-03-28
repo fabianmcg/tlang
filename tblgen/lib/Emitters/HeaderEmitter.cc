@@ -50,6 +50,7 @@ private:
         return true;
       }));
     }
+    ost << "using AbstractNode::classof;\n";
   }
   void emitConstructor(bool withKind, bool isConst) {
     ost << CXXFunction::constructor(CXXFunction::decl, node, "", withKind, isConst);
@@ -60,13 +61,13 @@ private:
     auto &variables = node.members();
     centeredComment(ost, "Constructors");
     emitVisibility(Visibility::Protected);
-    frmts(ost, "{}(int) : {}(kind) {{}}\n", node.name(), C::base_type_v);
+    frmts(ost, "{}(int) {{AbstractNode::set(kind);}}\n", node.name(), C::base_type_v);
     emitConstructor(true, false);
-    if (children.size() + variables.size())
+    if (variables.size())
       emitConstructor(true, true);
     emitVisibility(Visibility::Public);
     emitConstructor(false, false);
-    if (children.size() + variables.size())
+    if (variables.size())
       emitConstructor(false, true);
     if (node.defaultConstructor().isDefault())
       ost << node->getName() << "():" << node->getName() << "(0) {}\n";
@@ -137,7 +138,7 @@ private:
     emitVisibility(Visibility::Public);
     centeredComment(ost, "Children Methods");
     auto &children = node.children();
-    ost << "static constexpr bool hasChildren() { return children_list::size(); };\n";
+    ost << "static constexpr bool hasChildren() { return children_list::size; };\n";
     if (!children.empty()) {
       ost << "inline children_list* operator->() { return &children; };\n";
       ost << "inline const children_list* operator->() const { return &children; };\n";
@@ -222,9 +223,9 @@ public:
     emitSuperClasses();
     ost << " {\n";
     emitNodeInfo();
+    emitEnums();
     emitConstructors();
     emitAssignmentOperators();
-    emitEnums();
     emitChildrenMethods();
     emitMemberMethods();
     emitClassSections();

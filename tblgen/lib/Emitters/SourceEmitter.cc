@@ -19,13 +19,13 @@ private:
     auto &children = node.children();
     auto &variables = node.members();
     emitConstructor(true, false);
-    if (children.size() + variables.size())
+    if (variables.size())
       emitConstructor(true, true);
     emitConstructor(false, false);
-    if (children.size() + variables.size())
+    if (variables.size())
       emitConstructor(false, true);
     if (!node.defaultDestructor().isUserDefined() && node.abstract())
-      ost << "virtual " << node->getName() << "::~" << node->getName() << "() = default;\n\n";
+      ost << node->getName() << "::~" << node->getName() << "() = default;\n\n";
     ost
         << CXXFunction::function(CXXFunction::def, node.name() + "::" + std::string(C::clasoff_v), CXXType("bool"),
             std::array<CXXVariable, 1> { CXXVariable { CXXType { std::string(C::kind_v) }, "kind" } },
@@ -46,10 +46,10 @@ private:
           ost << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "()" << body;
           ost << "const " << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "() const" << body;
         } else if (kind.isDynamicList()) {
-          ost << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "();\n";
+          ost << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "()" << body;
           ost << "const " << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "() const" << body;
         } else if (kind.isStaticList()) {
-          ost << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "();\n";
+          ost << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "()" << body;
           ost << "const " << child.cxxType() << "& " << node->getName() << "::get" << capitalize(child.name.str()) << "() const" << body;
         }
       }
@@ -93,7 +93,7 @@ private:
   void emitClassSections() {
     auto &sections = node.sections();
     for (auto &section : sections) {
-      if (section.source().empty() && !section.location().isSource())
+      if (section.source().empty() || !section.location().isSource())
         continue;
       ost << section.source() << "\n\n";
     }
@@ -122,7 +122,6 @@ void NodesEmitter::emitSource(llvm::raw_ostream &ost) {
   std::filesystem::path path = std::filesystem::path(records.getInputFilename());
   std::string fn = path.stem().string();
   auto nodes = sortDefinitions(records, "", true);
-  defineGuards(ost, "AST_" + toupper(fn) + "_HH", true);
   include(ost, "AST/" + fn + ".hh", false);
   include(ost, "AST/Traits.hh", false);
   for (auto record : nodes)
@@ -132,7 +131,7 @@ void NodesEmitter::emitSource(llvm::raw_ostream &ost) {
         SourceGen { node, ost }.emit();
       } else if (CodeSection::is(record)) {
         CodeSection section { *record };
-        if (section.location().isHeader() && section.source().size())
+        if (section.location().isSource() && section.source().size())
           ost << "\n" << section.source() << "\n";
       }
     }

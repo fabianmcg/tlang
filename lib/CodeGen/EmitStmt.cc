@@ -510,7 +510,7 @@ struct EmitStmt {
   llvm::Value* emitStmt(Stmt *stmt) {
     if (auto expr = dynamic_cast<Expr*>(stmt))
       return emitExpr(*expr);
-    auto kind = stmt->classOf();
+    auto kind = stmt->classof();
     if (kind == NodeClass::IfStmt)
       return emitIfStmt(*static_cast<IfStmt*>(stmt));
     else if (kind == NodeClass::ForStmt)
