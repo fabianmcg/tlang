@@ -27,21 +27,8 @@ def indentTxt(txt, indentation=0):
     return textwrap.indent(txt, " " * indentation, lambda x: True)
 
 
-def formatIndent(src, indentation=0):
-    lc = ["clang-format-13", r'-style="{BasedOnStyle: llvm, ColumnLimit: 120, AllowShortFunctionsOnASingleLine: None}"']
-    retcode = run(" ".join(lc), capture_output=True, text=True, shell=True, input=src)
-    return indentTxt(retcode.stdout, indentation)
-
-
 def getCxx(x):
     return str(x) if not hasattr(x, "cxx") else x.cxx()
-
-
-def getTd(x):
-    if not hasattr(x, "td"):
-        print(type(x))
-        raise RuntimeError("")
-    return x.td()
 
 
 def getParseStr(x, *args):

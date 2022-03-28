@@ -1,0 +1,107 @@
+#ifndef DECL_TD
+#define DECL_TD
+include "ASTNode.td"
+
+class DeclContext;
+
+def Decl : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
+  Child attributes = Child<Dynamic, [{AttrList}]>;
+}
+
+def NamedDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable identifier = Var<[{Identifier}]>;
+  ClassSection epilogue = ClassSection<Header, Public, [{
+    virtual std::string usr() const {
+      return __identifier;
+    }
+  }]>;
+}
+
+def ModuleDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {
+}
+
+def ExternFunctionDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child returnType = Child<Static, [{QualType}]>;
+  Child parameters = Child<StaticList, [{QualType}]>;
+}
+
+def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {
+  Variable complete = Var<[{bool}]>;
+  Child returnType = Child<Static, [{QualType}]>;
+  Child parameters = Child<DynamicList, [{ParameterDecl}]>;
+  Child body = Child<Dynamic, [{CompoundStmt}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    template <typename... Args>
+    FunctorDecl(NamedDecl &&__nameddecl, DeclContext &&__declcontext, Args &&...args)
+        : NamedDecl(std::move(__nameddecl)), DeclContext(std::move(__declcontext)), __complete(false),
+          __children(std::forward<Args>(args)...) {
+    }
+  }]>;
+}
+
+def FunctionDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+}
+
+def ImportDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable moduleName = Var<[{Identifier}]>;
+  Variable module = Var<[{reference<ModuleDecl>}]>;
+}
+
+def UsingDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child type = Child<Static, [{QualType}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    UsingDecl(const Identifier &identifier, QualType &&type) : NamedDecl(Decl(), identifier), __children(std::move(type)) {
+    }
+  }]>;
+}
+
+def TypeDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  ClassSection header = ClassSection<Header, Public, [{
+    TypeDecl(const Identifier &identifier) : NamedDecl(Decl(), identifier) {
+    }
+  }]>;
+}
+
+def TagDecl : AbstractNode<TypeDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {
+}
+
+def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  ClassSection header = ClassSection<Header, Public, [{
+    StructDecl(const Identifier &identifier, DeclContext &&context) : TagDecl(TypeDecl(identifier), std::move(context)) {
+    }
+  }]>;
+}
+
+def MethodDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+}
+
+def VariableDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child type = Child<Static, [{QualType}]>;
+  Child init = Child<Dynamic, [{Expr}]>;
+}
+
+def ParameterDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+}
+
+def MemberDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+}
+
+def EnumDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child type = Child<Static, [{QualType}]>;
+  Child members = Child<DynamicList, [{EnumMemberDecl}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    EnumDecl(const Identifier &identifier, QualType &&type, std::vector<EnumMemberDecl *> &&members)
+        : TagDecl(TypeDecl(identifier), DeclContext()), __children(std::move(type), std::move(members)) {
+    }
+  }]>;
+}
+
+def EnumMemberDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child value = Child<Dynamic, [{Expr}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    EnumMemberDecl(const Identifier &identifier, Expr *value = nullptr) : NamedDecl(Decl(), identifier), __children(value) {
+    }
+  }]>;
+}
+
+#endif

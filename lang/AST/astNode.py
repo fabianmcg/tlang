@@ -6,10 +6,7 @@ Created on Oct Sun 31 11:09:00 2021
 @author: fabian
 """
 
-from inspect import isclass
-
-from numpy import isin
-from Cxx.type import EnumType, Type
+from Cxx.type import Type
 from Cxx.type import NodeType
 from Cxx.util import CxxList
 from Cxx.variable import Variable
@@ -209,58 +206,3 @@ class Node(Struct):
         src = Struct.cxxProtectedSectionBody(self)
         src += "children_t __children{};"
         return src
-
-    def td(self):
-        ID = self.identifier
-        Parent = self.parents[0]
-        ExtraParents = "" if len(self.parents) == 0 else ", ".join(self.parents[1:])
-        ExtraParents = ", " + ExtraParents if len(ExtraParents) else ""
-        body = ""
-        for member in self.members:
-            body += "\n"
-            if isinstance(member.T, EnumType):
-                body += "  Variable {} = Var<[{{{}}}], [{{}}], Protected, 1>;".format(member.identifier, member.T)
-            else:
-                body += "  Variable {} = Var<[{{{}}}]>;".format(member.identifier, member.T)
-        for child in self.children:
-            if isinstance(child.T, StaticNode):
-                body += "\n"
-                body += "  Child {} = Child<Static, [{{{}}}]>;".format(child.identifier, child.T.identifier)
-            elif isinstance(child.T, DynamicNode):
-                body += "\n"
-                body += "  Child {} = Child<Dynamic, [{{{}}}]>;".format(child.identifier, child.T.identifier)
-            elif isinstance(child.T, StaticList):
-                body += "\n"
-                body += "  Child {} = Child<StaticList, [{{{}}}]>;".format(child.identifier, child.T.identifier)
-            elif isinstance(child.T, DynamicList):
-                body += "\n"
-                body += "  Child {} = Child<DynamicList, [{{{}}}]>;".format(child.identifier, child.T.identifier)
-        from Utility.util import formatIndent
-        from Cxx.struct import Enum, EnumElement
-
-        for e in self.enums:
-            if isinstance(e, Enum):
-                tmp = []
-                for em in e.values:
-                    if isinstance(em, EnumElement):
-                        t = ", [{{{}}}]".format(em.value) if em.value != None and len(em.value) else ""
-                        tmp.append('EM<"{}"{}>'.format(em.identifier, t))
-                tmp = ", ".join(tmp)
-                body += "\n  Enum {} = Enum<[{}]{}>;".format(e.identifier, tmp, ", 1" if e.isClass else "")
-        body += (
-            "\n  ClassSection header = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(
-                formatIndent(self.headerSection.code, 4)
-            )
-            if len(self.headerSection.code)
-            else ""
-        )
-        body += (
-            "\n  ClassSection epilogue = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(
-                formatIndent(self.epilogueSection.code, 4)
-            )
-            if len(self.epilogueSection.code)
-            else ""
-        )
-        return "def {} : AbstractNode<{}, /* Abstract = */ 0, /* Implicit = */ 0>{} {{{}\n}}\n".format(
-            ID, Parent, ExtraParents, body
-        )

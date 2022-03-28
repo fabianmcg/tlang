@@ -1,0 +1,11 @@
+TG ?= ./build/tlang-tblgen
+FLAGS ?= -I td/ -I nodes/
+ACTION ?= traits
+MODE ?= hh
+FILE ?= 
+OUT ?= $(notdir $(addsuffix .$(MODE), $(basename $(FILE))))
+OUT_DIR ?= .
+
+.PHONY: run
+run:
+	$(TG) $(FLAGS) $(FILE) --emit-$(ACTION) --$(MODE) -o $(OUT_DIR)/$(OUT)
