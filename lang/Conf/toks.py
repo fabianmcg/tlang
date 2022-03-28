@@ -43,7 +43,7 @@ def makeLexer():
     db.addToken(Keyword, "Enum")
     db.addToken(Keyword, "For")
     db.addToken(Keyword, "While")
-    db.addToken(Keyword, "Continue")
+    db.addToken(Keyword, "Continue") 
     db.addToken(Keyword, "If")
     db.addToken(Keyword, "Else")
     db.addToken(Keyword, "Switch")

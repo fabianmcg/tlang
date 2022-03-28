@@ -9,7 +9,6 @@ Created on Oct Sun 31 11:09:00 2021
 from AST.astNode import Node
 from Utility.util import (
     getCxx,
-    getTd,
     getJinjaTemplate,
     getParseStr,
     formatStr,
@@ -63,17 +62,6 @@ class FileNamespace:
         if tmp:
             src += tmp if namespace == "" else "namespace {} {{\n{}\n}}".format(namespace, tmp)
         return formatStr(src)
-
-    def td(self, namespace="", postHeader=""):
-        src = ""
-        declarations = self.declarations.copy()
-        tmp = []
-        if len(declarations):
-            if isinstance(declarations[0], HeaderSection):
-                declarations.pop(0)
-            tmp = map(getTd, declarations) if declarations else []
-        tmp = postHeader + "\n".join(tmp)
-        return tmp
 
 
 class ASTDatabase:
@@ -147,29 +135,31 @@ class ASTDatabase:
     def generateNamespace(self, namespace: FileNamespace, templatePath):
         incSrc = ""
         libSrc = ""
-        identifier = "{}_TD".format(namespace.getId())
+        identifier = "AST_{}_HEADER".format(namespace.getId())
         if not namespace.isMain():
-            incSrc = namespace.td("")
+            incSrc = namespace.cxx("_astnp_")
             incSrc = getJinjaTemplate(
                 templatePath,
-                {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"ASTNode.td"']},
+                {"ID": identifier, "HEADER": incSrc, "INCLUDES": ['"AST/ASTNode.hh"', '"Common/Reference.hh"']},
             )
-        # else:
-        #     incSrc = namespace.cxx("_astnp_", self.generateMain())
-        #     incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ["<string>"]})
+        else:
+            incSrc = namespace.cxx("_astnp_", self.generateMain())
+            incSrc = getJinjaTemplate(templatePath, {"ID": identifier, "HEADER": incSrc, "INCLUDES": ["<string>"]})
         return incSrc, libSrc
 
     def generateASTNodes(self, includeOutdir, libOutdir, templatePath, lexer: Lexer):
-        # operatorFile = pathJoin(includeOutdir, "Operators.hh")
-        # printToFile(self.generateOperators(lexer), operatorFile)
-        # format(operatorFile)
+        operatorFile = pathJoin(includeOutdir, "Operators.hh")
+        printToFile(self.generateOperators(lexer), operatorFile)
+        format(operatorFile)
         for namespace in self.fileNamespaces.values():
-            print(namespace.getId() + ".td")
+            print(namespace.getId() + ".hh")
             inc, lib = self.generateNamespace(namespace, templatePath)
-            incName = pathJoin(includeOutdir, namespace.getId() + ".td")
-            # libName = pathJoin(libOutdir, namespace.getId() + ".cc")
+            incName = pathJoin(includeOutdir, namespace.getId() + ".hh")
+            libName = pathJoin(libOutdir, namespace.getId() + ".cc")
             if len(inc):
                 printToFile(inc, incName)
+            if len(lib):
+                printToFile(lib, libName)
 
     def generateRecursiveASTVisitor(self, outputDir, inputDir):
         visit = ""
