@@ -13,7 +13,7 @@ struct ParentSetterAST: RecursiveASTVisitor<ParentSetterAST, VisitorPattern::pre
   }
   visit_t visitASTNode(ASTNode *node, bool isFirst) {
     if (isFirst) {
-      node->parent() = stack.top();
+      node->getParent() = stack.top();
       stack.push(node);
     } else
       stack.pop();

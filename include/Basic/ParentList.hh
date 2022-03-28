@@ -1,18 +1,19 @@
-#ifndef AST_INFRA_PARENTLIST_HH
-#define AST_INFRA_PARENTLIST_HH
+#ifndef BASIC_INFRA_PARENTLIST_HH
+#define BASIC_INFRA_PARENTLIST_HH
 
+#include <cstddef>
 #include <tuple>
 
 namespace tlang {
 template <typename ...T>
-struct ParentClasses {
+struct ParentList {
   static constexpr size_t size = sizeof...(T);
   using parent_types_t = std::tuple<T...>;
   template <int I>
   using type_t = std::tuple_element_t<I, parent_types_t>;
 };
 template <>
-struct ParentClasses<> {
+struct ParentList<> {
   static constexpr size_t size = 0;
   template <int I>
   using type_t = void;

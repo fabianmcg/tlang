@@ -7,7 +7,7 @@
 struct Constants {
   static constexpr std::string_view namespace_v = "tlang";
   static constexpr std::string_view kind_v = "ASTKind";
-  static constexpr std::string_view parent_class_v = "ParentClasses";
+  static constexpr std::string_view parent_class_v = "ParentList";
   static constexpr std::string_view children_class_v = "ChildrenList";
   static constexpr std::string_view clasoff_v = "classof";
 

@@ -1,12 +1,11 @@
-#ifndef __COMMON_SOURCE_RANGE_HH__
-#define __COMMON_SOURCE_RANGE_HH__
+#ifndef BASIC_SOURCERANGE_HH
+#define BASIC_SOURCERANGE_HH
 
-#include <Common/Macros.hh>
 #include <iostream>
 #include <string>
 #include <utility>
 
-namespace __lang_np__ {
+namespace tlang {
 struct SourceLocation {
   int line { -1 };
   int column { -1 };
