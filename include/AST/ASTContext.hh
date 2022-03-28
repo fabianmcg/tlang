@@ -1,15 +1,14 @@
 #ifndef __AST_ASTCONTEXT_HH__
 #define __AST_ASTCONTEXT_HH__
 
-#include "Common/Macros.hh"
 #include "Common.hh"
 //#include "TypeContext.hh"
-#include "SymbolTable.hh"
 #include <Analysis/AnalysisContext.hh>
 #include <cstdint>
 #include <map>
+#include <memory>
 
-namespace _astnp_ {
+namespace tlang {
 struct ASTContext {
   ASTContext() {
   }
@@ -40,22 +39,6 @@ struct ASTContext {
   void add_module(ModuleDecl *module) {
     __module = module;
   }
-  SymbolTable& operator[](ASTNode *node) {
-    return __tables[node];
-  }
-  auto find_table(ASTNode *node) {
-    return __tables.find(node);
-  }
-  auto find_table(ASTNode *node) const {
-    return __tables.find(node);
-  }
-  void print_symbols(std::ostream &ost) const {
-    for (auto& [k, v] : __tables) {
-      ost << to_string(k->classof()) << ": " << k << std::endl;
-      v.print(ost);
-      ost << std::endl;
-    }
-  }
   AnalysisContext& analysisContext() {
     return __analyis;
   }
@@ -64,7 +47,6 @@ struct ASTContext {
   }
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> __nodes;
-  std::map<ASTNode*, SymbolTable> __tables;
   AnalysisContext __analyis { };
   ModuleDecl *__module { };
   template <typename T>

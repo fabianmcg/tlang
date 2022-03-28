@@ -4,6 +4,7 @@ include "ASTNode.td"
 
 def DeclHeader : CodeSection<Header, [{
 #include <AST/Type.hh>
+#include <AST/DeclContext.hh>
 }]>;
 
 class DeclContext;

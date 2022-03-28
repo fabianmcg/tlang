@@ -2,6 +2,8 @@
 #define __ANALYSIS_ANALYSIS_CONTEXT_HH__
 
 #include <AST/ASTNode.hh>
+#include <map>
+#include <memory>
 #include "AnalysisInfo.hh"
 
 namespace tlang {
