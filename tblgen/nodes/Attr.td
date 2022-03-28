@@ -2,6 +2,10 @@
 #define ATTR_TD
 include "ASTNode.td"
 
+def AttrHeader : CodeSection<Header, [{
+#include <AST/Type.hh>
+}]>;
+
 def Attr : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
 
@@ -15,7 +19,7 @@ def NamedAttr : AbstractNode<Attr, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def TypeAttr : AbstractNode<Attr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child type = Child<Dynamic, [{QualType}]>;
+  Child type = Child<Static, [{QualType}]>;
 }
 
 def ExprAttr : AbstractNode<Attr, /* Abstract = */ 0, /* Implicit = */ 0> {

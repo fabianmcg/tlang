@@ -2,7 +2,7 @@
 #define __AST_SYMBOLTABLE_HH__
 
 #include "Common/Macros.hh"
-#include "ASTCommon.hh"
+#include "Common.hh"
 #include "Decl.hh"
 #include <map>
 
@@ -39,7 +39,7 @@ struct SymbolTable {
   void print(std::ostream &ost) const {
     ost << this << ":" << parent << ":" << std::endl;
     for (auto& [k, v] : table)
-      ost << to_string(v->classOf()) << ": " << k << " " << v << std::endl;
+      ost << to_string(v->classof()) << ": " << k << " " << v << std::endl;
   }
 };
 }

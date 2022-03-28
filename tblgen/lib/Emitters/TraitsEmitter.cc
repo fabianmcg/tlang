@@ -33,18 +33,18 @@ void emitTraits(AST<AbstractNode> &ast, llvm::raw_ostream &ost) {
   ost << "\n";
   auto traits =
       R""""(
-template <typename T>  using ASTraits_t = ASTTraits<std::decay_t<T>>;
+template <typename T> using ASTTraits_t = ASTTraits<std::decay_t<T>>;
 template <typename T> inline constexpr bool isValidNode_v = ASTTraits_t<T>::valid;
 template <typename S, typename T> inline constexpr bool isASTKind_v = ASTTraits_t<S>::is(T::kind);
 template <typename S, typename T> inline bool isa(T* node) {
   if constexpr (isValidNode_v<T>) 
-    return ASTraits_t<S>::is(node->classof());
+    return ASTTraits_t<S>::is(node->classof());
   return false;
 }
 template <typename S, typename T, std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>, int> = 0>
 inline bool isa(T node) {
   if constexpr (isValidNode_v<T>) 
-    return ASTraits_t<S>::is(node.classof());
+    return ASTTraits_t<S>::is(node.classof());
   return false;
 }
 template <typename S, typename T>

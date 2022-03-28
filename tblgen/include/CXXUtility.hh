@@ -66,9 +66,15 @@ public:
     if (decl == kind)
       return header + ";\n";
     auto init = sjoin(arguments, [](auto &e) -> std::string {
-      return e.first.empty() ? std::string { } : frmt("{}({})", e.first, e.second.asInit());
+      return e.first.empty() || e.first == "children" ? std::string { } : frmt("{}({})", e.first, e.second.asInit());
     });
-    return frmt("{}{}{{{}}}\n", header, init.empty() ? std::string { } : ": " + init, body);
+    auto tmp = sjoin(arguments, [](auto &e) -> std::string {
+      return e.first != "children" ? std::string { } : e.second.asInit();
+    });
+    if (tmp.size())
+        tmp = frmt("children({})", tmp);
+    init = init + (init.size() && tmp.size() ? ", " : "" ) + tmp;
+    return frmt("{}::{}{}{{{}}}\n", identifier, header, init.empty() ? std::string { } : ": " + init, body);
   }
   static std::string constructor(Kind kind, ASTNode &node, const std::string &body, bool withKind, bool isConst);
   template <typename List, std::enable_if_t<std::is_same_v<typename List::value_type, CXXVariable>, int> = 0>

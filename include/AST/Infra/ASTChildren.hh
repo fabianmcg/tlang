@@ -5,67 +5,58 @@
 #include <memory>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 #include <Common/StaticFor.hh>
+#include <Common/Reference.hh>
 
-namespace _astnp_ {
-template <typename ...T>
-struct parent_container {
-  static constexpr size_t size = sizeof...(T);
-  using parent_types_t = std::tuple<T...>;
-  template <int I>
-  using type_t = std::tuple_element_t<I, parent_types_t>;
+namespace tlang {
+template <typename T>
+using List = std::vector<T>;
+using Identifier = std::string;
+enum class ChildKind {
+  Static,
+  Dynamic,
+  StaticList,
+  DynamicList
 };
-template <>
-struct parent_container<> {
-  static constexpr size_t size = 0;
-  template <int I>
-  using type_t = void;
-};
-
-enum class child_kind {
-  static_node,
-  dynamic_node,
-  static_list,
-  dynamic_list
-};
-template <child_kind K>
+template <ChildKind K>
 constexpr bool is_list() {
-  return K == child_kind::static_list || K == child_kind::dynamic_list;
+  return K == ChildKind::StaticList || K == ChildKind::DynamicList;
 }
-template <child_kind K>
+template <ChildKind K>
 constexpr bool is_dynamic() {
-  return K == child_kind::dynamic_node || K == child_kind::dynamic_list;
+  return K == ChildKind::Dynamic || K == ChildKind::DynamicList;
 }
-template <typename T, child_kind K>
+template <typename T, ChildKind K>
 struct child_container_type {
   using type = T;
   using value_type = T;
   using return_type = type&;
 };
 template <typename T>
-struct child_container_type<T, child_kind::dynamic_node> {
+struct child_container_type<T, ChildKind::Dynamic> {
   using type = T*;
   using value_type = T*;
   using return_type = type&;
 };
 template <typename T>
-struct child_container_type<T, child_kind::static_list> {
+struct child_container_type<T, ChildKind::StaticList> {
   using type = std::vector<T>;
   using value_type = T;
   using return_type = type&;
 };
 template <typename T>
-struct child_container_type<T, child_kind::dynamic_list> {
+struct child_container_type<T, ChildKind::DynamicList> {
   using type = std::vector<T*>;
   using value_type = T*;
   using return_type = type&;
 };
-template <typename T, child_kind K>
+template <typename T, ChildKind K>
 using child_container_t = child_container_type<T, K>;
 
-template <child_kind K, typename T, int O, bool V = true>
-struct child_node {
-  static constexpr child_kind kind = K;
+template <ChildKind K, typename T, int O, bool V = true>
+struct Child {
+  static constexpr ChildKind kind = K;
   using type = T;
   using value_type = typename child_container_t<type, K>::value_type;
   using return_type = typename child_container_t<type, K>::return_type;
@@ -111,7 +102,7 @@ public:
   static constexpr bool is_trivial = false;
   static constexpr size_t size = sizeof...(T);
   using children_nodes_t = std::tuple<T...>;
-  static constexpr child_kind children_kinds[size] = { T::kind... };
+  static constexpr ChildKind children_kinds[size] = { T::kind... };
   using children_types = std::tuple<typename T::type...>;
   using children_value_types = std::tuple<typename T::value_type...>;
   using children_return_types = std::tuple<typename T::return_type...>;
@@ -127,9 +118,25 @@ public:
   template <int offset>
   using value_t = std::tuple_element_t<offset, children_value_types>&;
   children_container_helper() = default;
+//  template <typename V>
+//  static const V& fwd(const V &value) {
+//    return value;
+//  }
+//  template <typename VV, typename V = VV, std::enable_if_t<std::is_rvalue_reference_v<V>, int> = 0>
+//  static std::decay_t<VV>&& fwd(VV &&value) {
+//    return std::forward<V>(value);
+//  }
+//  template <typename V, std::enable_if_t<!std::is_rvalue_reference_v<V>, int> = 0>
+//  static std::decay_t<V> fwd(V &&value) {
+//    return value;
+//  }
+//  template <typename ...Args>
+//  children_container_helper(Args &&...args) :
+//      __data(fwd<Args>(args)...) {
+//  }
   template <typename ...Args>
-  children_container_helper(Args &&...args) :
-      __data(std::forward<Args>(args)...) {
+  children_container_helper(const Args &...args) :
+      __data(args...) {
   }
   children_container_helper(children_container_helper&&) = default;
   children_container_helper(const children_container_helper&) = default;
@@ -137,7 +144,7 @@ public:
   children_container_helper& operator=(const children_container_helper&) = default;
   template <int offset, typename V = container_t<offset>, std::enable_if_t<!is_list<children_kinds[offset]>(), int> = 0>
   V* getAs() const {
-    if constexpr (children_kinds[offset] == child_kind::dynamic_node)
+    if constexpr (children_kinds[offset] == ChildKind::Dynamic)
       return dynamic_cast<V*>(data<offset>());
     else
       return dynamic_cast<V*>(const_cast<container_t<offset>*>(&data<offset>()));
@@ -168,7 +175,7 @@ public:
   }
   template <int offset>
   inline bool has() const {
-    if constexpr (children_kinds[offset] == child_kind::dynamic_node)
+    if constexpr (children_kinds[offset] == ChildKind::Dynamic)
       return data<offset>();
     return true;
   }

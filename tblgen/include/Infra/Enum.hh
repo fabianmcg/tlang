@@ -28,6 +28,9 @@ struct EnumMember {
   inline llvm::StringRef value() const {
     return record.getValueAsString("value");
   }
+  inline llvm::StringRef stringRepresentation() const {
+    return record.getValueAsString("stringRepresentation");
+  }
 };
 struct Enum {
   static constexpr std::string_view kind = "Enum";

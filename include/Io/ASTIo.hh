@@ -37,12 +37,12 @@ public:
   }
   visit_t visitBuiltinType(BuiltinType *node, bool isFirst) {
     if (isFirst)
-      ost << _astnp_::to_string(node->classOf());
+      ost << _astnp_::to_string(node->classof());
     return visit_t::skip;
   }
   visit_t visitDefinedType(DefinedType *node, bool isFirst) {
     if (isFirst) {
-      ost << _astnp_::to_string(node->classOf()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
+      ost << _astnp_::to_string(node->classof()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
     }
     return visit_t::skip;
   }
@@ -66,7 +66,7 @@ public:
     color_stack.push(Color::Default());
   }
   visit_t visitASTNode(ASTNode *node, bool isFirst) {
-    auto kind = node->classOf();
+    auto kind = node->classof();
     if (isFirst) {
       if (isStmt(kind)) {
         push_color(Color::Magenta());

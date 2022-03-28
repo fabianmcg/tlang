@@ -55,16 +55,9 @@ def ReturnStmt : AbstractNode<ValueStmt, /* Abstract = */ 0, /* Implicit = */ 0>
 }
 
 def ParallelStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable referencedPrivate = Var<[{VariableList}]>;
-  Variable referencedShared = Var<[{VariableList}]>;
   Child privateVariables = Child<DynamicList, [{Expr}]>;
   Child sharedVariables = Child<DynamicList, [{Expr}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    using VariableList = std::set<VariableDecl *>;
-    template <typename... Args> ParallelStmt(Args &&...args) : __children(std::forward<Args>(args)...) {
-    }
-  }]>;
 }
 
 def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -86,21 +79,29 @@ def MainStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def AtomicStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable operator = Var<[{OperatorKind}]>;
+  Enum Operator = Enum<[
+    EM<"Plus">,
+    EM<"Minus">,
+    EM<"Multiply">,
+    EM<"Divide">,
+  ]>;
+  Variable op = EVar<[{Operator}]>;
   Child lhs = Child<Dynamic, [{Expr}]>;
   Child rhs = Child<Dynamic, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    AtomicStmt(OperatorKind op, Expr *lhs, Expr *rhs) : Stmt(), __operator(op), __children(lhs, rhs) {
-    }
-  }]>;
 }
 
 def ReduceStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable operator = Var<[{OperatorKind}]>;
+  Enum Operator = Enum<[
+    EM<"Plus">,
+    EM<"Minus">,
+    EM<"Multiply">,
+    EM<"Divide">,
+  ]>;
+  Variable op = EVar<[{Operator}]>;
   Child exprs = Child<DynamicList, [{Expr}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    ReduceStmt(OperatorKind op, std::vector<Expr *> &&exprs)
-        : Stmt(), __operator(op), __children(std::forward<std::vector<Expr *>>(exprs)) {
+    ReduceStmt(Operator op, std::vector<Expr *> &&exprs)
+        : Stmt(), op(op), children(std::forward<std::vector<Expr *>>(exprs)) {
     }
   }]>;
 }
