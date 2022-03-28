@@ -87,7 +87,7 @@ int __tlang_tid() {
 int __tlang_nt() {
   return region.getNumThreads();
 }
-__Tlang_Range    __tlang_loop_partition(int begin, int end)    {
+__Tlang_Range __tlang_loop_partition(int begin, int end) {
   int nt = region.getNumThreads();
   int size = end - begin, start, stop;
   size = (size + nt - 1) / nt;

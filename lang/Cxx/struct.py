@@ -299,6 +299,6 @@ class Struct:
         parents = ",".join(map(lambda x: "public " + x, self.parents))
         parents = ": " + parents if len(parents) else ""
         return src.format(self.identifier, parents, self.cxxBody())
-    
+
     def td(self):
         return ""

@@ -8,7 +8,8 @@ Created on Oct Sun 31 11:09:00 2021
 
 from AST.astNode import Node
 from Utility.util import (
-    getCxx, getTd,
+    getCxx,
+    getTd,
     getJinjaTemplate,
     getParseStr,
     formatStr,
