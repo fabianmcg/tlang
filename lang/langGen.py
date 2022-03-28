@@ -75,7 +75,7 @@ def main():
     #     grammar = makeParser(str(pathJoin(args.config_dir, "grammar.conf")), tokens)
     #     grammarParser = GrammarParser(grammar)
     #     grammarParser.generateParser(args.output_dir, args.template_dir)
-        # printToFile(grammar, "grammar.conf")
+    # printToFile(grammar, "grammar.conf")
 
 
 if __name__ == "__main__":

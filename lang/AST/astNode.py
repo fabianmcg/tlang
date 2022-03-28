@@ -7,7 +7,9 @@ Created on Oct Sun 31 11:09:00 2021
 """
 
 from inspect import isclass
-from Cxx.type import Type
+
+from numpy import isin
+from Cxx.type import EnumType, Type
 from Cxx.type import NodeType
 from Cxx.util import CxxList
 from Cxx.variable import Variable
@@ -216,7 +218,10 @@ class Node(Struct):
         body = ""
         for member in self.members:
             body += "\n"
-            body += "  Variable {} = Variable<[{{{}}}]>;".format(member.identifier, member.T)
+            if isinstance(member.T, EnumType):
+                body += "  Variable {} = Var<[{{{}}}], [{{}}], Protected, 1>;".format(member.identifier, member.T)
+            else:
+                body += "  Variable {} = Var<[{{{}}}]>;".format(member.identifier, member.T)
         for child in self.children:
             if isinstance(child.T, StaticNode):
                 body += "\n"
@@ -230,6 +235,32 @@ class Node(Struct):
             elif isinstance(child.T, DynamicList):
                 body += "\n"
                 body += "  Child {} = Child<DynamicList, [{{{}}}]>;".format(child.identifier, child.T.identifier)
-        body += "\n  ClassSection header = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(self.headerSection.code) if len(self.headerSection.code) else ""
-        body += "\n  ClassSection epilogue = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(self.epilogueSection.code) if len(self.epilogueSection.code) else ""
-        return "def {} : AbstractNode<{}, 0>{} {{{}\n}}".format(ID, Parent, ExtraParents, body)
+        from Utility.util import formatIndent
+        from Cxx.struct import Enum, EnumElement
+
+        for e in self.enums:
+            if isinstance(e, Enum):
+                tmp = []
+                for em in e.values:
+                    if isinstance(em, EnumElement):
+                        t = ", [{{{}}}]".format(em.value) if em.value != None and len(em.value) else ""
+                        tmp.append('EM<"{}"{}>'.format(em.identifier, t))
+                tmp = ", ".join(tmp)
+                body += "\n  Enum {} = Enum<[{}]{}>;".format(e.identifier, tmp, ", 1" if e.isClass else "")
+        body += (
+            "\n  ClassSection header = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(
+                formatIndent(self.headerSection.code, 4)
+            )
+            if len(self.headerSection.code)
+            else ""
+        )
+        body += (
+            "\n  ClassSection epilogue = ClassSection<Header, Public, [{{\n{}\n  }}]>;".format(
+                formatIndent(self.epilogueSection.code, 4)
+            )
+            if len(self.epilogueSection.code)
+            else ""
+        )
+        return "def {} : AbstractNode<{}, /* Abstract = */ 0, /* Implicit = */ 0>{} {{{}\n}}\n".format(
+            ID, Parent, ExtraParents, body
+        )
