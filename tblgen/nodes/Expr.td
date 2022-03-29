@@ -10,10 +10,6 @@ def ExprHeader : CodeSection<Header, [{
 
 def Expr : AbstractNode<ValueStmt, /* Abstract = */ 1, /* Implicit = */ 0> {
   Child type = Child<Static, [{QualType}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    Expr(QualType &&type) : children(std::forward<QualType>(type)) {
-    }
-  }]>;
 }
 
 def LiteralExpr : AbstractNode<Expr, /* Abstract = */ 1, /* Implicit = */ 0> {

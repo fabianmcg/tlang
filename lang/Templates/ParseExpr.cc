@@ -1,5 +1,5 @@
 parse_result<Expr, return_kind::Dynamic> ParseBinOpRHS(int exprPrecedence, parse_result<Expr, return_kind::Dynamic> lhs) {
-  using binary_t = parse_result<BinaryOperation, return_kind::Dynamic>;
+  using binary_t = parse_result<BinaryOperator, return_kind::Dynamic>;
   using member_t = parse_result<MemberExpr, return_kind::Dynamic>;
   while (true) {
     auto bop = tokToOperator(peek().kind);
@@ -19,7 +19,7 @@ parse_result<Expr, return_kind::Dynamic> ParseBinOpRHS(int exprPrecedence, parse
     }
     auto lhsRange = lhs.range();
     auto rhsRange = rhs.range();
-    if (bop == OperatorKind::Dot)  {
+    if (bop == BinaryOperator::Dot)  {
       // auto node = make_node<MemberRefExpr>(*lhs, *rhs);
       lhs = make<member_t>(*lhs, *rhs);
       // node->getSourceRange() = SourceRange(lhsRange.begin, rhsRange.end);

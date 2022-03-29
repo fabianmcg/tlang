@@ -9,7 +9,7 @@ def CompoundStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmts = Child<DynamicList, [{Stmt}]>;
 }
 
-def ValueStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def ValueStmt : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
 }
 
 def DeclStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {

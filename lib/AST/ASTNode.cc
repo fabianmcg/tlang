@@ -10,7 +10,7 @@ ASTNode::~ASTNode() = default;
 ASTNode::ASTNode(const SourceRange &range) :
     range(range) {
 }
-ASTNode::ASTNode(const SourceLocation &start, const SourceLocation &end = SourceLocation { }) :
+ASTNode::ASTNode(const SourceLocation &start, const SourceLocation &end) :
     range(SourceRange { start, end }) {
 }
 ASTNode::ASTNode(ASTNode &&other) {

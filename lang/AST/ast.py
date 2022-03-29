@@ -97,15 +97,15 @@ class ASTDatabase:
 
     def generateOperators(self, lexer: Lexer):
         enum = ", ".join([operator.name for operator in lexer.operators.values()])
-        enum = "enum class OperatorKind {{unknown,{},}};".format(enum)
+        enum = "enum class BinaryOperator::Operator {{unknown,{},}};".format(enum)
         to_string = "\n ".join(
             [
-                'case OperatorKind::{}: return "{}";'.format(operator.name, operator.rules[0])
+                'case BinaryOperator::Operator::{}: return "{}";'.format(operator.name, operator.rules[0])
                 for operator in lexer.operators.values()
             ]
         )
         to_string = (
-            'inline std::string to_string(OperatorKind kind) {{switch(kind) {{{}default: return "unknown";}}}}'.format(
+            'inline std::string to_string(BinaryOperator::Operator kind) {{switch(kind) {{{}default: return "unknown";}}}}'.format(
                 to_string
             )
         )
