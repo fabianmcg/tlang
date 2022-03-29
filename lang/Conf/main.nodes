@@ -1,6 +1,0 @@
-file main {
-    :{
-      using string = std::string;
-      using Identifier = std::string;
-    }:
-};

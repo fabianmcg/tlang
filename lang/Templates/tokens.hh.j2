@@ -1,13 +1,12 @@
-#ifndef __LEXER_TOKENS_HH__
-#define __LEXER_TOKENS_HH__
+#ifndef LEX_TOKENS_HH
+#define LEX_TOKENS_HH
 
-#include <Common/Macros.hh>
 #include <cstdint>
 #include <iostream>
 #include <string>
 
-namespace __lang_np__ {
-namespace __lex_np__ {
+namespace tlang {
+namespace lex {
 enum class token_kind {
   UNKW = -1,
   EOS = 0,
@@ -33,6 +32,6 @@ inline std::ostream &operator<<(std::ostream &ost, token_kind kind) {
   ost << to_string(kind);
   return ost;
 }
-} // namespace __lex_np__
-} // namespace __lang_np__
+}
+}
 #endif

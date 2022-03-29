@@ -1,16 +1,14 @@
-#ifndef __LEXER_HH__
-#define __LEXER_HH__
+#ifndef LEX_LEXER_HH
+#define LEX_LEXER_HH
 
 #include <any>
-#include <deque>
-#include <iostream>
-#include <Common/Macros.hh>
-#include <Common/Exception.hh>
-#include <Common/SourceRange.hh>
-#include <Tokens.hh>
+#include <iosfwd>
+#include <Basic/Exception.hh>
+#include <Basic/SourceRange.hh>
+#include <Lex/Tokens.hh>
 
-namespace __lang_np__ {
-namespace __lex_np__ {
+namespace tlang {
+namespace lex {
 using tk = token_kind;
 struct token {
   std::string text { };
@@ -23,7 +21,7 @@ struct token {
     return kind != tk::EOS;
   }
   inline std::string to_string() const {
-    return text + " " + __lex_np__::to_string(kind) + loc.to_string();
+    return text + " " + lex::to_string(kind) + loc.to_string();
   }
   inline bool is(token_kind k) const {
     return kind == k;

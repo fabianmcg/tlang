@@ -137,18 +137,17 @@ class GrammarParser:
         add("+", "-")
         add("*", "/", "%")
         add(".")
-        add("::")
         tokToOperator = "\n".join(
-            ["case tok_k::{}: return OperatorKind::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
+            ["case tok_k::{}: return BinaryOperator::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
         )
-        tokToOperator = "inline OperatorKind tokToOperator(tok_k kind) {{ switch(kind) {{{}default: return OperatorKind::unknown;}} }}".format(
+        tokToOperator = "inline BinaryOperator::Operator tokToOperator(tok_k kind) {{ switch(kind) {{{}default: throw(std::runtime_error(\"Unk op\"));}} }}".format(
             tokToOperator
         )
         tokPrecedence = "\n".join(
-            ["case OperatorKind::{}: return {};".format(tok[0].name, tok[1]) for tok in precedenceMap]
+            ["case BinaryOperator::{}: return {};".format(tok[0].name, tok[1]) for tok in precedenceMap]
         )
         tokPrecedence = (
-            "inline int operatorPrecedence(OperatorKind kind) {{ switch(kind) {{{}default: return -1;}} }}".format(
+            "inline int operatorPrecedence(BinaryOperator::Operator kind) {{ switch(kind) {{{}default: return -1;}} }}".format(
                 tokPrecedence
             )
         )

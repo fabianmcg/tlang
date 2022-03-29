@@ -1,11 +1,10 @@
-#ifndef __COMMON_EXCEPTION_HH__
-#define __COMMON_EXCEPTION_HH__
+#ifndef BASIC_EXCEPTION_HH
+#define BASIC_EXCEPTION_HH
 
-#include <Common/Macros.hh>
 #include <string>
 #include <exception>
 
-namespace __lang_np__ {
+namespace tlang {
 struct compiler_exception: public std::exception {
   std::string message { "Compiler Exception" };
   using std::exception::exception;

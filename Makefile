@@ -14,7 +14,7 @@ lang: lexer ast parser
 
 .PHONY: lexer
 lexer:
-	python3 lang/langGen.py lexer -c lang/Conf -t lang/Templates -o include/Lexer
+	python3 lang/langGen.py lexer -c lang/Conf -t lang/Templates -o include/Lex
 
 .PHONY: ast
 ast:

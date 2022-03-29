@@ -1,9 +1,9 @@
-#ifndef __PARSER_HH__
-#define __PARSER_HH__
+#ifndef PARSER_PARSER_HH
+#define PARSER_PARSER_HH
 
+#include <Lex/Lexer.hh>
 #include <list>
-#include "AST/Include.hh"
-#include "Lexer/Lexer.hh"
+#include <AST/ASTContext.hh>
 
 namespace tlang::parser {
 using namespace lex;

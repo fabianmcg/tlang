@@ -1,4 +1,4 @@
-#include "Parser/Parser.hh"
+#include <Parser/Parser.hh>
 
 namespace tlang::parser {
 void Parser::consumeToken() {

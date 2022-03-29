@@ -22,11 +22,12 @@ include/AST/Attr.hh
 include/AST/Decl.hh
 include/AST/Expr.hh
 include/AST/RecursiveASTVisitor.hh
+include/AST/RecursiveASTVisitor*.hh
 include/AST/Stmt.hh
 include/AST/Type.hh
 include/AST/Operators.hh
-include/Lexer/tokens.hh
-include/Lexer/Tokens.hh
+include/Lex/tokens.hh
+include/Lex/Tokens.hh
 include/AST/Common.hh
 include/AST/Nodes.inc
 include/AST/Traits.hh
