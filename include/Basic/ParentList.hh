@@ -8,15 +8,13 @@ namespace tlang {
 template <typename ...T>
 struct ParentList {
   static constexpr size_t size = sizeof...(T);
-  using parent_types_t = std::tuple<T...>;
+  using parent_list = std::tuple<T...>;
   template <int I>
-  using type_t = std::tuple_element_t<I, parent_types_t>;
+  using parent_t = std::tuple_element_t<I, parent_list>;
 };
 template <>
 struct ParentList<> {
   static constexpr size_t size = 0;
-  template <int I>
-  using type_t = void;
 };
 }
 

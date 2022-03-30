@@ -1,10 +1,11 @@
-#ifndef __COMMON_IO_HH__
-#define __COMMON_IO_HH__
+#ifndef SUPPORT_UNIQUESTREAM_HH
+#define SUPPORT_UNIQUESTREAM_HH
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
+namespace tlang {
 class unique_fstream {
 protected:
   std::fstream file { };
@@ -62,4 +63,5 @@ public:
     return unique_fstream { name, mode | std::ios_base::in };
   }
 };
+}
 #endif

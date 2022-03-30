@@ -1,26 +1,26 @@
 #include <Driver/Driver.hh>
 #include <Driver/Arguments.hh>
-//#include <Common/Io.hh>
-//#include <Lexer/Lexer.hh>
-//#include <Parser/Parser.hh>
+#include <Support/UniqueStream.hh>
+#include <Lex/Lexer.hh>
+#include <Parser/Parser.hh>
 //#include <Sema/Sema.hh>
 //#include <Analysis/Analysis.hh>
 //#include <CodeGen/CodeGen.hh>
-//#include <Io/ASTIo.hh>
+#include <Io/ASTIo.hh>
 
 namespace tlang::driver {
 
 int Driver::run(int argc, char **argv) {
-//  int stage { 0 };
-//  if (++stage && parseCMD(argc, argv))
-//    return stage;
-//  if (++stage && parseFiles())
-//    return stage;
+  int stage { 0 };
+  if (++stage && parseCMD(argc, argv))
+    return stage;
+  if (++stage && parseFiles())
+    return stage;
 //  if (++stage && semaAnalysis(context))
 //    return stage;
 //  if (++stage && codeAnalysis(context))
 //    return stage;
-//  dump();
+  dump();
 //  if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
 //    return stage;
   return 0;
@@ -42,15 +42,15 @@ int Driver::parseFiles() {
   return cmdArguments.inputFiles.empty() ? 1 : 0;
 }
 int Driver::parseFile(ASTContext &context, const std::filesystem::path &file) {
-//  if (std::filesystem::exists(file)) {
-//    std::cerr << "Parsing file: " << file << std::endl;
-//    auto fs = unique_fstream::open_istream(file.string());
-//    lex::Lexer lex(*fs);
-//    parser::Parser parser(lex);
-//    parser.parse(context, "main");
-//    std::cerr << "Done parsing: " << file << std::endl;
-//    return 0;
-//  }
+  if (std::filesystem::exists(file)) {
+    std::cerr << "Parsing file: " << file << std::endl;
+    auto fs = unique_fstream::open_istream(file.string());
+    lex::Lexer lex(*fs);
+    parser::Parser parser(lex);
+    parser.parse(context, "main");
+    std::cerr << "Done parsing: " << file << std::endl;
+    return 0;
+  }
   return 1;
 }
 int Driver::semaAnalysis(ASTContext &context) {
@@ -77,8 +77,8 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
   return 1;
 }
 void Driver::dump() {
-//  if (cmdArguments.dumpAST)
-//    tlang::dump(*context);
+  if (cmdArguments.dumpAST)
+    tlang::dump(*context);
 //  if (cmdArguments.dumpSymbols)
 //    context.print_symbols(std::cerr);
 }

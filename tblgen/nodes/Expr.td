@@ -62,7 +62,8 @@ def UnaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def BinaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Operator = Enum<[EM<"And">,
+  Enum Operator = Enum<[EM<"None">,
+    EM<"And">,
     EM<"Or">,
     EM<"Equal">,
     EM<"NEQ">,
