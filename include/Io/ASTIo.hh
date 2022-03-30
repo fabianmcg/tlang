@@ -1,79 +1,81 @@
 #ifndef __IO_ASTIO_HH__
 #define __IO_ASTIO_HH__
 
-#include "AST/Include.hh"
-#include <AST/RecursiveASTVisitor.hh>
-#include <Common/Utility.hh>
-#include <Io/IOStream.hh>
 #include <sstream>
 #include <stack>
+#include "AST/Attr.hh"
+#include "AST/Decl.hh"
+#include "AST/Expr.hh"
+#include "AST/Type.hh"
+#include "AST/Stmt.hh"
+#include <AST/Visitors/ASTVisitor.hh>
+#include <Io/IOStream.hh>
 
-namespace _astnp_ {
-struct DumpType: RecursiveASTVisitor<DumpType, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>> {
+namespace tlang {
+struct DumpType: public ASTVisitor<DumpType, VisitorPattern::prePostOrder> {
 public:
   DumpType(std::ostream &ost) :
       ost(ost) {
   }
-  visit_t visitQualType(QualType *node, bool isFirst) {
+  visit_t visitQualType(QualType *node, VisitType kind) {
     auto qualifiers = node->getQualifiers();
-    if (isFirst)
+    if (kind)
       ost << ((qualifiers & QualType::Const) == QualType::Const ? "const " : "");
     else
       ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "");
-    return visit_value;
+    return visit;
   }
-  visit_t visitVariadicType(VariadicType *node, bool isFirst) {
-    if (isFirst) {
+  visit_t visitVariadicType(VariadicType *node, VisitType kind) {
+    if (kind) {
       if (node->getUnderlying())
         dynamicTraverse(node->getUnderlying());
       ost << "...";
     }
     return visit_t::skip;
   }
-  visit_t visitUnresolvedType(UnresolvedType *node, bool isFirst) {
-    if (isFirst)
+  visit_t visitUnresolvedType(UnresolvedType *node, VisitType kind) {
+    if (kind)
       ost << "#" << node->getIdentifier() << "#";
     return visit_t::skip;
   }
-  visit_t visitBuiltinType(BuiltinType *node, bool isFirst) {
-    if (isFirst)
-      ost << _astnp_::to_string(node->classof());
+  visit_t visitBuiltinType(BuiltinType *node, VisitType kind) {
+    if (kind)
+      ost << tlang::to_string(node->classof());
     return visit_t::skip;
   }
-  visit_t visitDefinedType(DefinedType *node, bool isFirst) {
-    if (isFirst) {
-      ost << _astnp_::to_string(node->classof()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
+  visit_t visitDefinedType(DefinedType *node, VisitType kind) {
+    if (kind) {
+      ost << tlang::to_string(node->classof()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
     }
     return visit_t::skip;
   }
-  visit_t visitPtrType(PtrType *node, bool isFirst) {
-    if (!isFirst)
+  visit_t visitPtrType(PtrType *node, VisitType kind) {
+    if (!kind)
       ost << "*";
     return visit_t::visit;
   }
-  visit_t visitArrayType(ArrayType *node, bool isFirst) {
-    if (!isFirst)
+  visit_t visitArrayType(ArrayType *node, VisitType kind) {
+    if (!kind)
       ost << "[]";
     return visit_t::visit;
   }
 private:
   std::ostream &ost;
 };
-struct DumpAST: RecursiveASTVisitor<DumpAST, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>, true> {
-  using parent_t = RecursiveASTVisitor<DumpAST, VisitorPattern::prePostOrder, VisitReturn<VisitStatus>, true>;
+struct DumpAST: ASTVisitor<DumpAST, VisitorPattern::prePostOrder | VisitorPattern::postWalk> {
 public:
   DumpAST() {
     color_stack.push(Color::Default());
   }
-  visit_t visitASTNode(ASTNode *node, bool isFirst) {
-    auto kind = node->classof();
-    if (isFirst) {
-      if (isStmt(kind)) {
+  visit_t visitASTNode(ASTNode *node, VisitType kind) {
+    auto classof = node->classof();
+    if (kind) {
+      if (Stmt::classof(classof)) {
         push_color(Color::Magenta());
-      } else if (isDecl(kind))
+      } else if (Decl::classof(classof))
         push_color(Color::AquaGreen());
-      if (!isType(kind)) {
-        cst() << std::string(indent, '-') + "+" << to_string(kind) << " ";
+      if (!Type::classof(classof)) {
+        cst() << std::string(indent, '-') + "+" << to_string(classof) << " ";
         push_color(Color::Default());
 //        cst() << node << ":" << node->parent() << " ";
         cst() << node << " ";
@@ -87,34 +89,34 @@ public:
       pop_color();
       cst();
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitDeclRefExpr(DeclRefExpr *node, bool isFirst) {
-    if (isFirst) {
+  visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType kind) {
+    if (kind) {
       ost << node->getIdentifier() << " ";
       if (node->getDecl())
         ost << *(node->getDecl()) << " ";
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitBinaryOperation(BinaryOperation *node, bool isFirst) {
-    if (isFirst)
-      ost << to_string(node->getOperator()) << " ";
-    return visit_value;
+//  visit_t visitBinaryOperation(BinaryOperator *node, VisitType kind) {
+//    if (kind)
+//      ost << to_string(node->getOperator()) << " ";
+//    return visit;
+//  }
+  visit_t visitImportDecl(ImportDecl *node, VisitType kind) {
+    if (kind)
+      ost << node->getModuleName() << " " << node->getModule().data() << " ";
+    return visit;
   }
-  visit_t visitImportDecl(ImportDecl *node, bool isFirst) {
-    if (isFirst)
-      ost << node->getModulename() << " " << node->getModule().data() << " ";
-    return visit_value;
-  }
-  visit_t visitNamedDecl(NamedDecl *node, bool isFirst) {
-    if (isFirst)
+  visit_t visitNamedDecl(NamedDecl *node, VisitType kind) {
+    if (kind)
       ost << node->getIdentifier() << " ";
-    return visit_value;
+    return visit;
   }
-  visit_t visitFunctorDecl(FunctorDecl *node, bool isFirst) {
-    if (isFirst) {
-      auto &type = node->getReturntype();
+  visit_t visitFunctorDecl(FunctorDecl *node, VisitType kind) {
+    if (kind) {
+      auto &type = node->getReturnType();
       if (!node->getComplete()) {
         push_color(Color::Red());
         cst() << "I ";
@@ -126,65 +128,65 @@ public:
       ost << " (";
       auto &args = node->getParameters();
       for (size_t i = 0; i < args.size(); ++i) {
-        dumpType(&(node->getParameters(i)->getType()), false);
+        dumpType(&(node->getParameters()[i]->getType()), false);
         if ((i + 1) < args.size())
           ost << ", ";
       }
       ost << ")'";
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, bool isFirst) {
-    if (isFirst) {
-      auto &type = node->getReturntype();
+  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, VisitType kind) {
+    if (kind) {
+      auto &type = node->getReturnType();
       ost << "'";
       dumpType(&type, false);
       ost << " (";
       auto &args = node->getParameters();
       for (size_t i = 0; i < args.size(); ++i) {
-        dumpType(&(node->getParameters(i)), false);
+        dumpType(&(node->getParameters()[i]), false);
         if ((i + 1) < args.size())
           ost << ", ";
       }
       ost << ")'";
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitVariableDecl(VariableDecl *node, bool isFirst) {
-    if (isFirst) {
+  visit_t visitVariableDecl(VariableDecl *node, VisitType kind) {
+    if (kind) {
       auto &type = node->getType();
       dumpType(&type);
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitUsingDecl(UsingDecl *node, bool isFirst) {
-    if (isFirst) {
+  visit_t visitUsingDecl(UsingDecl *node, VisitType kind) {
+    if (kind) {
       auto &type = node->getType();
       dumpType(&type);
     }
-    return visit_value;
+    return visit;
   }
-  visit_t visitLiteralExpr(LiteralExpr *node, bool isFirst) {
-    if (isFirst)
+  visit_t visitLiteralExpr(LiteralExpr *node, VisitType kind) {
+    if (kind)
       ost << "'" << node->getValue() << "' ";
-    return visit_value;
+    return visit;
   }
-  visit_t visitQualType(QualType *node, bool isFirst) {
+  visit_t visitQualType(QualType *node, VisitType kind) {
     return visit_t::skip;
   }
-  visit_t visitType(Type *node, bool isFirst) {
+  visit_t visitType(Type *node, VisitType kind) {
     return visit_t::skip;
   }
   template <typename T>
-  visit_t postWalk(T *node, bool isFirst) {
-    if (isType(T::kind))
+  visit_t postWalk(T *node, VisitType kind) {
+    if (ProtoType::classof(T::kind))
       return visit_t::skip;
-    if (isFirst) {
+    if (kind == preVisit) {
       if (auto expr = dynamic_cast<Expr*>(node))
         dumpType(&(expr->getType()));
       ost << std::endl;
     }
-    return visit_value;
+    return visit;
   }
   std::string str() const {
     return Color::Default_code + ost.str() + Color::Default_code;
@@ -210,7 +212,7 @@ private:
       cst() << "'";
     else
       cst();
-    DumpType { ost }.traverseQualType(node);
+//    DumpType { ost }.traverseQualType(node);
     if (quotes)
       ost << "'";
     pop_color();

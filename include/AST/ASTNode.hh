@@ -56,13 +56,24 @@ public:
   const SourceRange& getSourceRange() const;
   template <typename T>
   T& getAs() {
-    return *dyn_cast<T*>(this);
+    return *dyn_cast<T>(this);
   }
   template <typename T>
   const T& getAs() const {
-    return *dyn_cast<const T*>(this);
+    return *dyn_cast<const T>(this);
+  }
+  template <typename T>
+  T* getAsPtr() {
+    return dyn_cast<T>(this);
+  }
+  template <typename T>
+  const T* getAsPtr() const {
+    return dyn_cast<const T>(this);
   }
   void dump(std::ostream &ost) const;
+  static constexpr bool hasChildren() {
+    return children_list::size;
+  }
 protected:
   SourceRange range { };
   ASTNode *parent { };

@@ -140,7 +140,7 @@ class GrammarParser:
         tokToOperator = "\n".join(
             ["case tok_k::{}: return BinaryOperator::{};".format(tok[0].identifier, tok[0].name) for tok in precedenceMap]
         )
-        tokToOperator = "inline BinaryOperator::Operator tokToOperator(tok_k kind) {{ switch(kind) {{{}default: throw(std::runtime_error(\"Unk op\"));}} }}".format(
+        tokToOperator = "inline BinaryOperator::Operator tokToOperator(tok_k kind) {{ switch(kind) {{{}default: return BinaryOperator::None;}} }}".format(
             tokToOperator
         )
         tokPrecedence = "\n".join(

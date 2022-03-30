@@ -9,7 +9,7 @@ def AttrHeader : CodeSection<Header, [{
 def Attr : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
 
-def AttrList : AbstractNode<ASTNode, /* Abstract = */ 0, /* Implicit = */ 0> {
+def AttrList : AbstractNode<Attr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child attributes = Child<DynamicList, [{Attr}]>;
 }
 

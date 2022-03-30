@@ -26,6 +26,10 @@ struct ASTContext {
   T* make(Args &&...args) {
     return add_node(std::make_unique<T>(std::forward<Args>(args)...));
   }
+  template <typename T, typename V>
+  T* create(V&& val) {
+    return add_node(std::make_unique<V>(std::forward<V>(val)));
+  }
   template <typename T>
   T* add_type(T &&value) {
     return add_node(std::make_unique<T>(std::forward<T>(value)));
