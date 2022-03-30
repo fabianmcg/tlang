@@ -21,6 +21,20 @@ public:
   ASTKind classof() const {
     return kind;
   }
+  AbstractNode(const AbstractNode &other) :
+      kind(other.kind) {
+  }
+  AbstractNode(AbstractNode &&other) :
+      kind(other.kind) {
+  }
+  AbstractNode& operator=(const AbstractNode &other) {
+    kind = other.kind;
+    return *this;
+  }
+  AbstractNode& operator=(AbstractNode &&other) {
+    kind = other.kind;
+    return *this;
+  }
 protected:
   void set(ASTKind kind) {
     this->kind = kind;

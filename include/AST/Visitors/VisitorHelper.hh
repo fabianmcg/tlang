@@ -38,7 +38,7 @@ struct AddChildren {
   template <typename NodeInfo>
   static inline void addChildren(NodeInfo &&sn) {
     TupleVisitor<NodeInfo> visitor { sn };
-    visit_tuple((****sn), visitor);
+    visit_tuple<true>((****sn), visitor);
   }
   template <typename NodeInfo>
   struct NodeVisitor {
@@ -72,13 +72,15 @@ struct AddChildren {
           make(NodeInfo::make(node_info, asParent)).init();
       }
     }
-    void init() {
-      visit(*node_info);
+    inline void init() {
       static_for<0, parent_list::size>::execute(*this);
     }
   };
   template <typename NodeInfo>
   void operator()(NodeInfo &&nodeStack) {
+    using type = typename NodeInfo::node_type;
+    if constexpr (type::hasChildren())
+      AddChildren::addChildren(std::forward<NodeInfo>(nodeStack));
     NodeVisitor<NodeInfo> { nodeStack }.init();
   }
 };

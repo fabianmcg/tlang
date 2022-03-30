@@ -74,7 +74,7 @@ public:
         push_color(Color::Magenta());
       } else if (Decl::classof(classof))
         push_color(Color::AquaGreen());
-      if (!Type::classof(classof)) {
+      if (!ProtoType::classof(classof)) {
         cst() << std::string(indent, '-') + "+" << to_string(classof) << " ";
         push_color(Color::Default());
 //        cst() << node << ":" << node->parent() << " ";

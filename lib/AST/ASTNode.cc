@@ -13,11 +13,13 @@ ASTNode::ASTNode(const SourceRange &range) :
 ASTNode::ASTNode(const SourceLocation &start, const SourceLocation &end) :
     range(SourceRange { start, end }) {
 }
-ASTNode::ASTNode(ASTNode &&other) {
+ASTNode::ASTNode(ASTNode &&other) :
+    AbstractNode(other.classof()) {
   range = std::exchange(other.range, SourceRange { });
   parent = std::exchange(other.parent, nullptr);
 }
 ASTNode& ASTNode::operator=(ASTNode &&other) {
+  AbstractNode::operator =(std::forward<ASTNode>(*this));
   range = std::exchange(other.range, SourceRange { });
   parent = std::exchange(other.parent, nullptr);
   return *this;
