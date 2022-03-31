@@ -21,7 +21,32 @@ def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child type = Child<Dynamic, [{Type}]>;
   Enum cvr_qualifiers = Enum<[EM<"None", [{0}]>, EM<"Reference", [{1}]>, EM<"Const", [{2}]>]>;
   ClassSection header = ClassSection<Header, Public, [{
-    QualType(Type *type, cvr_qualifiers qualifiers = None) : qualifiers(qualifiers), children(type) {
+    friend class TypeContext;
+    QualType(Type *type, cvr_qualifiers qualifiers = None);
+    QualType getCanonicalType();
+    bool operator==(const QualType& other);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    QualType::QualType(Type *type, cvr_qualifiers qualifiers) : qualifiers(qualifiers), children(type) {
+    }
+    QualType QualType::getCanonicalType() {
+      auto type = getType();
+      if (type)
+        return QualType(type->getCanonicalType(), qualifiers);
+      return *this;
+    }
+    bool QualType::operator==(const QualType& other) {
+      if (qualifiers != other.qualifiers)
+        return false;
+      Type* type = getType();
+      Type* otherType = getType();
+      if (type == otherType)
+        return true;
+      if (type)
+        type = type->getCanonicalType();
+      if (otherType)
+        otherType = otherType->getCanonicalType();
+      return otherType == type;
     }
   }]>;
 }
@@ -193,6 +218,15 @@ def TypedefType : AbstractNode<DefinedType, /* Abstract = */ 0, /* Implicit = */
 def FunctionType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child returnType = Child<Static, [{QualType}]>;
   Child paremeters = Child<StaticList, [{QualType}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    friend class TypeContext;
+    static FunctionType* get(TypeContext *context, QualType &&returnType, List<QualType>&& arguments);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    FunctionType* FunctionType::get(TypeContext *context, QualType &&returnType, List<QualType>&& arguments) {
+      return context->getFunctionType(std::forward<QualType>(returnType), std::forward<List<QualType>>(arguments));
+    }
+  }]>;
 }
 
 #endif

@@ -86,6 +86,9 @@ public:
     }
     return nullptr;
   }
+  FunctionType* getFunctionType(QualType &&returnType, List<QualType>&& arguments) {
+    return addType(FunctionType(std::forward<QualType>(returnType), std::forward<List<QualType>>(arguments)));
+  }
 protected:
   AddressType addres_type { };
   BoolType bool_type { };

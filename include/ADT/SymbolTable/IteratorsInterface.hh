@@ -1,5 +1,5 @@
-#ifndef __SYMBOL_TABLE_ITERATORS_INTERFACE_HH__
-#define __SYMBOL_TABLE_ITERATORS_INTERFACE_HH__
+#ifndef ADT_SYMBOLTABLE_ITERATORSINTERFACE_HH
+#define ADT_SYMBOLTABLE_ITERATORSINTERFACE_HH
 
 #include <cstddef>
 #include <iterator>
@@ -89,11 +89,11 @@ public:
   using parent_type::BidirectionalSymbolIterator;
   inline void next() {
     if (parent_type::symbol)
-      parent_type::symbol = parent_type::symbol->next;
+      parent_type::symbol = parent_type::symbol->template getNext<symbol_type>();
   }
   inline void prev() {
     if (parent_type::symbol)
-      parent_type::symbol = parent_type::symbol->prev;
+      parent_type::symbol = parent_type::symbol->template getPrev<symbol_type>();
   }
 };
 template <typename ASTSymbol>
@@ -104,11 +104,11 @@ public:
   using parent_type::BidirectionalSymbolIterator;
   inline void next() {
     if (parent_type::symbol)
-      parent_type::symbol = parent_type::symbol->prev;
+      parent_type::symbol = parent_type::symbol->template getPrev<symbol_type>();
   }
   inline void prev() {
     if (parent_type::symbol)
-      parent_type::symbol = parent_type::symbol->next;
+      parent_type::symbol = parent_type::symbol->template getNext<symbol_type>();
   }
 };
 template <typename ASTSymbol>

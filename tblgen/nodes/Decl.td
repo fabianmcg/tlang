@@ -8,6 +8,7 @@ def DeclHeader : CodeSection<Header, [{
 }]>;
 
 class DeclContext;
+class VariableContext;
 
 def Decl : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
@@ -29,15 +30,15 @@ def ExternFunctionDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit
   Child parameters = Child<StaticList, [{QualType}]>;
 }
 
-def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {
+def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
   Variable complete = Var<[{bool}]>;
   Child returnType = Child<Static, [{QualType}]>;
   Child parameters = Child<DynamicList, [{ParameterDecl}]>;
   Child body = Child<Dynamic, [{CompoundStmt}]>;
   ClassSection header = ClassSection<Header, Public, [{
     template <typename... Args>
-    FunctorDecl(NamedDecl &&nameddecl, DeclContext &&declcontext, Args &&...args)
-        : NamedDecl(std::move(nameddecl)), DeclContext(std::move(declcontext)), complete(false),
+    FunctorDecl(NamedDecl &&nameddecl, VariableContext &&declcontext, Args &&...args)
+        : NamedDecl(std::move(nameddecl)), VariableContext(std::move(declcontext)), complete(false),
           children(std::forward<Args>(args)...) {
     }
   }]>;

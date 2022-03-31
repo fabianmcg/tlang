@@ -49,8 +49,10 @@ std::string makeConstructor(CXXFunction::Kind kind, ASTNode &node, const std::st
   if (withKind)
     elements.push_back( { std::string(), CXXVariable(CXXType(std::string(C::kind_v)), "kind") });
   for (auto &parent : parents) {
-    if (ignoreBase && i == 0)
+    if (ignoreBase && i == 0) {
+      ++i;
       continue;
+    }
     elements.push_back( { name(parent), CXXVariable(CXXType(name(parent), CXXType::RValue), frmt("p{}", i++)) });
   }
   i = 0;

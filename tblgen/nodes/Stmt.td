@@ -1,12 +1,25 @@
 #ifndef STMT_TD
 #define STMT_TD
 include "ASTNode.td"
+include "Decl.td"
+
+def StmtHeader : CodeSection<Header, [{
+#include <AST/DeclContext.hh>
+}]>;
 
 def Stmt : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
 
 def CompoundStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmts = Child<DynamicList, [{Stmt}]>;
+  /*ClassSection header = ClassSection<Header, Public, [{
+    CompoundStmt(List<Stmt*>&& stmts);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    CompoundStmt::CompoundStmt(List<Stmt*>&& stmts): CompoundStmt(DeclContext(), std::move(stmts)) {
+      visitContext = false;
+    }
+  }]>;*/
 }
 
 def ValueStmt : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
