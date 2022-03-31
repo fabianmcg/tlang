@@ -181,6 +181,11 @@ public:
     return type::success(get_type(std::forward<T>(value)));
   }
   template <typename T>
+  parse_result<T, return_kind::Dynamic> make_type(T *value) {
+    using type = parse_result<T, return_kind::Dynamic>;
+    return type::success(value);
+  }
+  template <typename T>
   T* get_type(T &&value) {
     return ctx.template add_type<T>(std::forward<T>(value));
   }

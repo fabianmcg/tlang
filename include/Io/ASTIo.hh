@@ -43,12 +43,6 @@ public:
       ost << tlang::to_string(node->classof());
     return visit_t::skip;
   }
-  visit_t visitDefinedType(DefinedType *node, VisitType kind) {
-    if (kind) {
-      ost << tlang::to_string(node->classof()) << ":" << node->getIdentifier() << " " << node->getDecl().data();
-    }
-    return visit_t::skip;
-  }
   visit_t visitPtrType(PtrType *node, VisitType kind) {
     if (!kind)
       ost << "*";
@@ -212,7 +206,7 @@ private:
       cst() << "'";
     else
       cst();
-//    DumpType { ost }.traverseQualType(node);
+    DumpType { ost }.traverseQualType(node);
     if (quotes)
       ost << "'";
     pop_color();
