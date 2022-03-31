@@ -12,4 +12,6 @@ link_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(ast)
+target_include_directories(ast PRIVATE ${LLVM_INCLUDE_DIRS})
+target_link_directories(ast PRIVATE ${LLVM_LIBRARY_DIR})
+target_link_libraries(ast LLVM)

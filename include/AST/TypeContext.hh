@@ -27,9 +27,13 @@ public:
     return &string_type;
   }
   IntType* getIntType(IntType::numeric_precision precision, IntType::numeric_sign sign) {
+    if (precision == IntType::Default)
+      return &(int_types[sign][IntType::P_32]);
     return &(int_types[sign][precision]);
   }
   FloatType* getFloatType(FloatType::numeric_precision precision) {
+    if (precision == FloatType::Default)
+      return &(float_types[FloatType::P_32]);
     return &(float_types[precision]);
   }
   VariadicType* getVariadicType(Type *underlying) {
@@ -111,10 +115,10 @@ protected:
       int_types[sign][precision] = IntType { precision, sign };
       int_types[sign][precision].getCanonicalType() = &(int_types[sign][precision]);
     };
-    for (int p = FloatType::Default; p <= FloatType::P_128; ++p)
+    for (int p = FloatType::P_8; p <= FloatType::P_128; ++p)
       add_float(static_cast<FloatType::numeric_precision>(p));
     for (int s = IntType::Signed; s <= IntType::Unsigned; ++s)
-      for (int p = IntType::Default; p <= IntType::P_64; ++p)
+      for (int p = IntType::P_8; p <= IntType::P_64; ++p)
         add_int(static_cast<IntType::numeric_precision>(p), static_cast<IntType::numeric_sign>(s));
   }
 };

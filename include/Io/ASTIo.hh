@@ -22,7 +22,7 @@ public:
     if (kind)
       ost << ((qualifiers & QualType::Const) == QualType::Const ? "const " : "");
     else
-      ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "");
+      ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "") << " [" << node->getType() << "]";
     return visit;
   }
   visit_t visitVariadicType(VariadicType *node, VisitType kind) {
@@ -41,7 +41,7 @@ public:
   visit_t visitBuiltinType(BuiltinType *node, VisitType kind) {
     if (kind)
       ost << tlang::to_string(node->classof());
-    return visit_t::skip;
+    return visit;
   }
   visit_t visitPtrType(PtrType *node, VisitType kind) {
     if (!kind)
@@ -162,7 +162,7 @@ public:
   }
   visit_t visitLiteralExpr(LiteralExpr *node, VisitType kind) {
     if (kind)
-      ost << "'" << node->getValue() << "' ";
+      ost << "'" << node->getValue()->to_string() << "' ";
     return visit;
   }
   visit_t visitQualType(QualType *node, VisitType kind) {
