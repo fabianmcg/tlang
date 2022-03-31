@@ -190,7 +190,9 @@ def EnumType : AbstractNode<TagType, /* Abstract = */ 0, /* Implicit = */ 0> {
 def TypedefType : AbstractNode<DefinedType, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
-def FunctionType : AbstractNode<DefinedType, /* Abstract = */ 0, /* Implicit = */ 0> {
+def FunctionType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child returnType = Child<Static, [{QualType}]>;
+  Child paremeters = Child<StaticList, [{QualType}]>;
 }
 
 #endif

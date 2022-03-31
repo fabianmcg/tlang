@@ -121,9 +121,10 @@ protected:
 };
 class ParserHelper {
 public:
-  ParserHelper(Parser &parser, ASTContext &ctx, const std::string &module_name) : parser(parser), ctx(ctx), module_name(module_name) {} {{ PARSE_METHODS }}private:
+  ParserHelper(Parser &parser, ASTContext &ctx, const std::string &module_name) : parser(parser), ctx(ctx), typeContext(ctx.types()), module_name(module_name) {} {{ PARSE_METHODS }}private:
   Parser &parser;
   ASTContext &ctx;
+  TypeContext &typeContext;
   std::string module_name;
   inline const token& peek() const { return parser.peekToken(); }
   inline auto consume() { return parser.consumeToken(); }
