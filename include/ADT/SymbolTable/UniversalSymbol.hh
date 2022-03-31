@@ -1,12 +1,15 @@
-#ifndef __SYMBOLTABLE_UNIVERSAL_SYMBOL_HH__
-#define __SYMBOLTABLE_UNIVERSAL_SYMBOL_HH__
+#ifndef ADT_SYMBOLTABLE_UNIVERSALSYMBOL_HH
+#define ADT_SYMBOLTABLE_UNIVERSALSYMBOL_HH
 
 #include "IteratorsInterface.hh"
 #include <iostream>
 
 namespace tlang::symbol_table::interface {
 template <typename NodeType>
-struct UniversalSymbol {
+class UniversalSymbol {
+public:
+  using value_type = NodeType;
+  using pointer = value_type*;
   using iterator = OrderedSymbolIteratorInterface<UniversalSymbol>;
   using const_iterator = OrderedSymbolIteratorInterface<const UniversalSymbol>;
   using reversed_iterator = ReverseOrderedSymbolIteratorInterface<UniversalSymbol>;
@@ -32,19 +35,27 @@ struct UniversalSymbol {
   inline T* getAsDyn() const {
     return dynamic_cast<T*>(node);
   }
-  inline iterator getIterator() {
+  inline iterator getOrderedIterator() {
     return iterator { this };
   }
-  inline const_iterator getIterator() const {
+  inline const_iterator getOrderedIterator() const {
     return iterator { this };
   }
-  inline reversed_iterator getReversedIterator() {
+  inline reversed_iterator getReverseOrderedIterator() {
     return reversed_iterator { this };
   }
-  inline reversed_iterator getReversedIterator() const {
+  inline const_reversed_iterator getReverseOrderedIterator() const {
     return const_reversed_iterator { this };
   }
-  NodeType *node { };
+  template <typename T = UniversalSymbol>
+  T* getNext() {
+    return static_cast<T*>(next);
+  }
+  template <typename T = UniversalSymbol>
+  T* getPrev() {
+    return static_cast<T*>(prev);
+  }
+  pointer node { };
   UniversalSymbol *prev { };
   UniversalSymbol *next { };
 };

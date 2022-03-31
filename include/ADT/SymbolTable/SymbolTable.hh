@@ -1,39 +1,24 @@
-#ifndef __SYMBOL_TABLE_HH__
-#define __SYMBOL_TABLE_HH__
+#ifndef ADT_SYMBOLTABLE_SYMBOLTABLE_HH
+#define ADT_SYMBOLTABLE_SYMBOLTABLE_HH
 
-#include "TableInterface.hh"
-#include "IteratorsInterface.hh"
 #include <iostream>
 #include <map>
 #include <string>
+#include "IteratorsInterface.hh"
+#include "TableInterface.hh"
+#include "UniversalSymbol.hh"
 
 namespace tlang {
 class ASTNode;
 }
 namespace tlang::symbol_table {
 template <typename NodeType>
-struct ASTSymbol {
+struct ASTSymbol: public interface::UniversalSymbol<NodeType> {
+  using base_type = interface::UniversalSymbol<NodeType>;
   using OrderedSymbolIterator = interface::OrderedSymbolIteratorInterface<ASTSymbol>;
   using ReverseOrderedSymbolIterator = interface::ReverseOrderedSymbolIteratorInterface<ASTSymbol>;
   using OverloadSymbolIterator = interface::OverloadSymbolIteratorInterface<ASTSymbol>;
-  ASTSymbol() = default;
-  inline ASTSymbol(NodeType *node) :
-      node(node) {
-  }
-  inline operator bool() const {
-    return node;
-  }
-  inline NodeType* operator*() const {
-    return node;
-  }
-  template <typename T>
-  inline T* getAs() const {
-    return static_cast<T*>(node);
-  }
-  template <typename T>
-  inline T* getAsDyn() const {
-    return dynamic_cast<T*>(node);
-  }
+  using base_type::UniversalSymbol;
   inline OrderedSymbolIterator getOrderedIterator() const {
     return OrderedSymbolIterator { const_cast<ASTSymbol*>(this) };
   }
@@ -44,23 +29,20 @@ struct ASTSymbol {
     return OverloadSymbolIterator { const_cast<ASTSymbol*>(this) };
   }
   inline void print(std::ostream &ost) const {
-    ost << node << "[" << scope << "]: " << prev << " -> " << next << " |-> " << overload;
+    ost << this->node << ": " << this->prev << " -> " << this->next << " |-> " << overload;
   }
   inline friend std::ostream& operator<<(std::ostream &ost, const ASTSymbol &symbol) {
     symbol.print(ost);
     return ost;
   }
-  NodeType *node { };
-  ASTSymbol *prev { };
-  ASTSymbol *next { };
   ASTSymbol *overload { };
-  ASTNode *scope { };
 };
 namespace interface {
 template <typename Symbol, typename NodeType>
-class ASTSymbolTable: public interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, ASTSymbol<NodeType>, Symbol> {
+class ASTSymbolTable: public interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, interface::UniversalSymbol<NodeType>,
+    Symbol> {
 public:
-  using parent_type = interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, ASTSymbol<NodeType>, Symbol>;
+  using parent_type = interface::SymbolTable<ASTSymbolTable<Symbol, NodeType>, std::string, interface::UniversalSymbol<NodeType>, Symbol>;
   using universal_symbol_table = typename parent_type::universal_symbol_table;
   using key_type = typename parent_type::key_type;
   using universal_symbol_type = typename parent_type::universal_symbol_type;

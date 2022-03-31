@@ -49,12 +49,14 @@ inline bool isa(T node) {
 }
 template <typename S, typename T>
 inline S* dyn_cast(T* node) {
+  if constexpr (isValidNode_v<S> && isValidNode_v<T> && isASTKind_v<T, S>)
   if (isa<S>(node)) 
     return static_cast<S*>(node);
   return nullptr;
 }
 template <typename S, typename T>
 inline const S* dyn_cast(const T* node) {
+  if constexpr (isValidNode_v<S> && isValidNode_v<T> && isASTKind_v<T, S>)
   if (isa<S>(node)) 
     return static_cast<const S*>(node);
   return nullptr;

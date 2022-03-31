@@ -3,6 +3,7 @@ extern fn timer_stop(i32);
 extern fn randlc(f64*, f64) -> f64;
 extern fn vranlc(i32, f64*, f64, f64*);
 extern fn sqrt(f64) -> f64;
+extern fn __tlang_tid() -> i32;
 
 fn conj_grad(colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*,
                p: f64*, q: f64*, r: f64*, rnorm: f64*, firstrow: i32,
@@ -28,7 +29,7 @@ fn conj_grad(colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*,
   }
 
   for(cgit in 1 : cgitmax + 1) /* for (cgit = 1; cgit <= cgitmax; cgit++) */ {
-    leading {
+    if (__tlang_tid() == 0) {
       rho0 = rho;
       d = 0.0;
       rho = 0.0;

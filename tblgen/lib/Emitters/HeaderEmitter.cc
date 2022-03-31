@@ -65,10 +65,12 @@ private:
     emitConstructor(true, false);
     if (variables.size())
       emitConstructor(true, true);
-    emitVisibility(Visibility::Public);
+    if (!node.defaultConstructor().isUserDefined())
+      emitVisibility(Visibility::Public);
     emitConstructor(false, false);
     if (variables.size())
       emitConstructor(false, true);
+    emitVisibility(Visibility::Public);
     if (node.defaultConstructor().isDefault())
       ost << node->getName() << "():" << node->getName() << "(0) {}\n";
     else if (node.defaultConstructor().isDeleted())

@@ -2,6 +2,7 @@
 #define AST_DECLCONTEXT_HH
 
 #include <ADT/SymbolTable/SymbolTable.hh>
+#include <ADT/SymbolTable/BasicTable.hh>
 #include <type_traits>
 
 namespace tlang {
@@ -12,13 +13,25 @@ public:
   using parent_type::ASTSymbolTable;
   void add(Decl *decl);
 };
+class VariableContext: public symbol_table::BasicTable<Decl> {
+public:
+  using parent_type = symbol_table::BasicTable<Decl>;
+  using parent_type::BasicTable;
+  void add(Decl *decl);
+};
+
 using UniversalSymbolTable = typename DeclContext::universal_symbol_table;
+
 template <typename T>
 struct IsDeclContext: std::false_type {
 };
 
 template <>
 struct IsDeclContext<DeclContext> : std::true_type {
+};
+
+template <>
+struct IsDeclContext<VariableContext> : std::true_type {
 };
 
 }
