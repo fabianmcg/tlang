@@ -25,6 +25,20 @@ public:
       ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "") << " [" << node->getType() << "]";
     return visit;
   }
+  visit_t visitFunctionType(FunctionType *node, VisitType kind) {
+    if (kind) {
+      ost << "F! ";
+      traverseQualType(&(node->getReturnType()));
+      ost << "(";
+      auto &args = node->getParemeters();
+      for (auto &arg : args) {
+        traverseQualType(&arg);
+        ost << ",";
+      }
+      ost << ")";
+    }
+    return visit_t::skip;
+  }
   visit_t visitVariadicType(VariadicType *node, VisitType kind) {
     if (kind) {
       if (node->getUnderlying())
@@ -53,7 +67,7 @@ public:
       std::string id { };
       if (node->getDecl())
         id = node->getDecl()->getIdentifier();
-      ost << "!" << id << " " << "(" << node->getDecl().data() << ")";
+      ost << "S!" << id << " " << "(" << node->getDecl().data() << ")";
     }
     return visit_t::visit;
   }

@@ -10,7 +10,4 @@ void Sema::run() {
   resolveNames();
   inferTypes();
 }
-void Sema::inferTypes() {
-
-}
 }
