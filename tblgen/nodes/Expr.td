@@ -210,8 +210,17 @@ def CastExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child expr = Child<Dynamic, [{Expr}]>;
 }
 
-def ImplicitCastExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+def ImplicitCastExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 1> {
   Child expr = Child<Dynamic, [{Expr}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    ImplicitCastExpr(Expr* expr, QualType&& type);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    ImplicitCastExpr::ImplicitCastExpr(Expr* expr, QualType&& type): 
+      ImplicitCastExpr(expr) {
+      getType() = type;
+    }
+  }]>;
 }
 
 def RangeExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {

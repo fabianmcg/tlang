@@ -130,5 +130,62 @@ protected:
         add_int(static_cast<IntType::numeric_precision>(p), static_cast<IntType::numeric_sign>(s));
   }
 };
+
+template <typename T>
+struct ArithmeticTypeTraits: std::false_type {
+};
+template <>
+struct ArithmeticTypeTraits<IntType> : std::true_type {
+};
+template <>
+struct ArithmeticTypeTraits<FloatType> : std::true_type {
+};
+template <>
+struct ArithmeticTypeTraits<BoolType> : std::true_type {
+};
+inline bool isArithmetic(Type *type) {
+  ASTKind kind = type->classof();
+  return ASTTraits<IntType>::is(kind) || ASTTraits<FloatType>::is(kind) || ASTTraits<BoolType>::is(kind);
+}
+inline std::pair<Type*, int> typePromotion(Type *lhs, Type *rhs) {
+  if (lhs == rhs)
+    return {lhs, -1};
+  if (!lhs || !rhs)
+    return {nullptr, -1};
+  ASTKind lKind = lhs->classof(), rKind = rhs->classof();
+  bool lIsArithmetic = isArithmetic(lhs), rIsArithmetic = isArithmetic(rhs);
+  if (lIsArithmetic && rIsArithmetic) {
+    if (ASTTraits<FloatType>::is(lKind) || ASTTraits<FloatType>::is(rKind)) {
+      if (lKind == rKind) {
+        FloatType *lt = dyn_cast<FloatType>(lhs), *rt = dyn_cast<FloatType>(rhs);
+        if (lt->getPrecision() < rt->getPrecision())
+          return {rhs, 0};
+        return {lhs, 1};
+      } else {
+        if (ASTTraits<FloatType>::is(lKind))
+          return {lhs, 1};
+        return {rhs, 0};
+      }
+    } else {
+      if (lKind == rKind) {
+        IntType *lt = dyn_cast<IntType>(lhs), *rt = dyn_cast<IntType>(rhs);
+        if (lt->getPrecision() < rt->getPrecision())
+          return {rhs, 0};
+        else if (lt->getPrecision() > rt->getPrecision())
+          return {lhs, 1};
+        else {
+          if (lt->getSign() == IntType::Unsigned)
+            return {lhs, 1};
+          return {rhs, 0};
+        }
+      } else {
+        if (auto bt = dyn_cast<BoolType>(lhs))
+          return {rhs, 0};
+        return {lhs, 1};
+      }
+    }
+  }
+  return {nullptr, -1};
+}
 }
 #endif

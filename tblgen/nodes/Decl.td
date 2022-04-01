@@ -44,11 +44,20 @@ def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0
       addArgs(getParameters());
     }
     void addArgs(const List<ParameterDecl*>& params);
+    FunctionType* getType(TypeContext& context);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
     void FunctorDecl::addArgs(const List<ParameterDecl*>& params) {
       for (auto &arg : params)
         add(arg);
+    }
+    FunctionType* FunctorDecl::getType(TypeContext& context) {
+      auto& parameters = getParameters();
+      QualType rt = getReturnType();
+      List<QualType> args(parameters.size());
+      for (size_t i = 0; i < args.size(); ++i)
+        args[i] = parameters[i]->getType();
+      return FunctionType::get(&context, std::move(rt), std::move(args));
     }
   }]>;
 }

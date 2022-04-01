@@ -24,6 +24,8 @@ def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
     friend class TypeContext;
     QualType(Type *type, cvr_qualifiers qualifiers = None);
     QualType getCanonicalType();
+    QualType modQuals(cvr_qualifiers qualifiers = None);
+    QualType addQuals(cvr_qualifiers qualifiers = None);
     bool operator==(const QualType& other);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
@@ -34,6 +36,12 @@ def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
       if (type)
         return QualType(type->getCanonicalType(), qualifiers);
       return *this;
+    }
+    QualType QualType::modQuals(cvr_qualifiers qualifiers) {
+      return QualType(getType(), qualifiers);
+    }
+    QualType QualType::addQuals(cvr_qualifiers qualifiers) {
+      return QualType(getType(), (cvr_qualifiers) (qualifiers | this->qualifiers));
     }
     bool QualType::operator==(const QualType& other) {
       if (qualifiers != other.qualifiers)
