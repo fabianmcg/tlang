@@ -86,8 +86,13 @@ public:
     }
     return nullptr;
   }
-  FunctionType* getFunctionType(QualType &&returnType, List<QualType>&& arguments) {
+  FunctionType* getFunctionType(QualType &&returnType, List<QualType> &&arguments) {
     return addType(FunctionType(std::forward<QualType>(returnType), std::forward<List<QualType>>(arguments)));
+  }
+  void remove(Type *type) {
+    auto it = types.find(type);
+    if (it != types.end())
+      types.erase(it);
   }
 protected:
   AddressType addres_type { };

@@ -2,21 +2,17 @@
 #define SEMA_SEMA_HH
 
 #include <AST/ASTContext.hh>
-#include "SymbolTablePass.hh"
-#include <Sema/FirstSemaPass.hh>
-//#include <Sema/TypeInference.hh>
-//#include "Parent.hh"
 
-namespace tlang::sema {
-struct Sema {
-  Sema(ASTContext &context) :
-      context(context) {
-    SymbolTablePass(context);
-  }
-  void analyze() {
-    FirstSemaPass(context);
-//    TypeInferenceSemaPass(context);
-  }
+namespace tlang {
+class Sema {
+public:
+  Sema(ASTContext &context);
+  void run();
+private:
+  void completeTable();
+  void resolveTypes();
+  void resolveNames();
+  void inferTypes();
   ASTContext &context;
 };
 }

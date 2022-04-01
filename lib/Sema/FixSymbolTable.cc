@@ -1,14 +1,13 @@
-#ifndef SEMA_SYMBOLTABLE_HH
-#define SEMA_SYMBOLTABLE_HH
-
-#include <AST/Visitors/ASTVisitor.hh>
 #include <deque>
 #include <map>
 #include <string>
+#include <Sema/Sema.hh>
+#include <AST/Visitors/ASTVisitor.hh>
 
-namespace tlang::sema {
-struct SymbolTableAST: ASTVisitor<SymbolTableAST, VisitorPattern::prePostOrder> {
-  SymbolTableAST(ASTContext &context) :
+namespace tlang {
+namespace sema {
+struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePostOrder> {
+  SymbolTableVisitor(ASTContext &context) :
       context(context) {
   }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
@@ -50,9 +49,8 @@ struct SymbolTableAST: ASTVisitor<SymbolTableAST, VisitorPattern::prePostOrder> 
   ASTContext &context;
   std::deque<UniversalSymbolTable*> table_stack;
 };
-inline void SymbolTablePass(ASTContext &ctx) {
-  SymbolTableAST { ctx }.traverseModuleDecl(*ctx);
+}
+void Sema::completeTable() {
+  sema::SymbolTableVisitor { context }.traverseModuleDecl(*context);
 }
 }
-
-#endif

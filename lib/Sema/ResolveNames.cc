@@ -1,39 +1,15 @@
-#ifndef __SEMA_NAMERESOLUTION_HH__
-#define __SEMA_NAMERESOLUTION_HH__
-
-#include <AST/ASTContext.hh>
-#include <AST/Visitors/ASTVisitor.hh>
 #include <deque>
 #include <map>
 #include <string>
+#include <Sema/Sema.hh>
+#include <AST/Visitors/ASTVisitor.hh>
 
-namespace tlang::sema {
-struct FirstSemaPassAST: ASTVisitor<FirstSemaPassAST, VisitorPattern::prePostOrder> {
-  FirstSemaPassAST(ASTContext &context) :
+namespace tlang {
+namespace sema {
+struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::prePostOrder> {
+  ResolveNamesVisitor(ASTContext &context) :
       context(context) {
   }
-//  visit_t visitUnresolvedType(UnresolvedType *node, VisitType isFirst) {
-//    auto parent = node->parent();
-//    auto kind = parent->classof();
-//    if (isFirst) {
-//      auto decl = context.find(node->getIdentifier());
-//      auto tdecl = dynamic_cast<NamedDecl*>(decl);
-//      if (decl && tdecl) {
-//        if (kind == NodeClass::QualType) {
-//          auto type = dynamic_cast<QualType*>(parent);
-//          type->getType() = make_type(tdecl);
-//        } else if (auto type = dynamic_cast<Type*>(parent)) {
-//          if (auto underlyingPtr = type->getUnderlyingPtr()) {
-//            Type *&underlying = *underlyingPtr;
-//            underlying = make_type(tdecl);
-//          }
-//        }
-//      }
-////      else
-////        throw(std::runtime_error("Undefined type: " + node->getIdentifier()));
-//    }
-//    return visit_value;
-//  }
   visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
     if (isFirst && table_stack.size()) {
       auto &ctx = *table_stack.front();
@@ -79,8 +55,8 @@ struct FirstSemaPassAST: ASTVisitor<FirstSemaPassAST, VisitorPattern::prePostOrd
   ASTContext &context;
   std::deque<UniversalSymbolTable*> table_stack;
 };
-inline void FirstSemaPass(ASTContext &ctx) {
-  FirstSemaPassAST { ctx }.traverseModuleDecl(*ctx);
+}
+void Sema::resolveNames() {
+  sema::ResolveNamesVisitor { context }.traverseModuleDecl(*context);
 }
 }
-#endif
