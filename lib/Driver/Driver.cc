@@ -54,8 +54,8 @@ int Driver::parseFile(ASTContext &context, const std::filesystem::path &file) {
   return 1;
 }
 int Driver::semaAnalysis(ASTContext &context) {
-  sema::Sema sema(context);
-  sema.analyze();
+  Sema sema(context);
+  sema.run();
   return 0;
 }
 int Driver::codeAnalysis(ASTContext &context) {
@@ -79,7 +79,5 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
 void Driver::dump() {
   if (cmdArguments.dumpAST)
     tlang::dump(*context);
-//  if (cmdArguments.dumpSymbols)
-//    context.print_symbols(std::cerr);
 }
 }

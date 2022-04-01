@@ -48,6 +48,15 @@ public:
       ost << "*";
     return visit_t::visit;
   }
+  visit_t visitDefinedType(DefinedType *node, VisitType kind) {
+    if (kind) {
+      std::string id { };
+      if (node->getDecl())
+        id = node->getDecl()->getIdentifier();
+      ost << "!" << id << " " << "(" << node->getDecl().data() << ")";
+    }
+    return visit_t::visit;
+  }
   visit_t visitArrayType(ArrayType *node, VisitType kind) {
     if (!kind)
       ost << "[]";

@@ -81,7 +81,7 @@ def TagDecl : AbstractNode<TypeDecl, /* Abstract = */ 0, /* Implicit = */ 0>, De
 
 def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
   ClassSection header = ClassSection<Header, Public, [{
-    StructDecl(const Identifier &identifier, DeclContext &&context) : TagDecl(TypeDecl(identifier), std::move(context)) {
+    StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context))) {
     }
   }]>;
 }
@@ -105,7 +105,7 @@ def EnumDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child members = Child<DynamicList, [{EnumMemberDecl}]>;
   ClassSection header = ClassSection<Header, Public, [{
     EnumDecl(const Identifier &identifier, QualType &&type, std::vector<EnumMemberDecl *> &&members)
-        : TagDecl(TypeDecl(identifier), DeclContext()), children(std::move(type), std::move(members)) {
+        : EnumDecl(TagDecl(TypeDecl(identifier), DeclContext()), std::move(type), std::move(members)) {
     }
   }]>;
 }
