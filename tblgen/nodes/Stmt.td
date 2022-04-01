@@ -7,19 +7,33 @@ def StmtHeader : CodeSection<Header, [{
 #include <AST/DeclContext.hh>
 }]>;
 
+def StmtSource : CodeSection<Source, [{
+#include <AST/Decl.hh>
+}]>;
+
 def Stmt : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
 
-def CompoundStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def CompoundStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, NoVisitDeclContext {
   Child stmts = Child<DynamicList, [{Stmt}]>;
-  /*ClassSection header = ClassSection<Header, Public, [{
+  ClassSection header = ClassSection<Header, Public, [{
     CompoundStmt(List<Stmt*>&& stmts);
+    bool addStmt(Stmt* stmt);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
-    CompoundStmt::CompoundStmt(List<Stmt*>&& stmts): CompoundStmt(DeclContext(), std::move(stmts)) {
-      visitContext = false;
+    CompoundStmt::CompoundStmt(List<Stmt*>&& stmts): CompoundStmt(NoVisitDeclContext(), std::move(stmts)) {
     }
-  }]>;*/
+    bool CompoundStmt::addStmt(Stmt* stmt) {
+      if (!stmt)
+        return false;
+      if (auto ds = dyn_cast<DeclStmt>(stmt)) {
+        for (auto decl : ds->getDecl())
+          add(decl);
+      }
+      getStmts().push_back(stmt);
+      return true;
+    }
+  }]>;
 }
 
 def ValueStmt : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
@@ -41,9 +55,20 @@ def IfStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child elseStmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def ForStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child range = Child<DynamicList, [{RangeStmt}]>;
+def ForStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
+  Child ranges = Child<DynamicList, [{RangeStmt}]>;
   Child body = Child<Dynamic, [{Stmt}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    ForStmt(List<RangeStmt*>&& ranges, Stmt* stmt);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{  
+    ForStmt::ForStmt(List<RangeStmt*>&& ranges, Stmt* stmt): ForStmt(VariableContext(), std::move(ranges), stmt) {
+      auto &Ranges = getRanges();
+      for (auto& range : Ranges)
+        if (range->getDecl())
+          add(range->getDecl());
+    }
+  }]>;
 }
 
 def WhileStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -73,11 +98,22 @@ def ParallelStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
   Variable noWait = Var<[{bool}]>;
   Child reduceList = Child<Dynamic, [{ReduceStmt}]>;
   Child ranges = Child<DynamicList, [{RangeStmt}]>;
   Child body = Child<Dynamic, [{Stmt}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    LoopStmt(bool noWait, ReduceStmt* reduce, List<RangeStmt*>&& ranges, Stmt* stmt);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{  
+    LoopStmt::LoopStmt(bool noWait, ReduceStmt* reduce, List<RangeStmt*>&& ranges, Stmt* stmt): LoopStmt(VariableContext(), noWait, reduce, std::move(ranges), stmt) {
+      auto &Ranges = getRanges();
+      for (auto& range : Ranges)
+        if (range->getDecl())
+          add(range->getDecl());
+    }
+  }]>;
 }
 
 def SyncStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -112,11 +148,6 @@ def ReduceStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   ]>;
   Variable op = EVar<[{Operator}]>;
   Child exprs = Child<DynamicList, [{Expr}]>;
-  ClassSection header = ClassSection<Header, Public, [{
-    ReduceStmt(Operator op, std::vector<Expr *> &&exprs)
-        : Stmt(), op(op), children(std::forward<std::vector<Expr *>>(exprs)) {
-    }
-  }]>;
 }
 
 #endif

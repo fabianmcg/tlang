@@ -13,6 +13,14 @@ public:
   using parent_type::ASTSymbolTable;
   void add(Decl *decl);
 };
+class NoVisitDeclContext: public symbol_table::ASTSymbolTable<Decl> {
+public:
+  using parent_type = symbol_table::ASTSymbolTable<Decl>;
+  NoVisitDeclContext() {
+    visitContext = false;
+  }
+  void add(Decl *decl);
+};
 class VariableContext: public symbol_table::BasicTable<Decl> {
 public:
   using parent_type = symbol_table::BasicTable<Decl>;
@@ -28,6 +36,10 @@ struct IsDeclContext: std::false_type {
 
 template <>
 struct IsDeclContext<DeclContext> : std::true_type {
+};
+
+template <>
+struct IsDeclContext<NoVisitDeclContext> : std::true_type {
 };
 
 template <>

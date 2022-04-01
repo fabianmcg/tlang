@@ -51,8 +51,9 @@ struct AddChildren {
     }
     template <typename T, std::enable_if_t<IsDeclContext<T>::value, int> = 0>
     inline void visit(T *context) {
-      for (auto &decl : make_reverse(*context))
-        node_info.push(*decl);
+      if (context->visit())
+        for (auto &decl : make_reverse(*context))
+          node_info.push(*decl);
     }
     template <typename T, std::enable_if_t<isValidNode_v<T>, int> = 0>
     inline void visit(T *node) {
