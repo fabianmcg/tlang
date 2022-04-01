@@ -1,11 +1,11 @@
-#ifndef __SEMA_SEMA_HH__
-#define __SEMA_SEMA_HH__
+#ifndef SEMA_SEMA_HH
+#define SEMA_SEMA_HH
 
-#include <Sema/FirstSemaPass.hh>
-#include <Sema/TypeInference.hh>
-#include "AST/Include.hh"
-#include "Parent.hh"
+#include <AST/ASTContext.hh>
 #include "SymbolTablePass.hh"
+#include <Sema/FirstSemaPass.hh>
+//#include <Sema/TypeInference.hh>
+//#include "Parent.hh"
 
 namespace tlang::sema {
 struct Sema {
@@ -15,7 +15,7 @@ struct Sema {
   }
   void analyze() {
     FirstSemaPass(context);
-    TypeInferenceSemaPass(context);
+//    TypeInferenceSemaPass(context);
   }
   ASTContext &context;
 };

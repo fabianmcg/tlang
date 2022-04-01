@@ -1,6 +1,6 @@
 BASE_DIR = ./tblgen
 TG ?= $(BASE_DIR)/build/tlang-tblgen
-FLAGS ?= "-I $(BASE_DIR)/td/ -I $(BASE_DIR)/nodes/"
+FLAGS ?= "-I $(BASE_DIR)/td/ -I $(BASE_DIR)/nodes/ --write-if-changed"
 INC_DIR ?= ./include/AST/
 LIB_DIR ?= ./lib/AST/
 

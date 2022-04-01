@@ -1,5 +1,5 @@
 TG ?= ./build/tlang-tblgen
-FLAGS ?= -I td/ -I nodes/
+FLAGS ?= -I td/ -I nodes/ --write-if-changed
 ACTION ?= traits
 MODE ?= hh
 FILE ?= 

@@ -76,10 +76,11 @@ public:
         extentInfo(node);
         pop_color();
         cst() << " ";
+        indent++;
       }
-      indent++;
     } else {
-      indent--;
+      if (!ProtoType::classof(classof))
+        indent--;
       pop_color();
       cst();
     }
@@ -89,7 +90,7 @@ public:
     if (kind) {
       ost << node->getIdentifier() << " ";
       if (node->getDecl())
-        ost << *(node->getDecl()) << " ";
+        ost << node->getDecl().data() << " ";
     }
     return visit;
   }

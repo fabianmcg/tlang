@@ -8,6 +8,7 @@ def DeclHeader : CodeSection<Header, [{
 }]>;
 
 class DeclContext;
+class NoVisitDeclContext;
 class VariableContext;
 
 def Decl : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
@@ -40,6 +41,14 @@ def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0
     FunctorDecl(NamedDecl &&nameddecl, VariableContext &&declcontext, Args &&...args)
         : NamedDecl(std::move(nameddecl)), VariableContext(std::move(declcontext)), complete(false),
           children(std::forward<Args>(args)...) {
+      addArgs(getParameters());
+    }
+    void addArgs(const List<ParameterDecl*>& params);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    void FunctorDecl::addArgs(const List<ParameterDecl*>& params) {
+      for (auto &arg : params)
+        add(arg);
     }
   }]>;
 }

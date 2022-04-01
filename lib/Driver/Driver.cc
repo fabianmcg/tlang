@@ -3,7 +3,7 @@
 #include <Support/UniqueStream.hh>
 #include <Lex/Lexer.hh>
 #include <Parser/Parser.hh>
-//#include <Sema/Sema.hh>
+#include <Sema/Sema.hh>
 //#include <Analysis/Analysis.hh>
 //#include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
@@ -16,8 +16,8 @@ int Driver::run(int argc, char **argv) {
     return stage;
   if (++stage && parseFiles())
     return stage;
-//  if (++stage && semaAnalysis(context))
-//    return stage;
+  if (++stage && semaAnalysis(context))
+    return stage;
 //  if (++stage && codeAnalysis(context))
 //    return stage;
   dump();
@@ -54,8 +54,8 @@ int Driver::parseFile(ASTContext &context, const std::filesystem::path &file) {
   return 1;
 }
 int Driver::semaAnalysis(ASTContext &context) {
-//  sema::Sema sema(context);
-//  sema.analyze();
+  sema::Sema sema(context);
+  sema.analyze();
   return 0;
 }
 int Driver::codeAnalysis(ASTContext &context) {
