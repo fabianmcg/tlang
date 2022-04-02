@@ -15,6 +15,11 @@ struct token {
   token_kind kind { tk::EOS };
   SourceLocation loc { };
   static token create(const char *txt, tk kind, int32_t l, int32_t c) {
+    if (tk::StringLiteral == kind) {
+      auto tmp = std::string(txt + 1);
+      tmp.erase(--tmp.end());
+      return token {tmp , kind, SourceLocation { l, c } };
+    }
     return token { std::string(txt), kind, SourceLocation { l, c } };
   }
   inline bool valid() const {

@@ -1,12 +1,23 @@
 #ifndef AST_DECLCONTEXT_HH
 #define AST_DECLCONTEXT_HH
 
-#include <ADT/SymbolTable/SymbolTable.hh>
-#include <ADT/SymbolTable/BasicTable.hh>
+#include <list>
 #include <type_traits>
+#include <ADT/SymbolTable/BasicTable.hh>
+#include <ADT/SymbolTable/SymbolTable.hh>
 
 namespace tlang {
 class Decl;
+class ModuleDecl;
+class UnitContext: public symbol_table::interface::UniversalSymbolTable<std::string, symbol_table::interface::UniversalSymbol<Decl>> {
+public:
+  void add(ModuleDecl *decl);
+protected:
+  symbol_type search(const key_type &key) const;
+private:
+  std::list<symbol_type> modules;
+};
+
 class DeclContext: public symbol_table::ASTSymbolTable<Decl> {
 public:
   using parent_type = symbol_table::ASTSymbolTable<Decl>;
@@ -32,6 +43,10 @@ using UniversalSymbolTable = typename DeclContext::universal_symbol_table;
 
 template <typename T>
 struct IsDeclContext: std::false_type {
+};
+
+template <>
+struct IsDeclContext<UnitContext> : std::true_type {
 };
 
 template <>

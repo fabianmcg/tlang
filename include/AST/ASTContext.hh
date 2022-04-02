@@ -1,64 +1,49 @@
 #ifndef AST_ASTCONTEXT_HH
 #define AST_ASTCONTEXT_HH
 
-#include "Common.hh"
-#include "TypeContext.hh"
-#include <Analysis/AnalysisContext.hh>
 #include <cstdint>
 #include <map>
 #include <memory>
+#include "Common.hh"
+#include "TypeContext.hh"
+#include <Analysis/AnalysisContext.hh>
 
 namespace tlang {
 struct ASTContext {
-  ASTContext() {
-  }
-  ~ASTContext() {
-    module == nullptr;
-  }
+  ASTContext();
+  ~ASTContext() = default;
   ASTContext(ASTContext&&) = default;
   ASTContext(const ASTContext&) = delete;
   ASTContext& operator=(ASTContext&&) = default;
   ASTContext& operator=(const ASTContext&) = delete;
-  ModuleDecl* operator*() const {
-    return module;
-  }
+  ProgramDecl* operator*() const;
   template <typename T, typename ...Args>
   T* make(Args &&...args) {
-    return add_node(std::make_unique<T>(std::forward<Args>(args)...));
+    return addNode(std::make_unique<T>(std::forward<Args>(args)...));
   }
   template <typename T, typename V>
   T* create(V &&val) {
-    return add_node(std::make_unique<V>(std::forward<V>(val)));
+    return addNode(std::make_unique<V>(std::forward<V>(val)));
   }
-  template <typename T>
-  T* add_type(T &&value) {
-    return add_node(std::make_unique<T>(std::forward<T>(value)));
+  void remove(ASTNode *node);
+  void addModule(UnitDecl *unit, ModuleDecl *module);
+  template <typename ...Args>
+  UnitDecl* addUnit(const Identifier &name, Args &&...args) {
+    auto unit = make<UnitDecl>(name, UnitContext(), std::forward<Args>(args)...);
+    program->getUnits().push_back(unit);
+    return unit;
   }
-  template <typename T>
-  void remove(T *node) {
-    auto it = nodes.find(reinterpret_cast<std::uintptr_t>(node));
-    if (it != nodes.end())
-      nodes.erase(it);
-  }
-  void add_module(ModuleDecl *module) {
-    this->module = module;
-  }
-  AnalysisContext& analysisContext() {
-    return analyis;
-  }
-  const AnalysisContext& analysisContext() const {
-    return analyis;
-  }
-  TypeContext& types() {
-    return type_context;
-  }
+  AnalysisContext& analysisContext();
+  const AnalysisContext& analysisContext() const;
+  TypeContext& types();
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> nodes;
-  AnalysisContext analyis { };
-  ModuleDecl *module { };
   TypeContext type_context;
+  AnalysisContext analyis { };
+  ProgramDecl *program { };
+  UnitDecl *mainUnit { };
   template <typename T>
-  T* add_node(std::unique_ptr<T> &&value) {
+  T* addNode(std::unique_ptr<T> &&value) {
     if (value) {
       auto &node = nodes[reinterpret_cast<std::uintptr_t>(value.get())] = std::forward<std::unique_ptr<T>>(value);
       return static_cast<T*>(node.get());

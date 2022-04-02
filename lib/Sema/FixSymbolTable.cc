@@ -10,6 +10,9 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
   SymbolTableVisitor(ASTContext &context) :
       context(context) {
   }
+  visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
+    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+  }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
     return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
@@ -51,6 +54,6 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
 };
 }
 void Sema::completeTable() {
-  sema::SymbolTableVisitor { context }.traverseModuleDecl(*context);
+  sema::SymbolTableVisitor { context }.traverseProgramDecl(*context);
 }
 }

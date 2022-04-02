@@ -11,14 +11,22 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
       context(context) {
   }
   visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
-    if (isFirst && table_stack.size()) {
-      auto &ctx = *table_stack.front();
-      if (auto symbol = ctx.find(node->getIdentifier(), false)) {
+    if (isFirst && declContext) {
+      if (auto symbol = declContext->find(node->getIdentifier(), false)) {
         node->getDecl() = *symbol;
       } else
         std::cerr << "Symbol: " << node->getIdentifier() << " doesn't exists." << std::endl;
     }
     return visit;
+  }
+  visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
+    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+  }
+  visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
+    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+  }
+  visit_t visitTagDecl(TagDecl *node, VisitType isFirst) {
+    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
@@ -29,27 +37,21 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
   visit_t visitLoopStmt(LoopStmt *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
-  visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
-  }
-  visit_t visitTagDecl(TagDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
-  }
   visit_t visitCompoundStmt(CompoundStmt *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
   visit_t add_scope(UniversalSymbolTable *node, VisitType isFirst) {
     if (isFirst)
-      table_stack.push_front(node);
+      declContext = node;
     else
-      table_stack.pop_front();
+      declContext = node->getParent();
     return visit_t::visit;
   }
   ASTContext &context;
-  std::deque<UniversalSymbolTable*> table_stack;
+  UniversalSymbolTable *declContext { };
 };
 }
 void Sema::resolveNames() {
-  sema::ResolveNamesVisitor { context }.traverseModuleDecl(*context);
+  sema::ResolveNamesVisitor { context }.traverseProgramDecl(*context);
 }
 }

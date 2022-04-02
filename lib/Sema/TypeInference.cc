@@ -167,6 +167,9 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     }
     return visit;
   }
+  visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
+    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+  }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
@@ -197,6 +200,6 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
 };
 }
 void Sema::inferTypes() {
-  sema::TypeInferenceAST { context }.traverseModuleDecl(*context);
+  sema::TypeInferenceAST { context }.traverseProgramDecl(*context);
 }
 }
