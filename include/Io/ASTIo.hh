@@ -117,6 +117,14 @@ public:
     }
     return visit;
   }
+  visit_t visitMemberExpr(MemberExpr *node, VisitType kind) {
+    if (kind) {
+      if (auto drf = dyn_cast<DeclRefExpr>(node->getMember().data())) {
+        ost << "." << drf->getIdentifier();
+      }
+    }
+    return visit;
+  }
 //  visit_t visitBinaryOperation(BinaryOperator *node, VisitType kind) {
 //    if (kind)
 //      ost << to_string(node->getOperator()) << " ";

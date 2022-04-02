@@ -49,6 +49,7 @@ public:
   using value_type = NodeType*;
   using symbol_type = Symbol;
   using table_type = std::multimap<key_type, symbol_type>;
+  using universal_symbol_table::find;
   ASTSymbolTable() = default;
   ~ASTSymbolTable() = default;
   ASTSymbolTable(ASTSymbolTable&&) = default;

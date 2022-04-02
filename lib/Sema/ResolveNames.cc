@@ -15,13 +15,6 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
       auto &ctx = *table_stack.front();
       if (auto symbol = ctx.find(node->getIdentifier(), false)) {
         node->getDecl() = *symbol;
-//        if (auto dk = dynamic_cast<VariableDecl*>(decl)) {
-//          node->getType() = dk->getType();
-//        } else if (auto dk = dynamic_cast<FunctorDecl*>(decl)) {
-//          node->getType() = dk->getReturntype();
-//        } else if (auto dk = dynamic_cast<ExternFunctionDecl*>(decl)) {
-//          node->getType() = dk->getReturntype();
-//        }
       } else
         std::cerr << "Symbol: " << node->getIdentifier() << " doesn't exists." << std::endl;
     }

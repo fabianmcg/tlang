@@ -36,7 +36,7 @@ struct ASTContext {
   }
   template <typename T>
   void remove(T *node) {
-    auto it = nodes.find(static_cast<uint64_t>(node));
+    auto it = nodes.find(reinterpret_cast<std::uintptr_t>(node));
     if (it != nodes.end())
       nodes.erase(it);
   }
