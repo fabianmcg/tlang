@@ -177,25 +177,13 @@ public:
     return ctx.template create<T>(std::forward<T>(value));
   }
   template <typename T>
-  parse_result<T, return_kind::Dynamic> make_type(T &&value) {
-    using type = parse_result<T, return_kind::Dynamic>;
-    return type::success(get_type(std::forward<T>(value)));
-  }
-  template <typename T>
   parse_result<T, return_kind::Dynamic> make_type(T *value) {
     using type = parse_result<T, return_kind::Dynamic>;
     return type::success(value);
   }
-  template <typename T>
-  T* get_type(T &&value) {
-    return ctx.template add_type<T>(std::forward<T>(value));
-  }
-  template <typename T>
-  QualType get_qualType(T &&value, QualType::cvr_qualifiers qualifiers = QualType::None) {
-    return QualType(ctx.template add_type<T>(std::forward<T>(value)), qualifiers);
-  }
 };
-void Parser::parse(ASTContext& ctx, const std::string &module_name) {
+ModuleDecl* Parser::parse(ASTContext& ctx, const std::string &module_name) {
   auto result = ParserHelper(*this, ctx, module_name).ParseTop();
+  return *result;
 }
 } // namespace _pnp_

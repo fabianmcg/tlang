@@ -1,5 +1,5 @@
-#ifndef __DRIVER_HH__
-#define __DRIVER_HH__
+#ifndef DRIVER_DRIVER_HH
+#define DRIVER_DRIVER_HH
 
 #include <filesystem>
 #include <AST/ASTContext.hh>
@@ -21,7 +21,6 @@ public:
 private:
   int parseCMD(int argc, char **argv);
   int parseFiles();
-  int parseFile(ASTContext &context, const std::filesystem::path &file);
   int semaAnalysis(ASTContext &context);
   int codeAnalysis(ASTContext &context);
   int codeGen(ASTContext &context, const std::filesystem::path &file);

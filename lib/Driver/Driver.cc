@@ -1,8 +1,6 @@
 #include <Driver/Driver.hh>
 #include <Driver/Arguments.hh>
 #include <Support/UniqueStream.hh>
-#include <Lex/Lexer.hh>
-#include <Parser/Parser.hh>
 #include <Sema/Sema.hh>
 //#include <Analysis/Analysis.hh>
 //#include <CodeGen/CodeGen.hh>
@@ -34,24 +32,6 @@ int Driver::parseCMD(int argc, char **argv) {
   args.add_opt("dumpSymbols,S", args.flag_opt(cmdArguments.dumpSymbols), "Dump Symbol Table");
   args.add_opt("noCodeGen,n", args.flag_opt(cmdArguments.noCodegen), "Don't generate LLVM IR code");
   return args.parse(argc, argv, true);
-}
-int Driver::parseFiles() {
-  for (auto &file : cmdArguments.inputFiles)
-    if (parseFile(context, std::filesystem::path { file }))
-      return 1;
-  return cmdArguments.inputFiles.empty() ? 1 : 0;
-}
-int Driver::parseFile(ASTContext &context, const std::filesystem::path &file) {
-  if (std::filesystem::exists(file)) {
-    std::cerr << "Parsing file: " << file << std::endl;
-    auto fs = unique_fstream::open_istream(file.string());
-    lex::Lexer lex(*fs);
-    parser::Parser parser(lex);
-    parser.parse(context, "main");
-    std::cerr << "Done parsing: " << file << std::endl;
-    return 0;
-  }
-  return 1;
 }
 int Driver::semaAnalysis(ASTContext &context) {
   Sema sema(context);

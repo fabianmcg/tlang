@@ -7,6 +7,7 @@ def DeclHeader : CodeSection<Header, [{
 #include <AST/DeclContext.hh>
 }]>;
 
+class UnitContext;
 class DeclContext;
 class NoVisitDeclContext;
 class VariableContext;
@@ -21,6 +22,13 @@ def NamedDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
       return identifier;
     }
   }]>;
+}
+
+def ProgramDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child units = Child<DynamicList, [{UnitDecl}]>;
+}
+
+def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, UnitContext {
 }
 
 def ModuleDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {

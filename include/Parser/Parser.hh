@@ -15,7 +15,7 @@ public:
     current_token = tokens.end();
     consumeToken();
   }
-  void parse(ASTContext &ctx, const std::string &module_name);
+  ModuleDecl* parse(ASTContext &ctx, const std::string &module_name);
 protected:
   using tok_it_t = std::list<token>::iterator;
   using context_t = tok_it_t;
