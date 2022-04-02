@@ -10,6 +10,31 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
   TypeInferenceAST(ASTContext &context) :
       context(context) {
   }
+  visit_t visitMemberExpr(MemberExpr *node, VisitType isFirst) {
+    // TODO Need to resolve pointers
+    if (isFirst == postVisit) {
+      auto type = node->getOwner()->getType().getType();
+      if (auto st = dyn_cast<StructType>(type)) {
+        auto structDecl = dyn_cast<StructDecl>(st->getDecl().data());
+        if (auto member = dyn_cast<DeclRefExpr>(node->getMember().data())) {
+          if (auto symbol = structDecl->find(member->getIdentifier(), true)) {
+            auto decl = *symbol;
+            if (auto md = dyn_cast<MemberDecl>(decl)) {
+              member->getType() = md->getType().addQuals(QualType::Reference);
+              node->getType() = member->getType();
+            } else if (auto md = dyn_cast<MethodDecl>(decl)) {
+              member->getType() = QualType(md->getType(context.types()));
+              node->getType() = member->getType();
+            }
+          } else
+            throw(std::runtime_error("Invalid member reference"));
+        } else
+          throw(std::runtime_error("Invalid member value"));
+      } else
+        throw(std::runtime_error("Invalid member expression"));
+    }
+    return visit;
+  }
   visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
     if (isFirst) {
       if (auto symbol = declContext->find(node->getIdentifier(), false)) {
@@ -24,11 +49,38 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     }
     return visit;
   }
+  visit_t visitRangeExpr(RangeExpr *node, VisitType isFirst) {
+    if (isFirst == postVisit) {
+      auto startType = node->getStart()->getType();
+      auto stopType = node->getStop()->getType();
+      auto trr = typePromotion(startType.getType()->getCanonicalType(), stopType.getType()->getCanonicalType());
+      if (!trr.first)
+        throw(std::runtime_error("Invalid range expr"));
+      if (trr.second == 0)
+        node->getStart() = context.make<ImplicitCastExpr>(node->getStart(), stopType.addQuals());
+      else if (trr.second == 1)
+        node->getStop() = context.make<ImplicitCastExpr>(node->getStop(), startType.addQuals());
+      if (auto &step = node->getStep()) {
+        if (step->getType().getType() != trr.first)
+          step = context.make<ImplicitCastExpr>(step, startType.addQuals());
+      }
+      node->getType() = QualType(trr.first);
+    }
+    return visit;
+  }
   visit_t visitCallExpr(CallExpr *node, VisitType isFirst) {
     if (isFirst == postVisit)
-      if (auto ref = dyn_cast<DeclRefExpr>(node->getCallee()))
+      if (auto ref = dyn_cast<DeclRefExpr>(node->getCallee())) {
         if (auto ft = dyn_cast<FunctionType>(ref->getType().getType()))
           node->getType() = ft->getReturnType();
+      } else if (auto me = dyn_cast<MemberExpr>(node->getCallee())) {
+        auto ref = me->getMember().data();
+        if (auto member = dyn_cast<DeclRefExpr>(ref)) {
+          auto uft = member->getType().getType();
+          if (auto ft = dyn_cast<FunctionType>(uft))
+            node->getType() = ft->getReturnType();
+        }
+      }
     return visit;
   }
   visit_t visitArrayExpr(ArrayExpr *node, VisitType isFirst) {

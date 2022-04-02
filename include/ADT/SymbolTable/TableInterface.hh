@@ -17,6 +17,7 @@ public:
   using const_iterator = OrderedSymbolIteratorInterface<const symbol_type>;
   using reverse_iterator = ReverseOrderedSymbolIteratorInterface<symbol_type>;
   using const_reverse_iterator = ReverseOrderedSymbolIteratorInterface<const symbol_type>;
+  using universal_symbol_table::find;
   inline iterator begin() {
     if (this->first_symbol)
       return static_cast<symbol_type*>(this->first_symbol)->getOrderedIterator();

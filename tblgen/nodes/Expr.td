@@ -179,13 +179,8 @@ def DeclRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def MemberExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable member = Var<[{reference<Expr>}]>;
   Child owner = Child<Dynamic, [{Expr}]>;
-  Child member = Child<Dynamic, [{Expr}]>;
-}
-
-def MemberRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable owner = Var<[{reference<Expr>}]>;
-  Child member = Child<Dynamic, [{Expr}]>;
 }
 
 def CallExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -195,6 +190,9 @@ def CallExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
     CallExpr(std::vector<Expr *> &&args) : CallExpr(nullptr, std::forward<std::vector<Expr *>>(args)) {
     }
   }]>;
+}
+
+def MemberCallExpr : AbstractNode<CallExpr, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def ArrayExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
