@@ -33,6 +33,7 @@ include/AST/Nodes.inc
 include/AST/Traits.hh
 include/CodeGen/Emitable.inc
 include/CodeGen/RecursiveVisitor.hh
+include/CodeGen/Traits.hh
 lib/AST/Attr.cc
 lib/AST/Common.cc
 lib/AST/Decl.cc

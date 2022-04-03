@@ -96,7 +96,7 @@ struct FileDB {
       fileQueue.pop_front();
       auto fileCC = valid(file);
       if (!fileCC.empty()) {
-        auto unit = context.addUnit(fileCC.stem().string() + ".main");
+        auto unit = context.addUnit(fileCC.stem().string() + ".main", UnitDecl::Generic);
         parseUnit(unit, fileCC);
       }
     }

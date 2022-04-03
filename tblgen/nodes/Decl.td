@@ -29,6 +29,8 @@ def ProgramDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, UnitContext {
+  Enum GenKind = Enum<[EM<"Generic", [{0}]>, EM<"Parallel", [{1}]>, EM<"NVPTX", [{2}]>]>;
+  Variable genKind = EVar<[{GenKind}], [{Generic}]>;
 }
 
 def ModuleDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {

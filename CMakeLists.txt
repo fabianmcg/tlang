@@ -65,9 +65,9 @@ include(lib/AST/AST.cmake)
 include(include/Lex/CMakeLists.txt) 
 include(lib/Parser/Parser.cmake)
 include(lib/Sema/Sema.cmake)
-#include(lib/CodeGen/CMakeLists.txt)
+include(lib/CodeGen/CMakeLists.txt)
 #include(lib/Analysis/CMakeLists.txt)
 include(lib/Driver/Driver.cmake)
 
-add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON #[[USE_BOOST]] ON #[[USE_FRMT]] OFF "driver;ast;lex;parser;sema;ast")
+add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON #[[USE_BOOST]] ON #[[USE_FRMT]] OFF "driver;ast;lex;parser;sema;codegen;ast")
 
