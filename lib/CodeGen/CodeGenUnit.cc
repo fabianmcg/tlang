@@ -24,17 +24,21 @@ void initGenericTarget(llvm::Module *module) {
   module->setDataLayout(target_machine->createDataLayout());
 }
 }
-CodeGenUnit::CodeGenUnit(CodeEmitter &emitter, UnitDecl &unit, ASTContext &ast_context, llvm::LLVMContext &llvm_context) :
-    emitter(emitter), unit(unit), ast_context(ast_context), llvm_context(llvm_context) {
+CodeGenUnit::CodeGenUnit(UnitDecl *unit, ASTContext &ast_context, llvm::LLVMContext &llvm_context) :
+    unit(unit), ast_context(ast_context), llvm_context(llvm_context) {
+  init();
 }
-void CodeGenUnit::emit(llvm::raw_ostream &ost) {
-  emitter.run(&unit);
-  module->print(ost, nullptr);
+void CodeGenUnit::emit(CodeEmitter &emitter, llvm::raw_ostream &ost) {
+  emitter.run(unit);
+  if (module)
+    module->print(ost, nullptr);
 }
 void CodeGenUnit::init() {
-  module = std::make_unique<llvm::Module>(unit.getIdentifier(), llvm_context);
-  builder = std::make_unique<llvm::IRBuilder<>>(llvm_context);
-  if (unit.getGenKind() < UnitDecl::NVPTX)
-    initGenericTarget(module.get());
+  if (unit && !module && !builder) {
+    module = std::make_unique<llvm::Module>(unit->getIdentifier(), llvm_context);
+    builder = std::make_unique<llvm::IRBuilder<>>(llvm_context);
+    if (unit->getGenKind() < UnitDecl::NVPTX)
+      initGenericTarget(module.get());
+  }
 }
 }
