@@ -28,11 +28,15 @@ inline void preVisit(llvm::raw_ostream &ost, TreeNode<AbstractNode> &node) {
     ost << "AST_MACRO(NODE, BASE)";
   ost << "\n";
   ost << "#endif" << "\n";
+  if (node->abstract())
+    ost << "#ifndef NO_ABSTRACT";
   if (node->hasBase()) {
     auto base = node->base();
     ost << macro << "(" << (*node)->getName() << ", " << base->getName() << ")\n";
   } else
     ost << macro << "(" << (*node)->getName() << ", NO_PARENT)\n";
+  if (node->abstract())
+    ost << "#endif";
 }
 inline void postVisit(llvm::raw_ostream &ost, TreeNode<AbstractNode> &node) {
   std::string macro = toupper((*node)->getName().str());
@@ -56,4 +60,5 @@ void IncFileEmitter::run(llvm::raw_ostream &ost) {
   ast.bfsRecursive(pre, post);
   undefineMacro(ost, "AST_MACRO");
   undefineMacro(ost, "NO_PARENT");
+  undefineMacro(ost, "NO_ABSTRACT");
 }

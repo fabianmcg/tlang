@@ -39,8 +39,8 @@ inc: $(INC_DIR)
 	
 .PHONY: codegen
 codegen: $(INC_DIR)
-	$(MAKE) -f $(BASE_DIR)/Make.run run TG=$(TG) FLAGS=$(FLAGS) ACTION=codegen MODE=hh FILE=$(BASE_DIR)/nodes/CodeGen.td OUT_DIR=./include/CodeGen OUT=RecursiveVisitor.hh
-	$(MAKE) -f $(BASE_DIR)/Make.run run TG=$(TG) FLAGS=$(FLAGS) ACTION=codegen MODE=cc FILE=$(BASE_DIR)/nodes/CodeGen.td OUT_DIR=./include/CodeGen OUT=Emitable.inc
+	$(MAKE) -f $(BASE_DIR)/Make.run run TG=$(TG) FLAGS=$(FLAGS) ACTION=codegen MODE=hh FILE=$(BASE_DIR)/nodes/CodeGen.td OUT_DIR=./include/CodeGen OUT=Traits.hh
+# 	$(MAKE) -f $(BASE_DIR)/Make.run run TG=$(TG) FLAGS=$(FLAGS) ACTION=codegen MODE=cc FILE=$(BASE_DIR)/nodes/CodeGen.td OUT_DIR=./include/CodeGen OUT=Emitable.inc
 
 $(INC_DIR):
 	mkdir -pv $(INC_DIR)

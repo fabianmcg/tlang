@@ -3,8 +3,9 @@
 #include <Support/UniqueStream.hh>
 #include <Sema/Sema.hh>
 //#include <Analysis/Analysis.hh>
-//#include <CodeGen/CodeGen.hh>
+#include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
+#include <llvm/Support/raw_ostream.h>
 
 namespace tlang::driver {
 
@@ -27,7 +28,7 @@ int Driver::parseCMD(int argc, char **argv) {
   arguments args("Tlang compiler", 120, true);
   args.add_opt("inputFiles,I", cmdArguments.inputFiles, "Input files");
   args.add_popt("inputFiles", -1);
-  args.add_opt("outputFile,o", cmdArguments.outputFile, "a.ll", "Output file");
+  args.add_opt("outputFile,o", cmdArguments.outputFile, "a", "Output file");
   args.add_opt("dumpAST,d", args.flag_opt(cmdArguments.dumpAST), "Dump AST");
   args.add_opt("dumpSymbols,S", args.flag_opt(cmdArguments.dumpSymbols), "Dump Symbol Table");
   args.add_opt("noCodeGen,n", args.flag_opt(cmdArguments.noCodegen), "Don't generate LLVM IR code");
@@ -46,14 +47,22 @@ int Driver::codeAnalysis(ASTContext &context) {
 int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
   if (cmdArguments.noCodegen)
     return 0;
-//  if (!file.empty()) {
-//    std::cerr << "Generating: " << file << std::endl;
-//    codegen::CodeGen emitter(context, "main");
-//    auto os = unique_fstream::open_ostream(file.string());
-//    emitter.emit(*context, *os);
-//    std::cerr << "Finished generating: " << file << std::endl;
-//    return 0;
-//  }
+  if (!file.empty()) {
+    auto &units = (*context)->getUnits();
+    std::filesystem::path path = file.stem();
+    for (auto unit : units) {
+      auto file = path;
+      path /= unit->getIdentifier();
+      path /= ".ll";
+      std::cerr << "Generating: " << file << std::endl;
+      codegen::CodeGen emitter(context);
+      std::error_code code;
+      llvm::raw_fd_ostream os(path.string(), code);
+      emitter.emit(unit, os);
+      std::cerr << "Finished generating: " << file << std::endl;
+    }
+    return 0;
+  }
   return 1;
 }
 void Driver::dump() {

@@ -212,7 +212,7 @@ private:
       if (var.init().empty())
         ost << "{};\n";
       else
-        ost << var.init() << ";\n";
+        ost << " = " << var.init() << ";\n";
     }
   }
 public:
