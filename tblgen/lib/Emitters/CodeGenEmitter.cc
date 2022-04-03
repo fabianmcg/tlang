@@ -31,7 +31,7 @@ struct CodeGenTraits {
     };
     ast.bfs(visitor);
   }
-  ost << "template <typename T> using CodeGenTraits_t = typename CodeGenTraits<T>::type;" ;
+  ost << "template <typename T> using IRType_t = typename CodeGenTraits<T>::type;" ;
   ost << "}\n";
 }
 void emitCodeGen(AST<AbstractNode> &ast, llvm::raw_ostream &ost) {
