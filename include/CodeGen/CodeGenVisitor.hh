@@ -11,7 +11,7 @@
 namespace tlang::codegen {
 template <typename Derived> class CodeGenVisitor {
 public:
-  template <typename T> using return_t = CodeGenTraits_t<T>;
+  template <typename T> using return_t = IRType_t<T>;
   inline Derived &getDerived() {
     return *static_cast<Derived *>(this);
   }

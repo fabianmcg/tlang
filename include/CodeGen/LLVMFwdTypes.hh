@@ -3,7 +3,10 @@
 
 namespace llvm {
 class Type;
+class IntegerType;
+class PointerType;
 class Value;
+class LLVMContext;
 }
 
 #endif

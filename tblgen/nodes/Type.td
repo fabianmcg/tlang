@@ -133,6 +133,7 @@ def IntType : AbstractNode<BuiltinType, /* Abstract = */ 0, /* Implicit = */ 0> 
       return context->getIntType(precision, sign);
     }
   }]>;
+  code irType = [{llvm::IntegerType*}];
 }
 
 def FloatType : AbstractNode<BuiltinType, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -173,6 +174,7 @@ def PtrType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
       return context->getPtrType(underlying);
     }
   }]>;
+  code irType = [{llvm::PointerType*}];
 }
 
 def ArrayType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -187,6 +189,7 @@ def ArrayType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
       return context->getArrayType(underlying, std::forward<List<Expr*>>(layout));
     }
   }]>;
+  code irType = [{llvm::PointerType*}];
 }
 
 def DefinedType : AbstractNode<Type, /* Abstract = */ 1, /* Implicit = */ 0> {
