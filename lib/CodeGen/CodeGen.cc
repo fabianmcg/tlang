@@ -1,4 +1,5 @@
 #include <CodeGen/CodeGen.hh>
+#include <CodeGen/GenericEmitter.hh>
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/TargetSelect.h"
@@ -17,14 +18,15 @@ void CodeGen::init() {
   llvm_context = std::make_unique<LLVMContext>();
   initLLVM();
 }
-void CodeGen::initEmitters() {
-
-}
 void CodeGen::emit(UnitDecl *unit, llvm::raw_ostream &ost) {
+  assert(unit);
   auto CGunit = makeUnit(unit);
-  CGunit.emit(ost);
+  if (unit->getGenKind() < UnitDecl::NVPTX) {
+    GenericEmitter emitter = CGunit.makeEmitter<GenericEmitter>();
+    CGunit.emit(emitter, ost);
+  }
 }
 CodeGenUnit CodeGen::makeUnit(UnitDecl *unit) {
-  return CodeGenUnit(*emitters.at(unit->getGenKind()), *unit, ast_context, *llvm_context);
+  return CodeGenUnit(unit, ast_context, *llvm_context);
 }
 }

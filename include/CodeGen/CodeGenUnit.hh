@@ -7,12 +7,15 @@
 namespace tlang::codegen {
 class CodeGenUnit {
 public:
-  CodeGenUnit(CodeEmitter &emitter, UnitDecl &unit, ASTContext &ast_context, llvm::LLVMContext &llvm_context);
-  void emit(llvm::raw_ostream &ost);
-protected:
+  CodeGenUnit(UnitDecl *unit, ASTContext &ast_context, llvm::LLVMContext &llvm_context);
   void init();
-  CodeEmitter &emitter;
-  UnitDecl &unit;
+  void emit(CodeEmitter &emitter, llvm::raw_ostream &ost);
+  template <typename T, typename ...Args>
+  T makeEmitter(Args &&...args) {
+    return T { ast_context, llvm_context, *builder, *module, std::forward<Args>(args)... };
+  }
+protected:
+  UnitDecl *unit;
   ASTContext &ast_context;
   llvm::LLVMContext &llvm_context;
   std::unique_ptr<llvm::IRBuilder<>> builder { };

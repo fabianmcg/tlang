@@ -12,6 +12,12 @@ public:
   CodeEmitter(ASTContext &ast_context, llvm::LLVMContext &context, llvm::IRBuilder<> &builder, llvm::Module &module) :
       ast_context(ast_context), context(context), builder(builder), module(module) {
   }
+  llvm::LLVMContext& operator*() {
+    return context;
+  }
+  llvm::IRBuilder<>* operator->() {
+    return &builder;
+  }
   virtual ~CodeEmitter() = default;
   virtual void run(UnitDecl *unit) = 0;
 protected:

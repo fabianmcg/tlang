@@ -14,14 +14,14 @@ void visit(TreeNode<AbstractNode> &treeNode, llvm::raw_ostream &ost, TypeMap &ma
   AbstractNode &node = *treeNode;
   if (node.abstract() || !node.emittable())
     return;
-  frmts(ost, "template <> CodeGenTraits<{}>{{ using type = {}; }};", node.name(), map.at(&treeNode).type.str());
+  frmts(ost, "template <> struct CodeGenTraits<{}>{{ using type = {}; }};", node.name(), map.at(&treeNode).type.str());
 }
 void emitCodeGen(AST<AbstractNode> &ast, llvm::raw_ostream &ost, TypeMap &map) {
   ost
       << R""""(
 namespace codegen {
 template <typename T>
-CodeGenTraits {
+struct CodeGenTraits {
   using type = llvm::Value*;
 };
 )"""";

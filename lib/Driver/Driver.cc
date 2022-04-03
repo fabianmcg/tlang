@@ -20,8 +20,8 @@ int Driver::run(int argc, char **argv) {
 //  if (++stage && codeAnalysis(context))
 //    return stage;
   dump();
-//  if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
-//    return stage;
+  if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
+    return stage;
   return 0;
 }
 int Driver::parseCMD(int argc, char **argv) {
@@ -52,14 +52,19 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
     std::filesystem::path path = file.stem();
     for (auto unit : units) {
       auto file = path;
-      path /= unit->getIdentifier();
-      path /= ".ll";
-      std::cerr << "Generating: " << file << std::endl;
+      path += "." + unit->getIdentifier();
+      path += ".ll";
+      std::cerr << "Generating: " << path << std::endl;
       codegen::CodeGen emitter(context);
       std::error_code code;
       llvm::raw_fd_ostream os(path.string(), code);
+      if (code) {
+        std::cerr << code.message() << std::endl;
+        return 1;
+      }
+      os << "; Tlang generated LLVM IR \n" ;
       emitter.emit(unit, os);
-      std::cerr << "Finished generating: " << file << std::endl;
+      std::cerr << "Finished generating: " << path << std::endl;
     }
     return 0;
   }
