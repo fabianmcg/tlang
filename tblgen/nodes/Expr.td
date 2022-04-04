@@ -206,17 +206,24 @@ def ArrayExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
 
 def CastExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child expr = Child<Dynamic, [{Expr}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    CastExpr(Expr* expr, QualType&& type);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    CastExpr::CastExpr(Expr* expr, QualType&& type): 
+      CastExpr(expr) {
+      getType() = type;
+    }
+  }]>;
 }
 
-def ImplicitCastExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 1> {
-  Child expr = Child<Dynamic, [{Expr}]>;
+def ImplicitCastExpr : AbstractNode<CastExpr, /* Abstract = */ 0, /* Implicit = */ 1> {
   ClassSection header = ClassSection<Header, Public, [{
     ImplicitCastExpr(Expr* expr, QualType&& type);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
     ImplicitCastExpr::ImplicitCastExpr(Expr* expr, QualType&& type): 
-      ImplicitCastExpr(expr) {
-      getType() = type;
+      ImplicitCastExpr(CastExpr(expr, std::forward<QualType>(type))) {
     }
   }]>;
 }

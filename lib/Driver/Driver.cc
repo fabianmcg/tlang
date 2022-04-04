@@ -3,6 +3,7 @@
 #include <Support/UniqueStream.hh>
 #include <Sema/Sema.hh>
 //#include <Analysis/Analysis.hh>
+#include <Rewriter/Rewriter.hh>
 #include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
 #include <llvm/Support/raw_ostream.h>
@@ -20,6 +21,8 @@ int Driver::run(int argc, char **argv) {
 //  if (++stage && codeAnalysis(context))
 //    return stage;
   dump();
+  if (++stage && rewrite(context))
+    return stage;
   if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
     return stage;
   return 0;
@@ -42,6 +45,11 @@ int Driver::semaAnalysis(ASTContext &context) {
 int Driver::codeAnalysis(ASTContext &context) {
 //  CodeAnalysis pass(context);
 //  pass.run();
+  return 0;
+}
+int rewrite(ASTContext &context) {
+  Rewriter rewriter(context);
+  rewriter.run();
   return 0;
 }
 int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {

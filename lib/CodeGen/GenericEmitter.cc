@@ -5,8 +5,12 @@ GenericEmitter::GenericEmitter(ASTContext &ast_context, llvm::LLVMContext &conte
     Emitter(ast_context, context, builder, module), typeEmitter(context) {
 }
 void GenericEmitter::init() {
+  if (!exprEmitter)
+    exprEmitter = std::make_unique<ExprEmitterVisitor>(*this, typeEmitter);
+  if (!stmtEmitter)
+    stmtEmitter = std::make_unique<StmtEmitterVisitor>(*this, typeEmitter, *exprEmitter);
   if (!declEmitter)
-    declEmitter = std::make_unique<DeclEmitterVisitor>(*this, typeEmitter);
+    declEmitter = std::make_unique<DeclEmitterVisitor>(*this, typeEmitter, *stmtEmitter);
 }
 void GenericEmitter::run(UnitDecl *unit) {
   init();
