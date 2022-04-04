@@ -507,34 +507,6 @@ struct EmitStmt {
   llvm::Value* emitMainStmt(MainStmt &stmt) {
     return parallelEmitter.emitMainStmt(stmt);
   }
-  llvm::Value* emitStmt(Stmt *stmt) {
-    if (auto expr = dynamic_cast<Expr*>(stmt))
-      return emitExpr(*expr);
-    auto kind = stmt->classof();
-    if (kind == NodeClass::IfStmt)
-      return emitIfStmt(*static_cast<IfStmt*>(stmt));
-    else if (kind == NodeClass::ForStmt)
-      return emitForStmt(*static_cast<ForStmt*>(stmt));
-    else if (kind == NodeClass::BreakStmt)
-      return emitBreakStmt(*static_cast<BreakStmt*>(stmt));
-    else if (kind == NodeClass::ParallelStmt)
-      return emitParallelStmt(*static_cast<ParallelStmt*>(stmt));
-    else if (kind == NodeClass::LoopStmt)
-      return emitLoopStmt(*static_cast<LoopStmt*>(stmt));
-    else if (kind == NodeClass::SyncStmt)
-      return emitSyncStmt(*static_cast<SyncStmt*>(stmt));
-    else if (kind == NodeClass::AtomicStmt)
-      return emitAtomicStmt(*static_cast<AtomicStmt*>(stmt));
-    else if (kind == NodeClass::MainStmt)
-      return emitMainStmt(*static_cast<MainStmt*>(stmt));
-    else if (kind == NodeClass::CompoundStmt) {
-      llvm::Value *last { };
-      for (auto sub_stmt : static_cast<CompoundStmt*>(stmt)->getStmts())
-        last = emitStmt(sub_stmt);
-      return last;
-    }
-    return nullptr;
-  }
 protected:
   CGContext &context;
   llvm::BasicBlock *end_block { };

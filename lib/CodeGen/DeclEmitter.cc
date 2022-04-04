@@ -30,8 +30,9 @@ struct VariableAllocator: ASTVisitor<VariableAllocator<E>, VisitorPattern::preOr
   }
   E &emitter;
 };
-DeclEmitter::DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter) :
-    CodeEmitterContext(static_cast<CodeEmitterContext&>(emitter)), EmitterTable(emitter), typeEmitter(type_emitter) {
+DeclEmitter::DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter, StmtEmitter &stmt_emitter) :
+    CodeEmitterContext(static_cast<CodeEmitterContext&>(emitter)), EmitterTable(emitter), typeEmitter(type_emitter), stmtEmitter(
+        stmt_emitter) {
 }
 llvm::AllocaInst* DeclEmitter::makeVariable(VariableDecl *variable, const std::string &suffix) {
   llvm::Twine name = variable->getIdentifier() + suffix;

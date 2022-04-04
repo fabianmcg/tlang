@@ -1,8 +1,10 @@
 #ifndef CODEGEN_GENERICEMITTER_HH
 #define CODEGEN_GENERICEMITTER_HH
 
-#include <CodeGen/DeclEmitter.hh>
 #include <CodeGen/Emitter.hh>
+#include <CodeGen/DeclEmitter.hh>
+#include <CodeGen/ExprEmitter.hh>
+#include <CodeGen/StmtEmitter.hh>
 #include <CodeGen/TypeEmitter.hh>
 
 namespace tlang::codegen {
@@ -13,6 +15,8 @@ public:
 protected:
   void init();
   TypeEmitter typeEmitter;
+  std::unique_ptr<ExprEmitterVisitor> exprEmitter { };
+  std::unique_ptr<StmtEmitterVisitor> stmtEmitter { };
   std::unique_ptr<DeclEmitterVisitor> declEmitter { };
 };
 }
