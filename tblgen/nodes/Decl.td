@@ -77,6 +77,7 @@ def FunctorDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0
       return type;
     }
   }]>;
+  code irType = [{llvm::Function*}];
 }
 
 def ExternFunctionDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {

@@ -15,18 +15,6 @@ public:
   inline Derived &getDerived() {
     return *static_cast<Derived *>(this);
   }
-  return_t<UnitDecl> emitUnitDecl(UnitDecl *node) {
-    return_t<UnitDecl> last{};
-    for (auto &symbol : *static_cast<UnitContext *>(node))
-      last = emitDecl(*symbol);
-    return last;
-  }
-  return_t<ModuleDecl> emitModuleDecl(ModuleDecl *node) {
-    return_t<ModuleDecl> last{};
-    for (auto &symbol : *static_cast<DeclContext *>(node))
-      last = emitDecl(*symbol);
-    return last;
-  }
   return_t<CompoundStmt> emitCompoundStmt(CompoundStmt *node) {
     return_t<CompoundStmt> last{};
     auto &stmts = node->getStmts();

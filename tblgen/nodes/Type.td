@@ -227,6 +227,7 @@ def TypedefType : AbstractNode<DefinedType, /* Abstract = */ 0, /* Implicit = */
 }
 
 def FunctionType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
+  code irType = [{llvm::FunctionType*}];
   Child returnType = Child<Static, [{QualType}]>;
   Child paremeters = Child<StaticList, [{QualType}]>;
   ClassSection header = ClassSection<Header, Public, [{

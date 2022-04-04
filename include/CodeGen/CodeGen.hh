@@ -1,8 +1,11 @@
 #ifndef CODEGEN_CODEGEN_HH
 #define CODEGEN_CODEGEN_HH
 
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
-#include <CodeGen/CodeEmitter.hh>
+#include <AST/ASTContext.hh>
 
 namespace tlang::codegen {
 class CodeGen {

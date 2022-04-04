@@ -6,9 +6,10 @@
 #include <AST/Expr.hh>
 #include <AST/Stmt.hh>
 #include <AST/Type.hh>
-#include <CodeGen/CodeEmitter.hh>
-#include <CodeGen/EmitterContext.hh>
+#include <CodeGen/CodeEmitterContext.hh>
+#include <CodeGen/Emitter.hh>
 #include <CodeGen/Traits.hh>
+#include <CodeGen/TypeEmitter.hh>
 
 namespace tlang::codegen {
 namespace impl {
@@ -40,16 +41,16 @@ public:
   }
 };
 } // namespace impl
-template <typename Emitter>
-class DeclEmitter: public CodeEmitter, public impl::DeclEmitter<DeclEmitter<Emitter>> {
+class DeclEmitter: public CodeEmitterContext, public EmitterTable, public impl::DeclEmitter<DeclEmitter> {
 public:
-  DeclEmitter(Emitter &emitter) :
-      CodeEmitter(static_cast<CodeEmitter&>(emitter)), emitter(emitter) {
-  }
-  void run() {
-  }
+  DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter);
+  IRType_t<FunctionType> makeFunctionType(FunctorDecl *functor);
+  IRType_t<FunctorDecl> makeFunction(FunctorDecl *functor);
+  IRType_t<UnitDecl> emitUnitDecl(UnitDecl *unit);
+  IRType_t<ModuleDecl> emitModuleDecl(ModuleDecl *module);
+  IRType_t<FunctionDecl> emitFunctionDecl(FunctionDecl *module);
 private:
-  Emitter &emitter;
+  TypeEmitter &typeEmitter;
 };
 } // namespace tlang::codegen
 
