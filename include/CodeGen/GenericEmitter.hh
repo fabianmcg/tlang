@@ -1,9 +1,9 @@
 #ifndef CODEGEN_GENERICEMITTER_HH
 #define CODEGEN_GENERICEMITTER_HH
 
+#include <CodeGen/DeclEmitter.hh>
 #include <CodeGen/Emitter.hh>
 #include <CodeGen/TypeEmitter.hh>
-#include <CodeGen/DeclEmitter.hh>
 
 namespace tlang::codegen {
 class GenericEmitter: public Emitter {
@@ -13,7 +13,7 @@ public:
 protected:
   void init();
   TypeEmitter typeEmitter;
-  std::unique_ptr<DeclEmitter> declEmitter { };
+  std::unique_ptr<DeclEmitterVisitor> declEmitter { };
 };
 }
 

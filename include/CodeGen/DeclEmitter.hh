@@ -14,7 +14,7 @@
 namespace tlang::codegen {
 namespace impl {
 template <typename Derived>
-class DeclEmitter {
+class DeclEmitterVisitor {
 public:
   inline Derived& getDerived() {
     return *static_cast<Derived*>(this);
@@ -41,16 +41,23 @@ public:
   }
 };
 } // namespace impl
-class DeclEmitter: public CodeEmitterContext, public EmitterTable, public impl::DeclEmitter<DeclEmitter> {
+class DeclEmitter: public CodeEmitterContext, public EmitterTable {
 public:
   DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter);
+  llvm::AllocaInst* makeVariable(VariableDecl *variable, const std::string &suffix = "");
   IRType_t<FunctionType> makeFunctionType(FunctorDecl *functor);
   IRType_t<FunctorDecl> makeFunction(FunctorDecl *functor);
+protected:
+  TypeEmitter &typeEmitter;
+};
+class DeclEmitterVisitor: public DeclEmitter, public impl::DeclEmitterVisitor<DeclEmitterVisitor> {
+public:
+  using tlang::codegen::DeclEmitter::DeclEmitter;
   IRType_t<UnitDecl> emitUnitDecl(UnitDecl *unit);
   IRType_t<ModuleDecl> emitModuleDecl(ModuleDecl *module);
-  IRType_t<FunctionDecl> emitFunctionDecl(FunctionDecl *module);
-private:
-  TypeEmitter &typeEmitter;
+  IRType_t<FunctionDecl> emitFunctionDecl(FunctionDecl *function);
+  IRType_t<VariableDecl> emitVariableDecl(VariableDecl *variable);
+  IRType_t<ParameterDecl> emitParameterDecl(ParameterDecl *variable);
 };
 } // namespace tlang::codegen
 
