@@ -19,8 +19,8 @@ public:
   using universal_symbol_type = typename parent_type::universal_symbol_type;
   using value_type = NodeType*;
   using symbol_type = UniversalSymbol<NodeType>;
-  using table_type = std::map<key_type, symbol_type>;
-  BasicTable()  {
+  using table_type = std::map<std::pair<key_type, int>, symbol_type>;
+  BasicTable() {
     this->visitContext = false;
   }
   ~BasicTable() = default;
@@ -32,7 +32,12 @@ public:
     return symbols.size();
   }
   bool add(const key_type &key, value_type &&value) {
-    auto &symbol = symbols[key];
+    std::pair<key_type, int> K;
+    if (key.empty())
+      K = { "", unnamed++ };
+    else
+      K = { key, 0 };
+    auto &symbol = symbols[K];
     if (symbol)
       throw(std::runtime_error("Duplicated symbol: " + key));
     symbol = symbol_type { value };
@@ -50,7 +55,7 @@ public:
     symbols.erase(key);
   }
   inline symbol_type find(const key_type &key) const {
-    auto it = symbols.find(key);
+    auto it = symbols.find( { key, 0 });
     if (it != symbols.end())
       return it->second;
     return symbol_type { };
@@ -67,6 +72,7 @@ protected:
     return find(key);
   }
   table_type symbols { };
+  int unnamed { };
 };
 }
 template <typename NodeType>

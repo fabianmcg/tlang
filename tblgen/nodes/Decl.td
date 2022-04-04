@@ -36,40 +36,50 @@ def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, 
 def ModuleDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {
 }
 
-def ExternFunctionDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child returnType = Child<Static, [{QualType}]>;
-  Child parameters = Child<StaticList, [{QualType}]>;
+def ValueDecl : AbstractNode<NamedDecl, /* Abstract = */ 1, /* Implicit = */ 0> {
+  Child type = Child<Static, [{QualType}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    ValueDecl(const Identifier& identifier);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    ValueDecl::ValueDecl(const Identifier& identifier): ValueDecl(NamedDecl(identifier), QualType()) {}
+  }]>;
 }
 
-def FunctorDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
+def FunctorDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
   Variable complete = Var<[{bool}]>;
   Child returnType = Child<Static, [{QualType}]>;
   Child parameters = Child<DynamicList, [{ParameterDecl}]>;
   Child body = Child<Dynamic, [{CompoundStmt}]>;
   ClassSection header = ClassSection<Header, Public, [{
     template <typename... Args>
-    FunctorDecl(NamedDecl &&nameddecl, VariableContext &&declcontext, Args &&...args)
-        : NamedDecl(std::move(nameddecl)), VariableContext(std::move(declcontext)), complete(false),
-          children(std::forward<Args>(args)...) {
+    FunctorDecl(const Identifier& identifier, Args &&...args)
+        : FunctorDecl(VariableContext(), false, std::forward<Args>(args)...) {
       addArgs(getParameters());
+      getIdentifier() = identifier;
     }
     void addArgs(const List<ParameterDecl*>& params);
-    FunctionType* getType(TypeContext& context);
+    FunctionType* setType(TypeContext& context);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
     void FunctorDecl::addArgs(const List<ParameterDecl*>& params) {
       for (auto &arg : params)
         add(arg);
     }
-    FunctionType* FunctorDecl::getType(TypeContext& context) {
+    FunctionType* FunctorDecl::setType(TypeContext& context) {
       auto& parameters = getParameters();
       QualType rt = getReturnType();
       List<QualType> args(parameters.size());
       for (size_t i = 0; i < args.size(); ++i)
         args[i] = parameters[i]->getType();
-      return FunctionType::get(&context, std::move(rt), std::move(args));
+      auto type = FunctionType::get(&context, std::move(rt), std::move(args));
+      getType() = QualType(type);
+      return type;
     }
   }]>;
+}
+
+def ExternFunctionDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def FunctionDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -99,8 +109,14 @@ def TagDecl : AbstractNode<TypeDecl, /* Abstract = */ 0, /* Implicit = */ 0>, De
 }
 
 def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable members = Var<[{List<MemberDecl*>}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context))) {
+    StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context)), List<MemberDecl*>{}) {
+      auto &members = getMembers();
+      for (auto symbol : *this) {
+        if (auto md = dyn_cast<MemberDecl>(*symbol))
+          members.push_back(md);
+      }
     }
   }]>;
 }
@@ -108,9 +124,22 @@ def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
 def MethodDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
-def VariableDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child type = Child<Static, [{QualType}]>;
+def VariableDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum StorageKind = Enum<[EM<"Regular", [{0}]>, EM<"Static", [{1}]>, EM<"Extern", [{2}]>, EM<"ThreadLocal", [{2}]>]>;
+  Variable storage = EVar<[{StorageKind}]>;
   Child init = Child<Dynamic, [{Expr}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    VariableDecl(const Identifier& identifier, QualType&& type, Expr* init = nullptr, StorageKind kind = Regular);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    VariableDecl::VariableDecl(const Identifier& identifier, QualType&& type, Expr* init, StorageKind kind): VariableDecl(kind, init) {
+      getType() = std::move(type);
+      getIdentifier() = identifier;
+    }
+  }]>;
+}
+
+def GlobalVarDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
 }
 
 def ParameterDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit = */ 0> {

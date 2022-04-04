@@ -142,7 +142,6 @@ public:
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType kind) {
     if (kind) {
-      auto &type = node->getReturnType();
       if (!node->getComplete()) {
         push_color(Color::Red());
         cst() << "I ";
@@ -150,34 +149,26 @@ public:
         cst();
       }
       ost << "'";
-      dumpType(&type, false);
-      ost << " (";
-      auto &args = node->getParameters();
-      for (size_t i = 0; i < args.size(); ++i) {
-        dumpType(&(node->getParameters()[i]->getType()), false);
-        if ((i + 1) < args.size())
-          ost << ", ";
-      }
-      ost << ")'";
+      dumpType(&node->getType(), false);
     }
     return visit;
   }
-  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, VisitType kind) {
-    if (kind) {
-      auto &type = node->getReturnType();
-      ost << "'";
-      dumpType(&type, false);
-      ost << " (";
-      auto &args = node->getParameters();
-      for (size_t i = 0; i < args.size(); ++i) {
-        dumpType(&(node->getParameters()[i]), false);
-        if ((i + 1) < args.size())
-          ost << ", ";
-      }
-      ost << ")'";
-    }
-    return visit;
-  }
+//  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, VisitType kind) {
+//    if (kind) {
+//      auto &type = node->getReturnType();
+//      ost << "'";
+//      dumpType(&type, false);
+//      ost << " (";
+//      auto &args = node->getParameters();
+//      for (size_t i = 0; i < args.size(); ++i) {
+//        dumpType(&(node->getParameters()[i]), false);
+//        if ((i + 1) < args.size())
+//          ost << ", ";
+//      }
+//      ost << ")'";
+//    }
+//    return visit;
+//  }
   visit_t visitVariableDecl(VariableDecl *node, VisitType kind) {
     if (kind) {
       auto &type = node->getType();

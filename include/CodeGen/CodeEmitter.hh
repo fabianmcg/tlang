@@ -26,6 +26,10 @@ protected:
   llvm::IRBuilder<> &builder;
   llvm::Module &module;
 };
+template <typename T, typename ...Args>
+T makeEmitter(ASTContext &ast_context, llvm::LLVMContext &llvm_context, llvm::Module &module, llvm::IRBuilder<> &builder, Args &&...args) {
+  return T { ast_context, llvm_context, builder, module, std::forward<Args>(args)... };
+}
 }
 
 #endif

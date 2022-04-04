@@ -6,6 +6,8 @@
 #include <AST/Expr.hh>
 #include <AST/Stmt.hh>
 #include <AST/Type.hh>
+#include <CodeGen/CodeEmitter.hh>
+#include <CodeGen/EmitterContext.hh>
 #include <CodeGen/Traits.hh>
 
 namespace tlang::codegen {
@@ -38,13 +40,16 @@ public:
   }
 };
 } // namespace impl
-template <typename TypeEmitter, typename StmtEmitter>
-class DeclEmitter: public impl::DeclEmitter<DeclEmitter<TypeEmitter, StmtEmitter>> {
+template <typename Emitter>
+class DeclEmitter: public CodeEmitter, public impl::DeclEmitter<DeclEmitter<Emitter>> {
 public:
-
+  DeclEmitter(Emitter &emitter) :
+      CodeEmitter(static_cast<CodeEmitter&>(emitter)), emitter(emitter) {
+  }
+  void run() {
+  }
 private:
-  TypeEmitter &type_emitter;
-  StmtEmitter &stmt_emitter;
+  Emitter &emitter;
 };
 } // namespace tlang::codegen
 

@@ -23,7 +23,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
               member->getType() = md->getType().addQuals(QualType::Reference);
               node->getType() = member->getType();
             } else if (auto md = dyn_cast<MethodDecl>(decl)) {
-              member->getType() = QualType(md->getType(context.types()));
+              member->getType() = QualType(md->getType());
               node->getType() = member->getType();
             }
           } else
@@ -42,7 +42,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
         if (auto vd = dyn_cast<VariableDecl>(decl)) {
           node->getType() = vd->getType().addQuals(QualType::Reference);
         } else if (auto fd = dyn_cast<FunctionDecl>(decl)) {
-          node->getType() = QualType(fd->getType(context.types()));
+          node->getType() = QualType(fd->getType());
         }
       } else
         throw(std::runtime_error("Undefined symbol: " + node->getIdentifier()));

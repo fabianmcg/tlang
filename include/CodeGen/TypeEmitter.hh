@@ -1,10 +1,10 @@
 #ifndef CODEGEN_TYPEEMITTER_HH
 #define CODEGEN_TYPEEMITTER_HH
 
-#include <AST/Attr.hh>
-#include <AST/Decl.hh>
-#include <AST/Expr.hh>
-#include <AST/Stmt.hh>
+#include <unordered_map>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
 #include <AST/Type.hh>
 #include <CodeGen/Traits.hh>
 
@@ -55,6 +55,7 @@ public:
   IRType_t<QualType> emitQualType(QualType &type);
   IRType_t<QualType> operator()(QualType &type);
 protected:
+  std::unordered_map<Decl*, llvm::Type*> decl2type { };
   llvm::LLVMContext &context;
   int adressSpace { };
 };

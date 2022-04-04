@@ -3,8 +3,6 @@
 #include <AST/Stmt.hh>
 #include <AST/Type.hh>
 #include <CodeGen/TypeEmitter.hh>
-#include <llvm/IR/Type.h>
-#include <llvm/IR/DerivedTypes.h>
 
 namespace tlang::codegen {
 llvm::Type* TypeEmitter::makeVoid() {
@@ -57,9 +55,17 @@ IRType_t<PtrType> TypeEmitter::emitPtrType(PtrType *type) {
 }
 IRType_t<StructType> TypeEmitter::emitStructType(StructType *type) {
   if (auto decl = dyn_cast<StructDecl>(type->getDecl().data())) {
+    auto &st = decl2type[decl];
+    if (st)
+      return llvm::dyn_cast<llvm::StructType>(st);
     auto emitted = llvm::StructType::create(context, decl->getIdentifier());
-    std::vector<llvm::Type*> body;
+    auto &members = decl->getMembers();
+    std::vector<llvm::Type*> body(members.size());
+    int idx { };
+    for (auto member : members)
+      body[idx++] = emitQualType(member->getType());
     emitted->setBody(body);
+    st = emitted;
     return emitted;
   }
   return nullptr;
