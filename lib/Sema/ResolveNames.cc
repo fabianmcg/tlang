@@ -29,6 +29,8 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
+    if (isFirst)
+      node->setType(context.types());
     return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
   }
   visit_t visitForStmt(ForStmt *node, VisitType isFirst) {

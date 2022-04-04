@@ -1,7 +1,8 @@
 #ifndef CODEGEN_CODEGEN_HH
 #define CODEGEN_CODEGEN_HH
 
-#include "CodeGenUnit.hh"
+#include <llvm/Support/raw_ostream.h>
+#include <CodeGen/CodeEmitter.hh>
 
 namespace tlang::codegen {
 class CodeGen {
@@ -10,12 +11,16 @@ public:
       ast_context(ast_context) {
     init();
   }
-  void emit(UnitDecl *unit, llvm::raw_ostream &ost);
+  llvm::Module* emit(UnitDecl *unit);
+  inline std::map<std::string, std::unique_ptr<llvm::Module>>& getModules() {
+    return modules;
+  }
 protected:
   void init();
-  CodeGenUnit makeUnit(UnitDecl *unit);
+  llvm::Module& getModule(UnitDecl *unit);
   ASTContext &ast_context;
   std::unique_ptr<llvm::LLVMContext> llvm_context { };
+  std::map<std::string, std::unique_ptr<llvm::Module>> modules;
 };
 }
 #endif

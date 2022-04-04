@@ -48,22 +48,26 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
   if (cmdArguments.noCodegen)
     return 0;
   if (!file.empty()) {
+    codegen::CodeGen emitter(context);
     auto &units = (*context)->getUnits();
-    std::filesystem::path path = file.stem();
+    std::filesystem::path path = std::filesystem::absolute(file).parent_path();
     for (auto unit : units) {
+      std::cerr << "Emitting: " << unit->getIdentifier() << std::endl;
+      emitter.emit(unit);
+      std::cerr << "Finished emitting: " << unit->getIdentifier() << std::endl;
+    }
+    for (auto& [k, v] : emitter.getModules()) {
       auto file = path;
-      path += "." + unit->getIdentifier();
+      path /= k;
       path += ".ll";
       std::cerr << "Generating: " << path << std::endl;
-      codegen::CodeGen emitter(context);
       std::error_code code;
       llvm::raw_fd_ostream os(path.string(), code);
       if (code) {
         std::cerr << code.message() << std::endl;
         return 1;
       }
-      os << "; Tlang generated LLVM IR \n" ;
-      emitter.emit(unit, os);
+      v->print(os, nullptr);
       std::cerr << "Finished generating: " << path << std::endl;
     }
     return 0;

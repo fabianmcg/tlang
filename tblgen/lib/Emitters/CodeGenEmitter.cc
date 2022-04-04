@@ -12,8 +12,6 @@ struct ExtraInfo {
 using TypeMap = std::map<TreeNode<AbstractNode>*, ExtraInfo>;
 void visit(TreeNode<AbstractNode> &treeNode, llvm::raw_ostream &ost, TypeMap &map) {
   AbstractNode &node = *treeNode;
-  if (node.abstract() || !node.emittable())
-    return;
   frmts(ost, "template <> struct CodeGenTraits<{}>{{ using type = {}; }};", node.name(), map.at(&treeNode).type.str());
 }
 void emitCodeGen(AST<AbstractNode> &ast, llvm::raw_ostream &ost, TypeMap &map) {
