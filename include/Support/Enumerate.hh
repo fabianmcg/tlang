@@ -3,6 +3,7 @@
 
 #include <iterator>
 
+namespace tlang {
 template <typename Iterator>
 class Enumerator {
 public:
@@ -60,4 +61,6 @@ template <typename T>
 Enumerator<typename T::const_iterator> enumerate(const T &container) {
   return Enumerator<typename T::const_iterator>(container.cbegin(), container.cend());
 }
+}
+
 #endif

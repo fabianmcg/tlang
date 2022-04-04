@@ -6,7 +6,7 @@ GenericEmitter::GenericEmitter(ASTContext &ast_context, llvm::LLVMContext &conte
 }
 void GenericEmitter::init() {
   if (!declEmitter)
-    declEmitter = std::make_unique<DeclEmitter>(*this, typeEmitter);
+    declEmitter = std::make_unique<DeclEmitterVisitor>(*this, typeEmitter);
 }
 void GenericEmitter::run(UnitDecl *unit) {
   init();

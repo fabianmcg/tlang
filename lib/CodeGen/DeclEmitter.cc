@@ -1,8 +1,43 @@
+#include <Support/Enumerate.hh>
+#include <AST/Visitors/ASTVisitor.hh>
 #include <CodeGen/DeclEmitter.hh>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Verifier.h>
 
 namespace tlang::codegen {
+template <typename E>
+struct VariableAllocator: ASTVisitor<VariableAllocator<E>, VisitorPattern::preOrder> {
+  using visit_t = typename ASTVisitor<VariableAllocator<E>, VisitorPattern::preOrder>::visit_t;
+  VariableAllocator(E &emitter) :
+      emitter(emitter) {
+  }
+  visit_t visitVariableDecl(VariableDecl *node) {
+    if (auto vd = dyn_cast<VariableDecl>(node))
+      emitter.emitVariableDecl(node);
+    return visit_t::skip;
+  }
+  visit_t visitTagDecl(TagDecl *node) {
+    return visit_t::skip;
+  }
+  visit_t visitFunctorDecl(FunctorDecl *node) {
+    return visit_t::skip;
+  }
+  visit_t visitExpr(Expr *node) {
+    return visit_t::skip;
+  }
+  visit_t visitQualType(QualType *node) {
+    return visit_t::skip;
+  }
+  E &emitter;
+};
 DeclEmitter::DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter) :
     CodeEmitterContext(static_cast<CodeEmitterContext&>(emitter)), EmitterTable(emitter), typeEmitter(type_emitter) {
+}
+llvm::AllocaInst* DeclEmitter::makeVariable(VariableDecl *variable, const std::string &suffix) {
+  llvm::Twine name = variable->getIdentifier() + suffix;
+  llvm::AllocaInst *alloca = builder.CreateAlloca(typeEmitter.emitQualType(variable->getType()), 0, name);
+  get(variable) = alloca;
+  return alloca;
 }
 IRType_t<FunctionType> DeclEmitter::makeFunctionType(FunctorDecl *functor) {
   return typeEmitter.emitFunctionType(dyn_cast<FunctionType>(functor->getType().getType()));
@@ -13,36 +48,45 @@ IRType_t<FunctorDecl> DeclEmitter::makeFunction(FunctorDecl *functor) {
   get(functor) = irFunction;
   return irFunction;
 }
-IRType_t<UnitDecl> DeclEmitter::emitUnitDecl(UnitDecl *node) {
+IRType_t<UnitDecl> DeclEmitterVisitor::emitUnitDecl(UnitDecl *node) {
   IRType_t<UnitDecl> last { };
   for (auto &symbol : *static_cast<UnitContext*>(node))
     last = emitDecl(*symbol);
   return last;
 }
-IRType_t<ModuleDecl> DeclEmitter::emitModuleDecl(ModuleDecl *node) {
+IRType_t<ModuleDecl> DeclEmitterVisitor::emitModuleDecl(ModuleDecl *node) {
   IRType_t<ModuleDecl> last { };
   for (auto &symbol : *static_cast<DeclContext*>(node))
     last = emitDecl(*symbol);
   return last;
 }
-IRType_t<FunctionDecl> DeclEmitter::emitFunctionDecl(FunctionDecl *function) {
+IRType_t<FunctionDecl> DeclEmitterVisitor::emitFunctionDecl(FunctionDecl *function) {
   llvm::Function *irFunction = makeFunction(function);
   llvm::BasicBlock *entry_block = llvm::BasicBlock::Create(context, "entry_block", irFunction);
   builder.SetInsertPoint(entry_block);
   auto &parameters = function->getParameters();
-  unsigned index = 0;
-  for (auto &argument : irFunction->args()) {
-    argument.setName(parameters[index]->getIdentifier());
-    get(parameters[index]) = &argument;
-//    emitParameterDecl(&argument, *params[index]);
-    ++index;
+  for (auto &indexValue : enumerate(irFunction->args())) {
+    indexValue.value().setName(parameters[indexValue.index()]->getIdentifier());
+    get(parameters[indexValue.index()]) = &indexValue.value();
+    emitParameterDecl(parameters[indexValue.index()]);
   }
-//  VariableAllocator<EmitDecl> variableEmitter { *this };
-//  variableEmitter.traverseCompoundStmt(function.getBody());
+  VariableAllocator<DeclEmitterVisitor> variableEmitter { *this };
+  variableEmitter.traverseCompoundStmt(function->getBody());
 //  context.emitStmt(function.getBody());
 //  if (function_type->getReturnType()->isVoidTy() && !context.builder.GetInsertBlock()->getTerminator())
 //    context.builder.CreateRetVoid();
 //  verifyFunction(*ir_function);
   return irFunction;
+}
+IRType_t<VariableDecl> DeclEmitterVisitor::emitVariableDecl(VariableDecl *variable) {
+  return makeVariable(variable);
+}
+IRType_t<ParameterDecl> DeclEmitterVisitor::emitParameterDecl(ParameterDecl *variable) {
+  if (variable->getIdentifier().empty())
+    return nullptr;
+  auto argument = get(variable);
+  auto alloca = makeVariable(variable, ".param");
+  builder.CreateStore(argument, alloca);
+  return alloca;
 }
 }
