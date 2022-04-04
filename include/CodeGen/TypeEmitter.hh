@@ -40,7 +40,7 @@ public:
 } // namespace impl
 class TypeEmitter: public impl::TypeEmitter<TypeEmitter> {
 public:
-  TypeEmitter(llvm::LLVMContext &context, int adressSpace);
+  TypeEmitter(llvm::LLVMContext &context);
   llvm::Type* makeVoid();
   llvm::PointerType* makeAddress(int adressSpace = 0);
   llvm::PointerType* makePointer(llvm::Type *type, int adressSpace = 0);
@@ -52,6 +52,7 @@ public:
   IRType_t<PtrType> emitPtrType(PtrType *type);
   IRType_t<ArrayType> emitArrayType(ArrayType *type);
   IRType_t<StructType> emitStructType(StructType *type);
+  IRType_t<FunctionType> emitFunctionType(FunctionType *type);
   IRType_t<QualType> emitQualType(QualType &type);
   IRType_t<QualType> operator()(QualType &type);
 protected:

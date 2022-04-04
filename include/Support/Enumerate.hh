@@ -1,10 +1,11 @@
-#ifndef __UTILITY_ENUMERATE_HH__
-#define __UTILITY_ENUMERATE_HH__
+#ifndef SUPPORT_ENUMERATE_HH
+#define SUPPORT_ENUMERATE_HH
 
 #include <iterator>
 
 template <typename Iterator>
 class Enumerator {
+public:
   class EnumerateIterator {
   private:
     size_t idx { };

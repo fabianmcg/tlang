@@ -5,6 +5,10 @@
 #include <CodeGen/TypeEmitter.hh>
 
 namespace tlang::codegen {
+TypeEmitter::TypeEmitter(llvm::LLVMContext &context) :
+    context(context) {
+
+}
 llvm::Type* TypeEmitter::makeVoid() {
   return llvm::Type::getVoidTy(context);
 }
@@ -69,6 +73,14 @@ IRType_t<StructType> TypeEmitter::emitStructType(StructType *type) {
     return emitted;
   }
   return nullptr;
+}
+IRType_t<FunctionType> TypeEmitter::emitFunctionType(FunctionType *type) {
+  auto &parameters = type->getParemeters();
+  std::vector<llvm::Type*> ir_params(parameters.size(), nullptr);
+  for (size_t i = 0; i < parameters.size(); ++i)
+    ir_params[i] = emitQualType(parameters[i]);
+  auto ret_type = emitQualType(type->getReturnType());
+  return llvm::FunctionType::get(ret_type, ir_params, false);
 }
 llvm::Type* TypeEmitter::emitQualType(QualType &type) {
   auto canonical = type.getCanonicalType();
