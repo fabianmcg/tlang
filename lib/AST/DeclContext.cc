@@ -6,14 +6,7 @@ void tlang::UnitContext::add(ModuleDecl *decl) {
   if (decl) {
     modules.push_back(symbol_type { decl });
     auto &symbol = modules.back();
-    if (!first_symbol)
-      first_symbol = &symbol;
-    auto tmpLast = last_symbol;
-    last_symbol = &symbol;
-    if (tmpLast) {
-      symbol.prev = tmpLast;
-      tmpLast->next = last_symbol;
-    }
+    push_back(&symbol);
   }
 }
 

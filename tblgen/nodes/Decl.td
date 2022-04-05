@@ -115,7 +115,7 @@ def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
     StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context)), List<MemberDecl*>{}) {
       auto &members = getMembers();
       for (auto symbol : *this) {
-        if (auto md = dyn_cast<MemberDecl>(*symbol))
+        if (auto md = dyn_cast<MemberDecl>(symbol))
           members.push_back(md);
       }
     }

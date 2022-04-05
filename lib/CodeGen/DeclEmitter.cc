@@ -51,14 +51,14 @@ IRType_t<FunctorDecl> DeclEmitter::makeFunction(FunctorDecl *functor) {
 }
 IRType_t<UnitDecl> DeclEmitterVisitor::emitUnitDecl(UnitDecl *node) {
   IRType_t<UnitDecl> last { };
-  for (auto &symbol : *static_cast<UnitContext*>(node))
-    last = emitDecl(*symbol);
+  for (auto symbol : *static_cast<UnitContext*>(node))
+    last = emitDecl(symbol);
   return last;
 }
 IRType_t<ModuleDecl> DeclEmitterVisitor::emitModuleDecl(ModuleDecl *node) {
   IRType_t<ModuleDecl> last { };
-  for (auto &symbol : *static_cast<DeclContext*>(node))
-    last = emitDecl(*symbol);
+  for (auto symbol : *static_cast<DeclContext*>(node))
+    last = emitDecl(symbol);
   return last;
 }
 IRType_t<FunctionDecl> DeclEmitterVisitor::emitFunctionDecl(FunctionDecl *function) {

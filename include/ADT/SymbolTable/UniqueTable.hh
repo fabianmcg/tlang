@@ -1,39 +1,46 @@
-#ifndef ADT_SYMBOLTABLE_SYMBOLTABLE_HH
-#define ADT_SYMBOLTABLE_SYMBOLTABLE_HH
+#ifndef ADT_SYMBOLTABLE_UNIQUETABLE_HH
+#define ADT_SYMBOLTABLE_UNIQUETABLE_HH
 
 #include <iostream>
 #include <map>
 #include <string>
-#include <ADT/SymbolTable/ASTSymbol.hh>
 #include <ADT/SymbolTable/TableInterface.hh>
 
 namespace tlang::symbol_table {
 template <typename Key, typename NodeType>
-class ASTSymbolTable: public SymbolTableBase<ASTSymbolTable<Key, NodeType>, Key, NodeType, ASTSymbol<NodeType>> {
+class UniqueTable: public SymbolTableBase<UniqueTable<Key, NodeType>, Key, NodeType> {
 public:
   using key_type = Key;
   using value_type = NodeType*;
   using symbol_type = ASTSymbol<NodeType>;
-  using table_type = std::multimap<key_type, symbol_type>;
+  using table_type = std::map<std::pair<key_type, int>, symbol_type>;
   using UniversalSymbolTable<Key, NodeType>::find;
-  ASTSymbolTable() = default;
+  UniqueTable() {
+    this->visitContext = false;
+  }
+  UniqueTable(UniqueTable&&) = default;
+  ~UniqueTable() = default;
   inline size_t size() const {
     return symbols.size();
   }
   bool add(const key_type &key, value_type &&value) {
-    auto it = symbols.insert( { key, symbol_type { value } });
-    auto &symbol = it->second;
+    std::pair<key_type, int> K;
+    if (key.empty())
+      K = { "", unnamed++ };
+    else
+      K = { key, 0 };
+    auto &symbol = symbols[K];
+    if (symbol)
+      throw(std::runtime_error("Duplicated symbol: " + key));
+    symbol = symbol_type { value };
     UniversalSymbolTable<Key, NodeType>::push_back(&symbol);
-    if (it != symbols.begin())
-      if ((--it)->first == key)
-        it->second.overload = &symbol;
     return true;
   }
   void remove(const key_type &key) {
     symbols.erase(key);
   }
   inline symbol_type find(const key_type &key) const {
-    auto it = symbols.find(key);
+    auto it = symbols.find( { key, 0 });
     if (it != symbols.end())
       return it->second;
     return symbol_type { };
@@ -50,6 +57,7 @@ protected:
     return find(key);
   }
   table_type symbols { };
+  int unnamed { };
 };
 }
 

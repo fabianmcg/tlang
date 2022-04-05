@@ -47,7 +47,7 @@ int Driver::codeAnalysis(ASTContext &context) {
 //  pass.run();
   return 0;
 }
-int rewrite(ASTContext &context) {
+int Driver::rewrite(ASTContext &context) {
   Rewriter rewriter(context);
   rewriter.run();
   return 0;
