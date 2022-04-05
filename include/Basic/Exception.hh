@@ -3,6 +3,7 @@
 
 #include <string>
 #include <exception>
+#include <source_location>
 
 namespace tlang {
 struct compiler_exception: public std::exception {
@@ -15,5 +16,6 @@ struct compiler_exception: public std::exception {
     return message.data();
   }
 };
-} // namespace __lang_np__
+} // namespace tlang
+
 #endif

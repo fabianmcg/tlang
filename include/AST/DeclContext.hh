@@ -3,13 +3,13 @@
 
 #include <list>
 #include <type_traits>
-#include <ADT/SymbolTable/BasicTable.hh>
 #include <ADT/SymbolTable/SymbolTable.hh>
+#include <ADT/SymbolTable/UniqueTable.hh>
 
 namespace tlang {
 class Decl;
 class ModuleDecl;
-class UnitContext: public symbol_table::interface::UniversalSymbolTable<std::string, symbol_table::interface::UniversalSymbol<Decl>> {
+class UnitContext: public symbol_table::UniversalSymbolTable<std::string, Decl> {
 public:
   void add(ModuleDecl *decl);
 protected:
@@ -18,24 +18,24 @@ private:
   std::list<symbol_type> modules;
 };
 
-class DeclContext: public symbol_table::ASTSymbolTable<Decl> {
+class DeclContext: public symbol_table::ASTSymbolTable<std::string, Decl> {
 public:
-  using parent_type = symbol_table::ASTSymbolTable<Decl>;
+  using parent_type = symbol_table::ASTSymbolTable<std::string, Decl>;
   using parent_type::ASTSymbolTable;
   void add(Decl *decl);
 };
-class NoVisitDeclContext: public symbol_table::ASTSymbolTable<Decl> {
+class NoVisitDeclContext: public symbol_table::ASTSymbolTable<std::string, Decl> {
 public:
-  using parent_type = symbol_table::ASTSymbolTable<Decl>;
+  using parent_type = symbol_table::ASTSymbolTable<std::string, Decl>;
   NoVisitDeclContext() {
     visitContext = false;
   }
   void add(Decl *decl);
 };
-class VariableContext: public symbol_table::BasicTable<Decl> {
+class VariableContext: public symbol_table::UniqueTable<std::string, Decl> {
 public:
-  using parent_type = symbol_table::BasicTable<Decl>;
-  using parent_type::BasicTable;
+  using parent_type = symbol_table::UniqueTable<std::string, Decl>;
+  using parent_type::UniqueTable;
   void add(Decl *decl);
 };
 
