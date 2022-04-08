@@ -15,6 +15,7 @@ public:
   using value_type = NodeType*;
   using symbol_type = ASTSymbol<NodeType>;
   using table_type = std::multimap<key_type, symbol_type>;
+  using iterator = SymbolIterator<symbol_type>;
   using UniversalSymbolTable<Key, NodeType>::find;
   ASTSymbolTable() = default;
   inline size_t size() const {
@@ -32,11 +33,14 @@ public:
   void remove(const key_type &key) {
     symbols.erase(key);
   }
-  inline symbol_type find(const key_type &key) const {
+  iterator erase(iterator it) {
+
+  }
+  inline iterator find(const key_type &key) const {
     auto it = symbols.find(key);
     if (it != symbols.end())
-      return it->second;
-    return symbol_type { };
+      return iterator { it->second };
+    return iterator { };
   }
   void print(std::ostream &ost) const {
     ost << this << "[" << this->parent << "]:" << std::endl;
@@ -47,7 +51,7 @@ public:
   }
 protected:
   virtual UniversalSymbol<NodeType> search(const key_type &key) const {
-    return find(key);
+    return find(key).get();
   }
   table_type symbols { };
 };

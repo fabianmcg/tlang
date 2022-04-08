@@ -32,6 +32,24 @@ inline constexpr bool isPostVisit(VisitorPattern x) {
 inline constexpr bool hasPostWalk(VisitorPattern x) {
   return (x & VisitorPattern::postWalk) == VisitorPattern::postWalk;
 }
+
+namespace impl {
+enum class VisitPattern {
+  none,
+  pre,
+  post,
+  prePost
+};
+inline constexpr VisitPattern toVisitorPattern(VisitorPattern pattern) {
+  if (isPreVisit(pattern) && isPostVisit(pattern))
+    return VisitPattern::prePost;
+  else if (isPreVisit(pattern))
+    return VisitPattern::pre;
+  else if (isPostVisit(pattern))
+    return VisitPattern::post;
+  return VisitPattern::none;
+}
+}
 }
 
 #endif

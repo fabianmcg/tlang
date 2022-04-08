@@ -6,7 +6,6 @@
 #include <memory>
 #include "Common.hh"
 #include "TypeContext.hh"
-#include <Analysis/AnalysisContext.hh>
 
 namespace tlang {
 struct ASTContext {
@@ -33,13 +32,10 @@ struct ASTContext {
     program->getUnits().push_back(unit);
     return unit;
   }
-  AnalysisContext& analysisContext();
-  const AnalysisContext& analysisContext() const;
   TypeContext& types();
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> nodes;
   TypeContext type_context;
-  AnalysisContext analyis { };
   ProgramDecl *program { };
   UnitDecl *mainUnit { };
   template <typename T>

@@ -9,6 +9,7 @@
 namespace tlang {
 class Decl;
 class ModuleDecl;
+using UniversalContext = symbol_table::UniversalSymbolTable<std::string, Decl>;
 class UnitContext: public symbol_table::UniversalSymbolTable<std::string, Decl> {
 public:
   void add(ModuleDecl *decl);
@@ -38,8 +39,6 @@ public:
   using parent_type::UniqueTable;
   void add(Decl *decl);
 };
-
-using UniversalSymbolTable = typename DeclContext::universal_symbol_table;
 
 template <typename T>
 struct IsDeclContext: std::false_type {

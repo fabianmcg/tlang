@@ -39,11 +39,11 @@ public:
   void remove(const key_type &key) {
     symbols.erase(key);
   }
-  inline symbol_type find(const key_type &key) const {
+  inline SymbolIterator<symbol_type> find(const key_type &key) const {
     auto it = symbols.find( { key, 0 });
     if (it != symbols.end())
-      return it->second;
-    return symbol_type { };
+      return SymbolIterator<symbol_type> { it->second };
+    return SymbolIterator<symbol_type> { };
   }
   void print(std::ostream &ost) const {
     ost << this << "[" << this->parent << "]:" << std::endl;
@@ -54,7 +54,7 @@ public:
   }
 protected:
   virtual UniversalSymbol<NodeType> search(const key_type &key) const {
-    return find(key);
+    return find(key).get();
   }
   table_type symbols { };
   int unnamed { };

@@ -9,22 +9,6 @@
 
 namespace tlang {
 namespace impl {
-enum class VisitPattern {
-  none,
-  pre,
-  post,
-  prePost
-};
-inline constexpr VisitPattern toVisitorPattern(VisitorPattern pattern) {
-  if (isPreVisit(pattern) && isPostVisit(pattern))
-    return VisitPattern::prePost;
-  else if (isPreVisit(pattern))
-    return VisitPattern::pre;
-  else if (isPostVisit(pattern))
-    return VisitPattern::post;
-  return VisitPattern::none;
-}
-
 template <typename Derived, VisitPattern pattern, bool hasPostWalk>
 class ASTVisitor;
 
@@ -57,6 +41,7 @@ public:
   }
 #include <AST/Nodes.inc>
 
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   bool traverse##BASE(BASE *node, stack_t *stack = nullptr) {                                                          \
     auto &derived = getDerived();                                                                                      \
@@ -102,6 +87,7 @@ private:
       return false;
     auto &derived = getDerived();
     switch (node->classof()) {
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   case ASTKind::BASE:                                                                                                  \
     return derived.traverse##BASE(static_cast<BASE *>(node), stack);
@@ -166,6 +152,7 @@ public:
   }
 #include <AST/Nodes.inc>
 
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   bool traverse##BASE(BASE *node, stack_t *stack = nullptr, VisitType kind = preVisit) {                               \
     auto &derived = getDerived();                                                                                      \
@@ -216,6 +203,7 @@ private:
       return false;
     auto &derived = getDerived();
     switch (node->classof()) {
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   case ASTKind::BASE:                                                                                                  \
     return derived.traverse##BASE(static_cast<BASE *>(node), stack, info.kind);
@@ -280,6 +268,7 @@ public:
   }
 #include <AST/Nodes.inc>
 
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   bool traverse##BASE(BASE *node, stack_t *stack = nullptr, VisitType kind = preVisit) {                               \
     auto &derived = getDerived();                                                                                      \
@@ -332,6 +321,7 @@ private:
       return false;
     auto &derived = getDerived();
     switch (node->classof()) {
+#define NO_ABSTRACT
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   case ASTKind::BASE:                                                                                                  \
     return derived.traverse##BASE(static_cast<BASE *>(node), stack, info.kind);

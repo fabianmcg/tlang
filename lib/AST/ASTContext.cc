@@ -15,12 +15,6 @@ void ASTContext::remove(ASTNode *node) {
 void ASTContext::addModule(UnitDecl *unit, ModuleDecl *module) {
   unit->add(module);
 }
-AnalysisContext& ASTContext::analysisContext() {
-  return analyis;
-}
-const AnalysisContext& ASTContext::analysisContext() const {
-  return analyis;
-}
 TypeContext& ASTContext::types() {
   return type_context;
 }

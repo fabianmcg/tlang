@@ -8,7 +8,7 @@ namespace tlang {
 namespace sema {
 namespace {
 struct TypeVisitor: ASTVisitor<TypeVisitor, VisitorPattern::prePostOrder> {
-  TypeVisitor(TypeContext &context, UniversalSymbolTable &declContext) :
+  TypeVisitor(TypeContext &context, UniversalContext &declContext) :
       context(context), declContext(declContext) {
   }
   visit_t visitUnresolvedType(UnresolvedType *node, VisitType isFirst) {
@@ -46,7 +46,7 @@ struct TypeVisitor: ASTVisitor<TypeVisitor, VisitorPattern::prePostOrder> {
     return visit;
   }
   TypeContext &context;
-  UniversalSymbolTable &declContext;
+  UniversalContext &declContext;
   Type *resolved { };
 };
 }
@@ -60,27 +60,27 @@ struct ResolveTypesVisitor: ASTVisitor<ResolveTypesVisitor, VisitorPattern::preP
     return skip;
   }
   visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitTagDecl(TagDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitForStmt(ForStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitLoopStmt(LoopStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitCompoundStmt(CompoundStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
-  visit_t add_scope(UniversalSymbolTable *node, VisitType isFirst) {
+  visit_t add_scope(UniversalContext *node, VisitType isFirst) {
     if (isFirst)
       declContext = node;
     else
@@ -88,7 +88,7 @@ struct ResolveTypesVisitor: ASTVisitor<ResolveTypesVisitor, VisitorPattern::preP
     return visit_t::visit;
   }
   ASTContext &context;
-  UniversalSymbolTable *declContext { };
+  UniversalContext *declContext { };
 };
 }
 void Sema::resolveTypes() {
