@@ -7,109 +7,40 @@
 #include <AST/Expr.hh>
 #include <AST/Stmt.hh>
 #include <AST/Type.hh>
+#include <AST/AnyNode.hh>
 #include <AST/DeclContext.hh>
 #include <AST/Traits.hh>
 #include <Support/StaticFor.hh>
 #include <Support/ReverseRange.hh>
 
 namespace tlang {
-enum class EditVisitorInfoKind {
-  Dynamic,
-  Static,
-  DynamicList,
-  StaticList,
-  DeclContext
-};
-
-template <EditVisitorInfoKind Kind, typename Child>
-struct EditVisitorInfo;
-template <typename Child>
-struct EditVisitorInfo<EditVisitorInfoKind::Dynamic, Child> {
-  static constexpr EditVisitorInfoKind kind = EditVisitorInfoKind::Dynamic;
-  Child *&child { };
-};
-template <typename Child>
-struct EditVisitorInfo<EditVisitorInfoKind::Static, Child> {
-  static constexpr EditVisitorInfoKind kind = EditVisitorInfoKind::Static;
-  Child &child { };
-};
-template <typename Child>
-struct EditVisitorInfo<EditVisitorInfoKind::DynamicList, Child> {
-  static constexpr EditVisitorInfoKind kind = EditVisitorInfoKind::DynamicList;
-  Child *&child { };
-  bool deleteChild = false;
-  inline void setDelete() {
-    deleteChild = true;
-  }
-};
-template <typename Child>
-struct EditVisitorInfo<EditVisitorInfoKind::StaticList, Child> {
-  static constexpr EditVisitorInfoKind kind = EditVisitorInfoKind::StaticList;
-  Child &child { };
-  bool deleteChild = false;
-  inline void setDelete() {
-    deleteChild = true;
-  }
-};
-template <typename Child>
-struct EditVisitorInfo<EditVisitorInfoKind::DeclContext, Child> {
-  static constexpr EditVisitorInfoKind kind = EditVisitorInfoKind::DeclContext;
-  Child &child { };
-  bool deleteChild = false;
-  inline void setDelete() {
-    deleteChild = true;
-  }
-};
-
-namespace tlang::impl {
+namespace impl {
 struct EditAddChildren {
   template <typename NodeInfo>
   struct TupleVisitor {
     NodeInfo &node_info;
     template <int it, typename NodeContainer>
     void execute(NodeContainer &value) {
-      using node_type = typename NodeInfo::node_type;
-      using child_info = typename node_type::children_list::children_t<it>;
-      using child_type = typename node_type::children_list::value_reference_t<it>;
+      using child_info = typename NodeInfo::node_type::children_list::children_t<it>;
       if constexpr (child_info::isList()) {
         if constexpr (child_info::isDynamicList()) {
-          auto it = value.begin();
-          while (it != value.end()) {
-            EditVisitorInfo<EditVisitorInfoKind::DynamicList, child_type> data { *it };
-            node_info(data, *it);
-            if (data.deleteChild) {
-              it = value.erase(it);
-              continue;
-            }
-            ++it;
-          }
-        } else {
-          auto it = value.begin();
-          while (it != value.end()) {
-            EditVisitorInfo<EditVisitorInfoKind::StaticList, child_type> data { *it };
-            node_info(data, *it);
-            if (data.deleteChild) {
-              it = value.erase(it);
-              continue;
-            }
-            ++it;
-          }
-        }
+          for (auto &child : make_reverse(value))
+            node_info.push(child, AnyASTNodeRef { child });
+        } else
+          for (auto &child : make_reverse(value))
+            node_info.push(&child, AnyASTNodeRef { child });
       } else {
-        if constexpr (child_info::isDynamic()) {
-          EditVisitorInfo<EditVisitorInfoKind::Dynamic, child_type> data { value };
-          node_info(data, value);
-        } else {
-          EditVisitorInfo<EditVisitorInfoKind::Static, child_type> data { value };
-          node_info(data, &value);
-        }
+        if constexpr (child_info::isDynamic())
+          node_info.push(value, AnyASTNodeRef { value });
+        else
+          node_info.push(&value, AnyASTNodeRef { value });
       }
     }
   };
   template <typename NodeInfo>
-  static inline void EditAddChildren(NodeInfo &&sn) {
+  static inline void addChildren(NodeInfo &&sn) {
     TupleVisitor<NodeInfo> visitor { sn };
-    visit_tuple((****sn), visitor);
+    visit_tuple<true>((****sn), visitor);
   }
   template <typename NodeInfo>
   struct NodeVisitor {
@@ -123,13 +54,13 @@ struct EditAddChildren {
     template <typename T, std::enable_if_t<IsDeclContext<T>::value, int> = 0>
     inline void visit(T *context) {
       if (context->visit())
-        for (auto &decl : make_reverse(*context))
-          node_info.push(*decl);
+        for (auto decl : make_reverse(*context))
+          node_info.push(decl, AnyASTNodeRef { });
     }
     template <typename T, std::enable_if_t<isValidNode_v<T>, int> = 0>
     inline void visit(T *node) {
       if constexpr (T::hasChildren())
-        EditAddChildren::EditAddChildren(NodeInfo::make(node_info, node));
+        EditAddChildren::addChildren(NodeInfo::make(node_info, node));
     }
     template <typename T, std::enable_if_t<!(isValidNode_v<T> || IsDeclContext<T>::value), int> = 0>
     inline void visit(T*) {
@@ -152,7 +83,7 @@ struct EditAddChildren {
   void operator()(NodeInfo &&nodeStack) {
     using type = typename NodeInfo::node_type;
     if constexpr (type::hasChildren())
-      EditAddChildren::EditAddChildren(std::forward<NodeInfo>(nodeStack));
+      EditAddChildren::addChildren(std::forward<NodeInfo>(nodeStack));
     NodeVisitor<NodeInfo> { nodeStack }.init();
   }
 };

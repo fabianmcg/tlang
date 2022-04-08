@@ -11,25 +11,25 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
       context(context) {
   }
   visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitTagDecl(TagDecl *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitCompoundStmt(CompoundStmt *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitForStmt(ForStmt *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitLoopStmt(LoopStmt *node, VisitType isFirst) {
-    return addScope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return addScope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitVariableDecl(VariableDecl *node, VisitType isFirst) {
     return visit_t::skip;
@@ -40,7 +40,7 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
   visit_t visitQualType(QualType *node, VisitType isFirst) {
     return visit_t::skip;
   }
-  visit_t addScope(UniversalSymbolTable *table, VisitType isFirst) {
+  visit_t addScope(UniversalContext *table, VisitType isFirst) {
     if (isFirst) {
       if (table_stack.size() && table->getParent() == nullptr)
         table->getParent() = table_stack.front();
@@ -50,7 +50,7 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
     return visit_t::visit;
   }
   ASTContext &context;
-  std::deque<UniversalSymbolTable*> table_stack;
+  std::deque<UniversalContext*> table_stack;
 };
 }
 void Sema::completeTable() {

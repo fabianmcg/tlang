@@ -2,11 +2,10 @@
 #include <Driver/Arguments.hh>
 #include <Support/UniqueStream.hh>
 #include <Sema/Sema.hh>
-//#include <Analysis/Analysis.hh>
-#include <Rewriter/Rewriter.hh>
 #include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
 #include <llvm/Support/raw_ostream.h>
+#include <Passes/PassManager.hh>
 
 namespace tlang::driver {
 
@@ -18,11 +17,9 @@ int Driver::run(int argc, char **argv) {
     return stage;
   if (++stage && semaAnalysis(context))
     return stage;
-//  if (++stage && codeAnalysis(context))
-//    return stage;
-  dump();
-  if (++stage && rewrite(context))
+  if (++stage && runPasses(context))
     return stage;
+  dump();
   if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
     return stage;
   return 0;
@@ -42,15 +39,9 @@ int Driver::semaAnalysis(ASTContext &context) {
   sema.run();
   return 0;
 }
-int Driver::codeAnalysis(ASTContext &context) {
-//  CodeAnalysis pass(context);
-//  pass.run();
-  return 0;
-}
-int Driver::rewrite(ASTContext &context) {
-  Rewriter rewriter(context);
-  rewriter.run();
-  return 0;
+int Driver::runPasses(ASTContext &context) {
+  PassManager pm(context);
+  return pm.run();
 }
 int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
   if (cmdArguments.noCodegen)

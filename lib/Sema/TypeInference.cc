@@ -168,27 +168,27 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     return visit;
   }
   visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitTagDecl(TagDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitForStmt(ForStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitLoopStmt(LoopStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitCompoundStmt(CompoundStmt *node, VisitType isFirst) {
-    return add_scope(static_cast<UniversalSymbolTable*>(node), isFirst);
+    return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
-  visit_t add_scope(UniversalSymbolTable *node, VisitType isFirst) {
+  visit_t add_scope(UniversalContext *node, VisitType isFirst) {
     if (isFirst)
       declContext = node;
     else
@@ -196,7 +196,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     return visit_t::visit;
   }
   ASTContext &context;
-  UniversalSymbolTable *declContext { };
+  UniversalContext *declContext { };
 };
 }
 void Sema::inferTypes() {
