@@ -92,7 +92,21 @@ def ReturnStmt : AbstractNode<ValueStmt, /* Abstract = */ 0, /* Implicit = */ 0>
   Child return = Child<Dynamic, [{Expr}]>;
 }
 
+def ContextStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable contextKind = Var<[{Identifier}]>;
+  Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
+  Child stmt = Child<Dynamic, [{Stmt}]>;
+}
+
+def MapStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable mapKind = EVar<[{Kind}]>;
+  Child mappedExprs = Child<DynamicList, [{Expr}]>;
+  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">]>;
+}
+
 def ParallelStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable noWait = Var<[{bool}]>;
+  Variable execUnit = Var<[{std::string}], [{"Auto"}]>;
   Child privateVariables = Child<DynamicList, [{Expr}]>;
   Child sharedVariables = Child<DynamicList, [{Expr}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;

@@ -7,6 +7,7 @@ def DeclHeader : CodeSection<Header, [{
 #include <AST/DeclContext.hh>
 }]>;
 
+class ProgramContext;
 class UnitContext;
 class DeclContext;
 class NoVisitDeclContext;
@@ -24,8 +25,7 @@ def NamedDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
   }]>;
 }
 
-def ProgramDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child units = Child<DynamicList, [{UnitDecl}]>;
+def ProgramDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0>, ProgramContext {
 }
 
 def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, UnitContext {
@@ -112,11 +112,16 @@ def TagDecl : AbstractNode<TypeDecl, /* Abstract = */ 0, /* Implicit = */ 0>, De
 def StructDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable members = Var<[{List<MemberDecl*>}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context)), List<MemberDecl*>{}) {
+    StructDecl(const Identifier &identifier, DeclContext &&context);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    StructDecl::StructDecl(const Identifier &identifier, DeclContext &&context) : StructDecl(TagDecl(TypeDecl(identifier), std::move(context)), List<MemberDecl*>{}) {
       auto &members = getMembers();
       for (auto symbol : *this) {
-        if (auto md = dyn_cast<MemberDecl>(symbol))
+        if (auto md = dyn_cast<MemberDecl>(symbol)) {
+          md->getIndex() = members.size();
           members.push_back(md);
+        }
       }
     }
   }]>;
@@ -147,6 +152,7 @@ def ParameterDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit =
 }
 
 def MemberDecl : AbstractNode<VariableDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable index = Var<[{int}]>;
 }
 
 def EnumDecl : AbstractNode<TagDecl, /* Abstract = */ 0, /* Implicit = */ 0> {

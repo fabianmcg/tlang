@@ -13,6 +13,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Verifier.h>
+#include <Support/Enumerate.hh>
 
 namespace tlang::codegen {
 ExprEmitter::ExprEmitter(Emitter &emitter, TypeEmitter &type_emitter) :
@@ -97,33 +98,115 @@ llvm::Value* ExprEmitter::makeCmp(QualType type, BinaryOperator::Operator kind, 
     return builder.CreateFCmp(predicate, lhs, rhs, "");
   return nullptr;
 }
-
-IRType_t<BooleanLiteral> ExprEmitterVisitor::emitBooleanLiteral(BooleanLiteral *literal) {
-  return makeBooleanLiteral(literal);
+llvm::Value* ExprEmitter::makeLoad(QualType type, llvm::Value *value) {
+  return builder.CreateLoad(emitQualType(type.modQuals()), value);
 }
-IRType_t<IntegerLiteral> ExprEmitterVisitor::emitIntegerLiteral(IntegerLiteral *literal) {
-  return makeIntegerLiteral(literal);
+llvm::Value* ExprEmitter::makeStore(llvm::Value *value, llvm::Value *ptr) {
+  return builder.CreateStore(value, ptr);
 }
-IRType_t<UIntegerLiteral> ExprEmitterVisitor::emitUIntegerLiteral(UIntegerLiteral *literal) {
-  return makeIntegerLiteral(literal);
-}
-IRType_t<FloatLiteral> ExprEmitterVisitor::emitFloatLiteral(FloatLiteral *literal) {
-  return makeFloatLiteral(literal);
-}
-IRType_t<ParenExpr> ExprEmitterVisitor::emitParenExpr(ParenExpr *expr) {
-  return emitExpr(expr->getExpr());
-}
-IRType_t<UnaryOperator> ExprEmitterVisitor::emitUnaryOperator(UnaryOperator *expr) {
+IRType_t<CastExpr> ExprEmitter::makeCast(Type *dest, Type *source, llvm::Value *subExpr) {
+  if (dest == source)
+    return subExpr;
+  auto IRdest = emitType(dest);
+  if (isa<PtrType>(dest) || isa<AddressType>(dest))
+    return builder.CreateBitCast(subExpr, IRdest);
+  if (isArithmetic(dest) && isArithmetic(source)) {
+    switch (dest->classof()) {
+    case ASTKind::IntType:
+      switch (source->classof()) {
+      case ASTKind::IntType: {
+        auto *d = static_cast<IntType*>(dest);
+        auto *s = static_cast<IntType*>(source);
+        if (d->getPrecision() > s->getPrecision()) {
+          if (d->isUnsigned())
+            return builder.CreateZExt(subExpr, IRdest);
+          return s->isSigned() ? builder.CreateSExt(subExpr, IRdest) : builder.CreateZExt(subExpr, IRdest);
+        } else if (d->getPrecision() == s->getPrecision())
+          return subExpr;
+        else
+          return builder.CreateTrunc(subExpr, IRdest);
+      }
+      case ASTKind::FloatType: {
+        auto *d = static_cast<IntType*>(dest);
+        return d->isSigned() ? builder.CreateFPToSI(subExpr, IRdest) : builder.CreateFPToUI(subExpr, IRdest);
+      }
+      case ASTKind::BoolType: {
+        auto *d = static_cast<IntType*>(dest);
+        return d->isSigned() ? builder.CreateSExt(subExpr, IRdest) : builder.CreateZExt(subExpr, IRdest);
+      }
+      default:
+        return nullptr;
+      }
+    case ASTKind::FloatType:
+      switch (source->classof()) {
+      case ASTKind::IntType: {
+        auto *s = static_cast<IntType*>(source);
+        return s->isSigned() ? builder.CreateSIToFP(subExpr, IRdest) : builder.CreateUIToFP(subExpr, IRdest);
+      }
+      case ASTKind::FloatType: {
+        auto *d = static_cast<FloatType*>(dest);
+        auto *s = static_cast<FloatType*>(source);
+        return d->getPrecision() > s->getPrecision() ? builder.CreateFPExt(subExpr, IRdest) : builder.CreateFPTrunc(subExpr, IRdest);
+      }
+      case ASTKind::BoolType:
+        return builder.CreateUIToFP(subExpr, IRdest);
+      default:
+        return nullptr;
+      }
+    case ASTKind::BoolType:
+      switch (source->classof()) {
+      case ASTKind::IntType:
+        return builder.CreateTrunc(subExpr, IRdest);
+      case ASTKind::FloatType:
+        return builder.CreateFPToUI(subExpr, IRdest);
+      default:
+        return nullptr;
+      }
+    default:
+      return nullptr;
+    }
+  }
   return nullptr;
 }
-IRType_t<BinaryOperator> ExprEmitterVisitor::emitBinaryOperator(BinaryOperator *expr) {
-  BinaryOperator::Operator op = expr->getOp();
-  if (op == BinaryOperator::Assign) {
-    llvm::Value *lhs = emitExpr(expr->getLhs());
-    llvm::Value *rhs = emitExpr(expr->getRhs());
+template <typename T>
+using ExprReturn = ExprEmitterVisitor::return_t<T>;
+ExprReturn<Expr> ExprEmitterVisitor::emitExprAndLoad(Expr *node, bool loadValue) {
+  ExprReturn<Expr> value = emitExprImpl(node);
+  if (loadValue && value.requiresLoad)
+    return makeLoad(node->getType(), value.value);
+  return value;
+}
+ExprReturn<BooleanLiteral> ExprEmitterVisitor::emitBooleanLiteralImpl(BooleanLiteral *literal) {
+  return makeBooleanLiteral(literal);
+}
+ExprReturn<IntegerLiteral> ExprEmitterVisitor::emitIntegerLiteralImpl(IntegerLiteral *literal) {
+  return makeIntegerLiteral(literal);
+}
+ExprReturn<UIntegerLiteral> ExprEmitterVisitor::emitUIntegerLiteralImpl(UIntegerLiteral *literal) {
+  return makeIntegerLiteral(literal);
+}
+ExprReturn<FloatLiteral> ExprEmitterVisitor::emitFloatLiteralImpl(FloatLiteral *literal) {
+  return makeFloatLiteral(literal);
+}
+ExprReturn<ParenExpr> ExprEmitterVisitor::emitParenExprImpl(ParenExpr *expr) {
+  return emitExprImpl(expr->getExpr());
+}
+ExprReturn<UnaryOperator> ExprEmitterVisitor::emitUnaryOperatorImpl(UnaryOperator *expr) {
+  UnaryOperator::Operator op = expr->getOp();
+  auto subExpr = emitExprImpl(expr->getExpr());
+  switch (op) {
+  case UnaryOperator::Address:
+    return {subExpr.value, false};
+  case UnaryOperator::Dereference:
+    return {subExpr.requiresLoad? makeLoad(expr->getExpr()->getType(), subExpr.value) : subExpr.value, true};
+  default:
+    return nullptr;
   }
-  llvm::Value *lhs = emitExpr(expr->getLhs());
-  llvm::Value *rhs = emitExpr(expr->getRhs());
+}
+ExprReturn<BinaryOperator> ExprEmitterVisitor::emitBinaryOperatorImpl(BinaryOperator *expr) {
+  BinaryOperator::Operator op = expr->getOp();
+  llvm::Value *lhs = emitExprAndLoad(expr->getLhs(), op != BinaryOperator::Assign).value;
+  llvm::Value *rhs = emitExprAndLoad(expr->getRhs(), true).value;
   auto type = expr->getType();
   switch (op) {
   case BinaryOperator::Plus:
@@ -141,27 +224,57 @@ IRType_t<BinaryOperator> ExprEmitterVisitor::emitBinaryOperator(BinaryOperator *
   case BinaryOperator::LEQ:
   case BinaryOperator::GEQ:
     return makeCmp(type, op, lhs, rhs);
+  case BinaryOperator::Assign:
+    makeStore(lhs, rhs);
+    return {lhs, true};
   default:
     return nullptr;
   }
 }
-IRType_t<DeclRefExpr> ExprEmitterVisitor::emitDeclRefExpr(DeclRefExpr *expr) {
+ExprReturn<DeclRefExpr> ExprEmitterVisitor::emitDeclRefExprImpl(DeclRefExpr *expr) {
+  auto decl = expr->getDecl().data();
+  if (auto vd = dyn_cast<VariableDecl>(decl)) {
+    auto alloca = get(vd);
+    assert(alloca);
+    return {alloca, true};
+  }
   return nullptr;
 }
-IRType_t<MemberExpr> ExprEmitterVisitor::emitDeclMemberExpr(MemberExpr *expr) {
+ExprReturn<MemberExpr> ExprEmitterVisitor::emitMemberExprImpl(MemberExpr *expr) {
+  auto ptr = emitExprImpl(expr->getOwner()).value;
+  int indx = -1;
+  if (auto re = dyn_cast<DeclRefExpr>(expr->getMember().data()))
+    if (auto md = dyn_cast<MemberDecl>(re->getDecl().data()))
+      indx = md->getIndex();
+  assert(indx > 0);
+  auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), indx, true);
+  return {builder.CreateGEP(emitQualType(expr->getOwner()->getType().modQuals()), ptr, index), true};
+}
+ExprReturn<CallExpr> ExprEmitterVisitor::emitCallExprImpl(CallExpr *expr) {
+  if (auto callee = dynamic_cast<DeclRefExpr*>(expr->getCallee())) {
+    llvm::Function *function = module.getFunction(callee->getIdentifier());
+    std::vector<llvm::Value*> arguments(expr->getArgs().size());
+    for (auto [i, arg] : tlang::enumerate(expr->getArgs())) {
+      arguments[i] = emitExprAndLoad(arg, true).value;
+      if (!arguments.back())
+        throw(std::runtime_error("Invalid call expr"));
+    }
+    return builder.CreateCall(function, arguments);
+  }
   return nullptr;
 }
-IRType_t<CallExpr> ExprEmitterVisitor::emitCallExpr(CallExpr *expr) {
-  return nullptr;
+ExprReturn<ArrayExpr> ExprEmitterVisitor::emitArrayExprImpl(ArrayExpr *expr) {
+  auto type = emitQualType(expr->getType().modQuals());
+  auto array = emitExprAndLoad(expr->getArray(), true).value;
+  auto index = emitExprAndLoad(expr->getIndex()[0], true).value;
+  return {builder.CreateGEP(type, array, index), true};
 }
-IRType_t<ArrayExpr> ExprEmitterVisitor::emitArrayExpr(ArrayExpr *expr) {
-  auto type = emitQualType(expr->getType());
-  auto array = emitExpr(expr->getArray());
-  auto index = emitExpr(expr->getIndex()[0]);
-  builder.CreateGEP(type, array, index);
-  return nullptr;
+ExprReturn<CastExpr> ExprEmitterVisitor::emitCastExprImpl(CastExpr *expr) {
+  auto subExpr = emitExprAndLoad(expr->getExpr(), true).value;
+  return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
 }
-IRType_t<CastExpr> ExprEmitterVisitor::emitCastExpr(CastExpr *expr) {
-  return nullptr;
+ExprReturn<ImplicitCastExpr> ExprEmitterVisitor::emitImplicitCastExprImpl(ImplicitCastExpr *expr) {
+  auto subExpr = emitExprAndLoad(expr->getExpr(), true).value;
+  return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
 }
 }

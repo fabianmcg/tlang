@@ -53,7 +53,7 @@ public:
   IRType_t<ArrayType> emitArrayType(ArrayType *type);
   IRType_t<StructType> emitStructType(StructType *type);
   IRType_t<FunctionType> emitFunctionType(FunctionType *type);
-  IRType_t<QualType> emitQualType(QualType &type);
+  IRType_t<QualType> emitQualType(QualType type);
   IRType_t<QualType> operator()(QualType &type);
 protected:
   std::unordered_map<Decl*, llvm::Type*> decl2type { };

@@ -44,13 +44,13 @@ public:
 } // namespace impl
 class DeclEmitter: public CodeEmitterContext, public EmitterTable {
 public:
-  DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter, StmtEmitter &stmt_emitter);
+  DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter, StmtEmitterVisitor &stmt_emitter);
   llvm::AllocaInst* makeVariable(VariableDecl *variable, const std::string &suffix = "");
   IRType_t<FunctionType> makeFunctionType(FunctorDecl *functor);
   IRType_t<FunctorDecl> makeFunction(FunctorDecl *functor);
 protected:
   TypeEmitter &typeEmitter;
-  StmtEmitter &stmtEmitter;
+  StmtEmitterVisitor &stmtEmitter;
 };
 class DeclEmitterVisitor: public DeclEmitter, public impl::DeclEmitterVisitor<DeclEmitterVisitor> {
 public:

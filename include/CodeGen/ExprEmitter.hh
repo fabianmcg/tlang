@@ -13,6 +13,17 @@
 
 namespace tlang::codegen {
 namespace impl {
+template <typename T>
+struct ExprEmitterReturn {
+  ExprEmitterReturn(nullptr_t) {
+  }
+  template <typename S>
+  ExprEmitterReturn(S *value, bool requiresLoad = false) :
+      value(value), requiresLoad(requiresLoad) {
+  }
+  T value { };
+  bool requiresLoad { };
+};
 template <typename Derived>
 class ExprEmitterVisitor {
 public:
@@ -21,11 +32,11 @@ public:
   }
 #define NO_ABSTRACT
 #define EXPR(BASE, PARENT)                                                                                             \
-  IRType_t<BASE> emit##BASE(BASE *node) {                                                                              \
+  ExprEmitterReturn<IRType_t<BASE>> emit##BASE##Impl(BASE *node) {                                                     \
     return nullptr;                                                                                                    \
   }
 #include <AST/Nodes.inc>
-  IRType_t<Expr> emitExpr(Expr *node) {
+  ExprEmitterReturn<IRType_t<Expr>> emitExprImpl(Expr *node) {
     if (!node)
       return nullptr;
     auto &derived = getDerived();
@@ -33,7 +44,7 @@ public:
 #define NO_ABSTRACT
 #define EXPR(BASE, PARENT)                                                                                             \
   case ASTKind::BASE:                                                                                                  \
-    return derived.emit##BASE(static_cast<BASE *>(node));
+    return derived.emit##BASE##Impl(static_cast<BASE *>(node));
 #include <AST/Nodes.inc>
     default:
       return nullptr;
@@ -44,7 +55,10 @@ public:
 class ExprEmitter: public CodeEmitterContext, public EmitterTable {
 public:
   ExprEmitter(Emitter &emitter, TypeEmitter &type_emitter);
-  inline IRType_t<QualType> emitQualType(QualType &type) {
+  inline IRType_t<Type> emitType(Type *type) {
+    return typeEmitter.emitType(type);
+  }
+  inline IRType_t<QualType> emitQualType(QualType type) {
     return typeEmitter.emitQualType(type);
   }
   llvm::Value* makeAddOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
@@ -52,30 +66,39 @@ public:
   llvm::Value* makeMulOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeDivOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeCmp(QualType type, BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs);
-  llvm::Value* makeLoad();
+  llvm::Value* makeLoad(QualType type, llvm::Value *value);
+  llvm::Value* makeStore(llvm::Value *value, llvm::Value *ptr);
   IRType_t<BooleanLiteral> makeBooleanLiteral(BooleanLiteral *literal);
   IRType_t<IntegerLiteral> makeIntegerLiteral(IntegerLiteral *literal);
   IRType_t<UIntegerLiteral> makeIntegerLiteral(UIntegerLiteral *literal);
   IRType_t<FloatLiteral> makeFloatLiteral(FloatLiteral *literal);
+  IRType_t<CastExpr> makeCast(Type *dest, Type *source, llvm::Value *subExpr);
+
 protected:
   TypeEmitter &typeEmitter;
 };
 class ExprEmitterVisitor: public ExprEmitter, public impl::ExprEmitterVisitor<ExprEmitterVisitor> {
 public:
-  IRType_t<BooleanLiteral> emitBooleanLiteral(BooleanLiteral *literal);
-  IRType_t<IntegerLiteral> emitIntegerLiteral(IntegerLiteral *literal);
-  IRType_t<UIntegerLiteral> emitUIntegerLiteral(UIntegerLiteral *literal);
-  IRType_t<FloatLiteral> emitFloatLiteral(FloatLiteral *literal);
-  IRType_t<ParenExpr> emitParenExpr(ParenExpr *expr);
-  IRType_t<UnaryOperator> emitUnaryOperator(UnaryOperator *expr);
-  IRType_t<BinaryOperator> emitBinaryOperator(BinaryOperator *expr);
-  IRType_t<DeclRefExpr> emitDeclRefExpr(DeclRefExpr *expr);
-  IRType_t<MemberExpr> emitDeclMemberExpr(MemberExpr *expr);
-  IRType_t<CallExpr> emitCallExpr(CallExpr *expr);
-//  IRType_t<MemberCallExpr> emitMemberCallExpr(MemberCallExpr *expr);
-  IRType_t<ArrayExpr> emitArrayExpr(ArrayExpr *expr);
-  IRType_t<CastExpr> emitCastExpr(CastExpr *expr);
-
+  template <typename T>
+  using return_t = impl::ExprEmitterReturn<IRType_t<T>>;
+  return_t<BooleanLiteral> emitBooleanLiteralImpl(BooleanLiteral *literal);
+  return_t<IntegerLiteral> emitIntegerLiteralImpl(IntegerLiteral *literal);
+  return_t<UIntegerLiteral> emitUIntegerLiteralImpl(UIntegerLiteral *literal);
+  return_t<FloatLiteral> emitFloatLiteralImpl(FloatLiteral *literal);
+  return_t<ParenExpr> emitParenExprImpl(ParenExpr *expr);
+  return_t<UnaryOperator> emitUnaryOperatorImpl(UnaryOperator *expr);
+  return_t<BinaryOperator> emitBinaryOperatorImpl(BinaryOperator *expr);
+  return_t<DeclRefExpr> emitDeclRefExprImpl(DeclRefExpr *expr);
+  return_t<MemberExpr> emitMemberExprImpl(MemberExpr *expr);
+  return_t<CallExpr> emitCallExprImpl(CallExpr *expr);
+  //  return_t<MemberCallExpr> emitMemberCallExprImpl(MemberCallExpr *expr);
+  return_t<ArrayExpr> emitArrayExprImpl(ArrayExpr *expr);
+  return_t<CastExpr> emitCastExprImpl(CastExpr *expr);
+  return_t<ImplicitCastExpr> emitImplicitCastExprImpl(ImplicitCastExpr *expr);
+  return_t<Expr> emitExprAndLoad(Expr *node, bool loadValue);
+  IRType_t<Expr> emitExpr(Expr *node) {
+    return emitExprAndLoad(node, true).value;
+  }
   using tlang::codegen::ExprEmitter::ExprEmitter;
 };
 } // namespace tlang::codegen

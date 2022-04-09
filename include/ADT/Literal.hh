@@ -35,6 +35,9 @@ public:
   BoolValue(bool value) :
       LiteralValue(Bool), literal(value) {
   }
+  bool& getValue() {
+    return literal;
+  }
   bool getValue() const {
     return literal;
   }
@@ -65,6 +68,9 @@ public:
   IntValue(int64_t value) :
       LiteralValue(Int), literal(value) {
   }
+  int64_t& getValue() {
+    return literal;
+  }
   int64_t getValue() const {
     return literal;
   }
@@ -80,6 +86,9 @@ public:
   UIntValue(uint64_t value) :
       LiteralValue(Uint), literal(value) {
   }
+  uint64_t& getValue() {
+    return literal;
+  }
   uint64_t getValue() const {
     return literal;
   }
@@ -94,6 +103,9 @@ class FloatValue final: public LiteralValue {
 public:
   FloatValue(double value) :
       LiteralValue(Float), literal(value) {
+  }
+  double& getValue() {
+    return literal;
   }
   double getValue() const {
     return literal;
