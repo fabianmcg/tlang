@@ -30,7 +30,7 @@ struct VariableAllocator: ASTVisitor<VariableAllocator<E>, VisitorPattern::preOr
   }
   E &emitter;
 };
-DeclEmitter::DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter, StmtEmitter &stmt_emitter) :
+DeclEmitter::DeclEmitter(Emitter &emitter, TypeEmitter &type_emitter, StmtEmitterVisitor &stmt_emitter) :
     CodeEmitterContext(static_cast<CodeEmitterContext&>(emitter)), EmitterTable(emitter), typeEmitter(type_emitter), stmtEmitter(
         stmt_emitter) {
 }
@@ -73,10 +73,11 @@ IRType_t<FunctionDecl> DeclEmitterVisitor::emitFunctionDecl(FunctionDecl *functi
   }
   VariableAllocator<DeclEmitterVisitor> variableEmitter { *this };
   variableEmitter.traverseCompoundStmt(function->getBody());
-//  context.emitStmt(function.getBody());
-//  if (function_type->getReturnType()->isVoidTy() && !context.builder.GetInsertBlock()->getTerminator())
-//    context.builder.CreateRetVoid();
-//  verifyFunction(*ir_function);
+  stmtEmitter.resetCounters();
+  stmtEmitter.emitStmt(function->getBody());
+  if (irFunction->getReturnType()->isVoidTy() && !builder.GetInsertBlock()->getTerminator())
+    builder.CreateRetVoid();
+  verifyFunction(*irFunction);
   return irFunction;
 }
 IRType_t<VariableDecl> DeclEmitterVisitor::emitVariableDecl(VariableDecl *variable) {

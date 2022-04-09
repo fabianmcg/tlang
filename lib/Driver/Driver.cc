@@ -48,9 +48,9 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
     return 0;
   if (!file.empty()) {
     codegen::CodeGen emitter(context);
-    auto &units = (*context)->getUnits();
     std::filesystem::path path = std::filesystem::absolute(file).parent_path();
-    for (auto unit : units) {
+    for (auto decl : (**context)) {
+      auto unit = static_cast<UnitDecl*>(decl);
       std::cerr << "Emitting: " << unit->getIdentifier() << std::endl;
       emitter.emit(unit);
       std::cerr << "Finished emitting: " << unit->getIdentifier() << std::endl;
@@ -58,7 +58,6 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
     for (auto& [k, v] : emitter.getModules()) {
       auto file = path;
       path /= k;
-      path += ".ll";
       std::cerr << "Generating: " << path << std::endl;
       std::error_code code;
       llvm::raw_fd_ostream os(path.string(), code);

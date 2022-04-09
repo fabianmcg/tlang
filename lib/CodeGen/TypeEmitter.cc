@@ -82,7 +82,7 @@ IRType_t<FunctionType> TypeEmitter::emitFunctionType(FunctionType *type) {
   auto ret_type = emitQualType(type->getReturnType());
   return llvm::FunctionType::get(ret_type, ir_params, false);
 }
-llvm::Type* TypeEmitter::emitQualType(QualType &type) {
+llvm::Type* TypeEmitter::emitQualType(QualType type) {
   auto canonical = type.getCanonicalType();
   auto canonicalType = canonical.getType();
   if (!canonicalType)

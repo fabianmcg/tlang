@@ -26,6 +26,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
               member->getType() = QualType(md->getType());
               node->getType() = member->getType();
             }
+            member->getDecl() = decl;
           } else
             throw(std::runtime_error("Invalid member reference"));
         } else

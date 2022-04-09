@@ -29,7 +29,7 @@ struct ASTContext {
   template <typename ...Args>
   UnitDecl* addUnit(const Identifier &name, Args &&...args) {
     auto unit = make<UnitDecl>(name, UnitContext(), std::forward<Args>(args)...);
-    program->getUnits().push_back(unit);
+    program->add(unit);
     return unit;
   }
   TypeContext& types();

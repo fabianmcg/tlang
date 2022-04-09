@@ -9,12 +9,16 @@ namespace tlang {
 struct AnyASTNodeRef {
 public:
   AnyASTNodeRef() = default;
-  template <typename T> AnyASTNodeRef(T &node) {
+  AnyASTNodeRef(AnyASTNodeRef&&) = default;
+  AnyASTNodeRef(const AnyASTNodeRef&) = default;
+  template <typename T, std::enable_if_t<!std::is_same_v<T, AnyASTNodeRef>, int> = 0>
+  explicit AnyASTNodeRef(T &node) {
     static_assert(isValidNode_v<T>);
     this->node = &node;
-    kind = node->classof();
+    kind = node.classof();
   }
-  template <typename T> AnyASTNodeRef(T *&node) {
+  template <typename T>
+  AnyASTNodeRef(T *&node) {
     static_assert(isValidNode_v<T>);
     this->node = &node;
     kind = T::kind;
@@ -22,39 +26,42 @@ public:
   }
   ~AnyASTNodeRef() {
     node = nullptr;
-    kind = {};
+    kind = { };
     fromPtr = false;
   }
   operator bool() const {
     return node;
   }
-  template <typename T> T *get() {
+  template <typename T>
+  T* get() {
     if (fromPtr) {
       if (kind == T::kind)
-        return *reinterpret_cast<T **>(node);
+        return *reinterpret_cast<T**>(node);
     } else {
       if (ASTTraits_t<T>::is(kind))
-        return reinterpret_cast<T *>(node);
+        return reinterpret_cast<T*>(node);
     }
     return nullptr;
   }
-  template <typename S, typename T> bool assign(T *node) {
+  template <typename S, typename T>
+  bool assign(T *node) {
     assert(this->node);
     if (S::kind == kind) {
       if (fromPtr)
-        *reinterpret_cast<S **>(this->node) = node;
+        *reinterpret_cast<S**>(this->node) = node;
       else
-        *reinterpret_cast<S *>(this->node) = *node;
+        *reinterpret_cast<S*>(this->node) = *node;
       return true;
     }
     return false;
   }
-  template <typename T> bool dynAssign(T *node) {
+  template <typename T>
+  bool dynAssign(T *node) {
     assert(this->node);
     switch (kind) {
 #define AST_MACRO(BASE, PARENT)                                                                                        \
   case ASTKind::BASE:                                                                                                  \
-    if (fromPointer) {                                                                                                 \
+    if (fromPtr) {                                                                                                 \
       if (isa<BASE>(node)) {                                                                                           \
         *reinterpret_cast<BASE **>(this->node) = node;                                                                 \
         return true;                                                                                                   \
@@ -80,9 +87,9 @@ public:
   }
 
 private:
-  void *node{};
-  ASTKind kind{};
-  bool fromPtr{};
+  void *node { };
+  ASTKind kind { };
+  bool fromPtr { };
 };
 } // namespace tlang
 

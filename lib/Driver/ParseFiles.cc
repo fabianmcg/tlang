@@ -33,8 +33,8 @@ struct PathHash {
   }
 };
 struct FileDB {
-  FileDB(ASTContext &context, const std::vector<std::string> &inputFiles) :
-      context(context) {
+  FileDB(ASTContext &context, std::filesystem::path outputFile, const std::vector<std::string> &inputFiles) :
+      context(context), outputFile(outputFile) {
     fileQueue.insert(fileQueue.begin(), inputFiles.begin(), inputFiles.end());
     searchPaths.push_back(std::filesystem::current_path());
   }
@@ -91,18 +91,19 @@ struct FileDB {
     searchPaths.pop_front();
   }
   int run() {
+    std::filesystem::path path = std::filesystem::absolute(outputFile);
+    auto unit = context.addUnit(path.filename().string(), UnitDecl::Generic);
     while (fileQueue.size()) {
       auto file = fileQueue.front();
       fileQueue.pop_front();
       auto fileCC = valid(file);
-      if (!fileCC.empty()) {
-        auto unit = context.addUnit(fileCC.stem().string() + ".main", UnitDecl::Generic);
+      if (!fileCC.empty())
         parseUnit(unit, fileCC);
-      }
     }
     return 0;
   }
   ASTContext &context;
+  std::filesystem::path outputFile;
   std::unordered_set<std::filesystem::path, PathHash, PathEquality> fileList;
   std::deque<std::string> fileQueue;
   std::deque<std::filesystem::path> searchPaths;
@@ -111,7 +112,7 @@ struct FileDB {
 int Driver::parseFiles() {
   if (cmdArguments.inputFiles.empty())
     return 1;
-  FileDB db(context, cmdArguments.inputFiles);
+  FileDB db(context, std::filesystem::path { cmdArguments.outputFile }, cmdArguments.inputFiles);
   return db.run();
 }
 }

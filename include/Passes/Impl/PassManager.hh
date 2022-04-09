@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <Passes/Impl/Pass.hh>
-#include <AST/Visitors/ASTVisitor.hh>
+#include <AST/Visitors/EditVisitor.hh>
 
 namespace tlang::impl {
 template <typename ASTNode, typename ResultsManager, typename RT, typename ...Args>
@@ -13,10 +13,10 @@ protected:
   std::vector<std::unique_ptr<pass_concept>> passes;
 public:
   PassManager() = default;
-  RT run(ASTNode &unit, ResultsManager &manager, Args ...args) {
+  RT run(ASTNode &unit, AnyASTNodeRef nodeRef, ResultsManager &manager, Args ...args) {
     for (auto &pass : passes) {
       if (pass)
-        pass->run(unit, manager, args...);
+        pass->run(unit, nodeRef, manager, args...);
     }
     return {};
   }
@@ -52,22 +52,22 @@ template <typename PassASTUnit, typename Pass, typename ASTUnit, typename Result
 class PassManagerAdaptor<PassASTUnit, Pass, PassManager<ASTUnit, ResultsManager, RT, Args...>> : public PassBase<
     PassManagerAdaptor<PassASTUnit, Pass, PassManager<ASTUnit, ResultsManager, RT, Args...>>> {
 public:
-  struct Visitor: public tlang::ASTVisitor<Visitor, VisitorPattern::preOrder> {
-    using VisitStatus = typename tlang::ASTVisitor<Visitor, VisitorPattern::preOrder>::VisitStatus;
+  struct Visitor: public tlang::EditVisitor<Visitor, VisitorPattern::preOrder> {
+    using VisitStatus = typename tlang::EditVisitor<Visitor, VisitorPattern::preOrder>::VisitStatus;
     Visitor(Pass &pass, ResultsManager &manager, std::tuple<Args...> &&args) :
         pass(pass), manager(manager), args(std::move(args)) {
     }
-    VisitStatus visitASTNode(ASTNode *astNode) {
+    VisitStatus visitASTNode(ASTNode *astNode, AnyASTNodeRef &nodeRef) {
       auto node = dyn_cast<PassASTUnit>(astNode);
       if (!node)
         return VisitStatus::visit;
       if constexpr (sizeof...(Args)) {
         auto helper = [&](auto ...args) {
-          pass.run(*node, manager, args...);
+          pass.run(*node, nodeRef, manager, args...);
         };
         std::apply(helper, args);
       } else
-        pass.run(*node, manager);
+        pass.run(*node, nodeRef, manager);
       return VisitStatus::visit;
     }
     Pass &pass;
@@ -77,10 +77,10 @@ public:
   PassManagerAdaptor(Pass &&pass) :
       pass(std::move(pass)) {
   }
-  RT run(ASTUnit &node, ResultsManager &manager, Args ...args) {
+  RT run(ASTUnit &node, AnyASTNodeRef nodeRef, ResultsManager &manager, Args ...args) {
     auto tuple = std::tuple<Args...> { std::forward<Args>(args)... };
     Visitor visitor { pass, manager, std::move(tuple) };
-    visitor.dynamicTraverse(&node);
+    visitor.dynamicTraverse(&node, nodeRef);
     return {};
   }
 protected:

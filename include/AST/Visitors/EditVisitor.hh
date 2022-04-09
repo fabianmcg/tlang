@@ -61,15 +61,15 @@ public:
       stack = _stack.get();                                                                                            \
     }                                                                                                                  \
     if (status == visit)                                                                                               \
-      impl::AddChildren{}(StackNodePair<BASE>{stack, node});                                                           \
+      impl::EditAddChildren{}(StackNodePair<BASE>{stack, node});                                                           \
     if (_stack && !traverseStack(stack))                                                                               \
       return false;                                                                                                    \
     return true;                                                                                                       \
   }
 #include <AST/Nodes.inc>
 
-  bool dynamicTraverse(ASTNode *node) {
-    return dynamicDispatch( { node, AnyASTNodeRef { } }, nullptr);
+  bool dynamicTraverse(ASTNode *node, AnyASTNodeRef nodeRef = { }) {
+    return dynamicDispatch( { node, nodeRef }, nullptr);
   }
 
 private:
@@ -177,7 +177,7 @@ public:
       if (status == visit)                                                                                             \
         stack->push_front({node, ref, postVisit});                                                                     \
       if (status == visit)                                                                                             \
-        impl::AddChildren{}(StackNodePair<BASE>{stack, node});                                                         \
+        impl::EditAddChildren{}(StackNodePair<BASE>{stack, node});                                                         \
       if (_stack && !traverseStack(stack))                                                                             \
         return false;                                                                                                  \
     }                                                                                                                  \
@@ -185,8 +185,8 @@ public:
   }
 #include <AST/Nodes.inc>
 
-  bool dynamicTraverse(ASTNode *node) {
-    return dynamicDispatch(VisitInfo { node, preVisit }, nullptr);
+  bool dynamicTraverse(ASTNode *node, AnyASTNodeRef nodeRef = { }) {
+    return dynamicDispatch( { node, preVisit, nodeRef }, nullptr);
   }
 
 private:
@@ -296,7 +296,7 @@ public:
       if (status == visit)                                                                                             \
         stack->push_front({node, postVisit, ref});                                                                     \
       if (status == visit)                                                                                             \
-        impl::AddChildren{}(StackNodePair<BASE>{stack, node});                                                         \
+        impl::EditAddChildren{}(StackNodePair<BASE>{stack, node});                                                         \
       if (_stack && !traverseStack(stack))                                                                             \
         return false;                                                                                                  \
     }                                                                                                                  \
@@ -304,8 +304,8 @@ public:
   }
 #include <AST/Nodes.inc>
 
-  bool dynamicTraverse(ASTNode *node) {
-    return dynamicDispatch(VisitInfo { node, preVisit }, nullptr);
+  bool dynamicTraverse(ASTNode *node, AnyASTNodeRef nodeRef = { }) {
+    return dynamicDispatch( { node, preVisit, nodeRef }, nullptr);
   }
 
 private:
