@@ -72,3 +72,6 @@ include(lib/Driver/Driver.cmake)
 
 add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON #[[USE_BOOST]] ON #[[USE_FRMT]] OFF "driver;ast;lex;parser;sema;rewriter;codegen;ast")
 
+add_subdirectory(runtime/)
+
+
