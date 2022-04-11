@@ -131,11 +131,11 @@ def MethodDecl : AbstractNode<FunctorDecl, /* Abstract = */ 0, /* Implicit = */ 
 }
 
 def VariableDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum StorageKind = Enum<[EM<"Regular", [{0}]>, EM<"Static", [{1}]>, EM<"Extern", [{2}]>, EM<"ThreadLocal", [{2}]>]>;
+  Enum StorageKind = Enum<[EM<"Generic", [{0}]>, EM<"Static", [{1}]>, EM<"Extern", [{2}]>, EM<"Local", [{4}]>, EM<"Global", [{8}]>, EM<"Shared", [{16}]>]>;
   Variable storage = EVar<[{StorageKind}]>;
   Child init = Child<Dynamic, [{Expr}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    VariableDecl(const Identifier& identifier, QualType&& type, Expr* init = nullptr, StorageKind kind = Regular);
+    VariableDecl(const Identifier& identifier, QualType&& type, Expr* init = nullptr, StorageKind kind = Generic);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
     VariableDecl::VariableDecl(const Identifier& identifier, QualType&& type, Expr* init, StorageKind kind): VariableDecl(kind, init) {

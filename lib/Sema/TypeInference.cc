@@ -3,12 +3,19 @@
 #include <string>
 #include <Sema/Sema.hh>
 #include <AST/Visitors/ASTVisitor.hh>
+#include <Support/Enumerate.hh>
 
 namespace tlang {
 namespace sema {
 struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrder> {
   TypeInferenceAST(ASTContext &context) :
       context(context) {
+  }
+  visit_t visitParenExpr(ParenExpr *node, VisitType isFirst) {
+    if (isFirst == postVisit) {
+      node->getType() = node->getExpr()->getType();
+    }
+    return visit;
   }
   visit_t visitMemberExpr(MemberExpr *node, VisitType isFirst) {
     // TODO Need to resolve pointers
@@ -70,10 +77,20 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     return visit;
   }
   visit_t visitCallExpr(CallExpr *node, VisitType isFirst) {
-    if (isFirst == postVisit)
+    if (isFirst == postVisit) {
       if (auto ref = dyn_cast<DeclRefExpr>(node->getCallee())) {
-        if (auto ft = dyn_cast<FunctionType>(ref->getType().getType()))
+        if (auto ft = dyn_cast<FunctionType>(ref->getType().getType())) {
           node->getType() = ft->getReturnType();
+          auto &paremeters = ft->getParemeters();
+          for (auto [i, arg] : tlang::enumerate(node->getArgs())) {
+            auto tp = typePromotion(paremeters[i].getType(), arg->getType().getType());
+            if (tp.first == nullptr)
+              throw(std::runtime_error("Invalid arg"));
+            if (tp.second != -1) {
+              arg = context.make<ImplicitCastExpr>(arg, QualType(tp.first));
+            }
+          }
+        }
       } else if (auto me = dyn_cast<MemberExpr>(node->getCallee())) {
         auto ref = me->getMember().data();
         if (auto member = dyn_cast<DeclRefExpr>(ref)) {
@@ -82,6 +99,14 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
             node->getType() = ft->getReturnType();
         }
       }
+      //TODO Implicit cast to arg
+    }
+    return visit;
+  }
+  visit_t visitIdxExpr(IdxExpr *node, VisitType isFirst) {
+    if (isFirst == preVisit) {
+      node->getType() = context.makeType<IntType>(IntType::P_32, IntType::Signed);
+    }
     return visit;
   }
   visit_t visitArrayExpr(ArrayExpr *node, VisitType isFirst) {
@@ -121,6 +146,21 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     }
     return visit;
   }
+  visit_t visitTernaryOperator(TernaryOperator *node, VisitType isFirst) {
+    if (isFirst == postVisit) {
+      auto &condition = node->getCondition();
+      auto bt = BoolType::get(&context.types());
+      if (condition->getType().getType() != bt)
+        condition = context.make<ImplicitCastExpr>(condition, QualType(bt));
+      QualType lhs = node->getLhs()->getType();
+      QualType rhs = node->getRhs()->getType();
+      auto trr = typePromotion(lhs.getType()->getCanonicalType(), rhs.getType()->getCanonicalType());
+      if (trr.first == nullptr)
+        throw(std::runtime_error("Invalid ternary operator"));
+      node->getType() = QualType(lhs.isReference() && rhs.isReference() ? QualType::Reference : QualType::None, trr.first);
+    }
+    return visit;
+  }
   visit_t visitBinaryOperator(BinaryOperator *node, VisitType isFirst) {
     if (isFirst == postVisit) {
       auto op = node->getOp();
@@ -144,6 +184,8 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
         case BinaryOperator::GEQ:
         case BinaryOperator::Less:
         case BinaryOperator::Greater:
+        case BinaryOperator::And:
+        case BinaryOperator::Or:
           node->getType() = QualType(BoolType::get(&context.types()));
           break;
         case BinaryOperator::Plus:

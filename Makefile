@@ -59,13 +59,13 @@ CG_PAR:
 .PHONY: emit
 emit:
 ifneq ($(file),)
-	$(CLANG) -S -emit-llvm $(file) -o $(addsuffix .ll,$(basename $(file)))
+	$(CLANG) -S -emit-llvm $(file) $(FLAGS) -o $(addsuffix .ll,$(basename $(file)))
 endif
 
 .PHONY: emit
 emitCXX:
 ifneq ($(file),)
-	$(CLANGXX) -S -emit-llvm $(file) -o $(addsuffix .ll,$(basename $(file)))
+	$(CLANGXX) -S -emit-llvm $(file) $(FLAGS) -o $(addsuffix .ll,$(basename $(file)))
 endif
 
 .PHONY: clean
