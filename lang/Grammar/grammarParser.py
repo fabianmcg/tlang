@@ -133,6 +133,7 @@ class GrammarParser:
         add("=")
         add("+=", "-=")
         add("*=", "/=")
+        add("?")
         add("||")
         add("&&")
         #add("<<=", ">>=")

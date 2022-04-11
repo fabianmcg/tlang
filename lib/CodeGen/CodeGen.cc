@@ -26,11 +26,28 @@ void initGenericTarget(llvm::Module *module) {
   auto target_machine = target->createTargetMachine(target_triple, CPU, Features, opt, RM);
   module->setDataLayout(target_machine->createDataLayout());
 }
+void initNVPTXTarget(llvm::Module *module) {
+  auto target_triple = "nvptx64-nvidia-cuda";
+  module->setTargetTriple(target_triple);
+  std::string error;
+  auto target = llvm::TargetRegistry::lookupTarget(target_triple, error);
+  if (!target) {
+    throw(std::runtime_error("Code generation error: " + error));
+  }
+  auto CPU = "sm_35";
+  auto Features = "+ptx50";
+  llvm::TargetOptions opt;
+  auto RM = llvm::Optional<llvm::Reloc::Model>();
+  auto target_machine = target->createTargetMachine(target_triple, CPU, Features, opt, RM);
+  module->setDataLayout(target_machine->createDataLayout());
+}
 std::unique_ptr<llvm::Module> makeModule(UnitDecl *unit, llvm::LLVMContext &context) {
   std::unique_ptr<llvm::Module> module;
   module = std::make_unique<llvm::Module>(unit->getIdentifier(), context);
   if (unit->getGenKind() < UnitDecl::NVPTX)
     initGenericTarget(module.get());
+  if (unit->getGenKind() == UnitDecl::NVPTX)
+    initNVPTXTarget(module.get());
   return module;
 }
 }
@@ -57,7 +74,7 @@ llvm::Module* CodeGen::emit(UnitDecl *unit) {
   assert(unit);
   llvm::IRBuilder<> builder { *llvm_context };
   auto &module = getModule(unit);
-  if (unit->getGenKind() < UnitDecl::NVPTX) {
+  if (unit->getGenKind() <= UnitDecl::NVPTX) {
     GenericEmitter emitter = makeEmitter<GenericEmitter>(ast_context, *llvm_context, module, builder);
     emitter.run(unit);
   }

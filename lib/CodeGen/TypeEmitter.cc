@@ -20,7 +20,7 @@ llvm::PointerType* TypeEmitter::makePointer(llvm::Type *type, int adressSpace) {
   return llvm::PointerType::get(type, adressSpace < 0 ? 0u : static_cast<unsigned>(adressSpace));
 }
 IRType_t<AddressType> TypeEmitter::emitAddressType(AddressType *type) {
-  return makeAddress(adressSpace);
+  return makeAddress(addressSpace);
 }
 IRType_t<BoolType> TypeEmitter::emitBoolType(BoolType *type) {
   return llvm::Type::getInt1Ty(context);
@@ -52,10 +52,14 @@ IRType_t<FloatType> TypeEmitter::emitFloatType(FloatType *type) {
   }
 }
 IRType_t<ArrayType> TypeEmitter::emitArrayType(ArrayType *type) {
-  return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), adressSpace);
+  auto as = addressSpace;
+  addressSpace = 0;
+  return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), as);
 }
 IRType_t<PtrType> TypeEmitter::emitPtrType(PtrType *type) {
-  return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), adressSpace);
+  auto as = addressSpace;
+  addressSpace = 0;
+  return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), as);
 }
 IRType_t<StructType> TypeEmitter::emitStructType(StructType *type) {
   if (auto decl = dyn_cast<StructDecl>(type->getDecl().data())) {
@@ -87,9 +91,12 @@ llvm::Type* TypeEmitter::emitQualType(QualType type) {
   auto canonicalType = canonical.getType();
   if (!canonicalType)
     return makeVoid();
+  if (type.getAddressSpace())
+    addressSpace = type.getAddressSpace();
   auto emitted = emitType(canonicalType);
   if (canonical.isReference())
-    emitted = makePointer(static_cast<llvm::Type*>(emitted));
+    emitted = makePointer(static_cast<llvm::Type*>(emitted), addressSpace);
+  addressSpace = 0;
   return emitted;
 }
 IRType_t<QualType> TypeEmitter::operator()(QualType &type) {

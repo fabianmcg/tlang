@@ -15,6 +15,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IR/IntrinsicsNVPTX.h>
 
 namespace tlang::codegen {
 StmtEmitter::StmtEmitter(Emitter &emitter, TypeEmitter &type_emitter, ExprEmitterVisitor &expr_emitter) :
@@ -118,5 +119,8 @@ IRType_t<ReturnStmt> StmtEmitterVisitor::emitReturnStmt(ReturnStmt *stmt) {
     builder.CreateRetVoid();
   auto ret = emitExpr(stmt->getReturn());
   return builder.CreateRet(ret);
+}
+IRType_t<SyncStmt> StmtEmitterVisitor::emitSyncStmt(SyncStmt *stmt) {
+  return builder.CreateIntrinsic(llvm::Intrinsic::nvvm_barrier0, llvm::ArrayRef<llvm::Type *>{}, llvm::ArrayRef<llvm::Value *>{});
 }
 }

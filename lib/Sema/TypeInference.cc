@@ -115,11 +115,11 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
       if (auto type = dyn_cast<ArrayType>(qualType.getType())) {
         if (type->getLayout().size() != node->getIndex().size())
           throw(std::runtime_error("Invalid index for array"));
-        node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), type->getUnderlying());
+        node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), 0, type->getUnderlying());
       } else if (auto type = dynamic_cast<PtrType*>(qualType.getType())) {
         if (node->getIndex().size() != 1)
           throw(std::runtime_error("Invalid index for array"));
-        node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), type->getUnderlying());
+        node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), 0, type->getUnderlying());
       } else {
         throw(std::runtime_error("Invalid ArrayExpr"));
       }
@@ -132,7 +132,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
       auto &exprType = node->getExpr()->getType();
       if (op == UnaryOperator::Dereference) {
         if (auto pt = dyn_cast<PtrType>(exprType.getType()))
-          node->getType() = QualType(QualType::Reference, pt->getUnderlying());
+          node->getType() = QualType(QualType::Reference, 0, pt->getUnderlying());
         else
           throw(std::runtime_error("Invalid dereference"));
       } else if (op == UnaryOperator::Address)
@@ -157,7 +157,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
       auto trr = typePromotion(lhs.getType()->getCanonicalType(), rhs.getType()->getCanonicalType());
       if (trr.first == nullptr)
         throw(std::runtime_error("Invalid ternary operator"));
-      node->getType() = QualType(lhs.isReference() && rhs.isReference() ? QualType::Reference : QualType::None, trr.first);
+      node->getType() = QualType(lhs.isReference() && rhs.isReference() ? QualType::Reference : QualType::None, 0, trr.first);
     }
     return visit;
   }

@@ -17,6 +17,7 @@ int Driver::run(int argc, char **argv) {
     return stage;
   if (++stage && semaAnalysis(context))
     return stage;
+//  dump();
   if (++stage && runPasses(context))
     return stage;
   dump();
@@ -57,16 +58,16 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
     }
     for (auto& [k, v] : emitter.getModules()) {
       auto file = path;
-      path /= k;
-      std::cerr << "Generating: " << path << std::endl;
+      file /= k;
+      std::cerr << "Generating: " << file << std::endl;
       std::error_code code;
-      llvm::raw_fd_ostream os(path.string(), code);
+      llvm::raw_fd_ostream os(file.string(), code);
       if (code) {
         std::cerr << code.message() << std::endl;
         return 1;
       }
       v->print(os, nullptr);
-      std::cerr << "Finished generating: " << path << std::endl;
+      std::cerr << "Finished generating: " << file << std::endl;
     }
     return 0;
   }

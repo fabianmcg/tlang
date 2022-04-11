@@ -7,8 +7,8 @@
 namespace tlang {
 namespace sema {
 struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::prePostOrder> {
-  ResolveNamesVisitor(ASTContext &context) :
-      context(context) {
+  ResolveNamesVisitor(ASTContext &context, bool setTypes = true) :
+      context(context), setTypes(setTypes) {
   }
   visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
     if (isFirst && declContext) {
@@ -29,7 +29,7 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
     return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
-    if (isFirst)
+    if (isFirst && setTypes)
       node->setType(context.types());
     return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
@@ -51,7 +51,11 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
   }
   ASTContext &context;
   UniversalContext *declContext { };
+  bool setTypes = true;
 };
+}
+void Sema::resolveNames(ASTNode *node, bool setType) {
+  sema::ResolveNamesVisitor { context, setType }.dynamicTraverse(node);
 }
 void Sema::resolveNames() {
   sema::ResolveNamesVisitor { context }.traverseProgramDecl(*context);
