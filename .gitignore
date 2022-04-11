@@ -43,3 +43,5 @@ lib/AST/Type.cc
 lang/Conf/tmp
 lib/Parser/ParserHandler.cc
 *TODO*
+*.ptx
+nvptx

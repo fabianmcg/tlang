@@ -13,8 +13,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
-aux_source_directory(lib/ LIB_SOURCES)
-
-add_library(tlang-runtime STATIC ${LIB_SOURCES})
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(tlang-runtime STATIC lib/parallel.cc)
 target_link_libraries(tlang-runtime pthread)
+
+add_library(tlang-nvptx STATIC lib/nvptx.cc)
+
+find_package(CUDAToolkit)
+#target_include_directories(tlang-nvptx PRIVATE )
+target_link_libraries(tlang-nvptx pthread CUDA::cuda_driver)
