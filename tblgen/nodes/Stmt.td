@@ -112,6 +112,10 @@ def ParallelStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
+def BlockStmt : AbstractNode<ParallelStmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child dimensions = Child<DynamicList, [{TupleExpr}]>;
+}
+
 def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
   Variable noWait = Var<[{bool}]>;
   Child reduceList = Child<Dynamic, [{ReduceStmt}]>;
@@ -131,6 +135,8 @@ def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, Varia
 }
 
 def SyncStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable context = Var<[{reference<Stmt>}]>;
+  Child expr = Child<Dynamic, [{Expr}]>;
 }
 
 def SingleStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {

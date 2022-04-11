@@ -185,6 +185,12 @@ inline std::pair<Type*, int> typePromotion(Type *lhs, Type *rhs) {
       }
     }
   }
+  if (lhs->classof(ASTKind::PtrType) && rhs->classof(ASTKind::AddressType)) {
+    return {lhs, 1};
+  }
+  else if (rhs->classof(ASTKind::PtrType) && lhs->classof(ASTKind::AddressType)) {
+    return {rhs, 0};
+  }
   return {nullptr, -1};
 }
 }

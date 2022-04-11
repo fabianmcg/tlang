@@ -1,3 +1,4 @@
+#include <Passes/Passes/ParallelPipeline.hh>
 #include <Passes/PassManager.hh>
 #include <Passes/Passes/SimplifyExpr.hh>
 
@@ -16,6 +17,9 @@ int PassManager::run() {
   EPM.addPass(SimplifyExpr { context });
   program_manager.addPass(impl::makePassAdaptor<FunctorDecl, ProgramPM>(std::move(FPM)));
   program_manager.addPass(impl::makePassAdaptor<Expr, ProgramPM>(std::move(EPM)));
+  ParallelPipeline parallelPipeline(context);
+  parallelPipeline.init();
+  program_manager.addPass(std::move(parallelPipeline));
   program_manager.run(**context, AnyASTNodeRef { }, results);
   return 0;
 }

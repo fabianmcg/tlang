@@ -166,6 +166,10 @@ def BinaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> 
     EM<"Minus">,
     EM<"Multiply">,
     EM<"Divide">,
+    EM<"CompoundPlus">,
+    EM<"CompoundMinus">,
+    EM<"CompoundMultiply">,
+    EM<"CompoundDivide">,
     EM<"Modulo">,
     EM<"At">,
     EM<"Dot">,
@@ -176,6 +180,21 @@ def BinaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> 
   Variable op = EVar<[{Operator}]>;
   Child lhs = Child<Dynamic, [{Expr}]>;
   Child rhs = Child<Dynamic, [{Expr}]>;
+}
+
+def TernaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child condition = Child<Dynamic, [{Expr}]>;
+  Child lhs = Child<Dynamic, [{Expr}]>;
+  Child rhs = Child<Dynamic, [{Expr}]>;
+}
+
+def TupleExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child elements = Child<DynamicList, [{Expr}]>;
+}
+
+def IdxExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable context = Var<[{reference<Stmt>}]>;
+  Child index = Child<DynamicList, [{Expr}]>;
 }
 
 def DeclRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {

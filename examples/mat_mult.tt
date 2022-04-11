@@ -1,0 +1,32 @@
+fn multiply(C: f64*, A: f64*, B: f64*, n: i32, p: i32, m: i32) {
+  let ns: i32 = (n + 31) / 32;
+  let ms: i32 = (m + 31) / 32;
+  parallel [private(A, B, n, m, p)] block [(ns, ms) (32, 32)] {
+    let [shared] Aik: f64[32, 32], [shared] Bkj: f64[32, 32];
+    let Cij: f64 = 0.;
+    let ii: i32 = Idx[1, 0], jj: i32 = Idx[1, 1];
+    let i: i32 = Idx[0, 0] * 32 + ii, j: i32 = Idx[0, 1] * 32 + jj;
+    for (let k: i32 in 0 : 32 : p) {
+      let ik: i32 = k + ii, kj: i32 = k + jj;
+      Aik[ii, jj] = i < n && ik < p ? A[i * p + ik] : 0;
+      Bkj[ii, jj] = j < m && kj < p ? B[kj * m + j] : 0;
+      sync[1];
+      for (let kk: i32 in 0 : 32)
+        Cij = ik < p && kj < p ? Cij + Aik[ii, kk] * Bkj[kk, jj] : 0;
+      sync[1];
+    }
+    if ( i < n && j < m)
+      C[i * m + j] = Cij;
+  }
+}
+
+/*
+fn multiply(C: f64*, A: f64*, B: f64*, n: i32, p: i32, m: i32) {
+  context Default [map(to: A[n * p], B[p * m]), map(to_from: C[n * m])] 
+  parallel loop (let i: i32 in 0 : n, let j: i32 in 0 : m) {
+    let Cij: f64 = 0.;
+    loop [reduce(+, Cij)] (let k: i32 in 0 : p)
+      Cij = Cij + A[i * p + k] * B[k * m + j];
+    C[i * m + j] = Cij;
+  }
+}*/

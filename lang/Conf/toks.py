@@ -60,8 +60,9 @@ def makeLexer():
     db.addToken(Keyword, "Namespace")
     db.addToken(Keyword, "This")
     db.addToken(Keyword, "Allocate")
+    db.addToken(Keyword, "Sizeof")
     db.addToken(Keyword, "In")
-    db.addToken(Keyword, "Extern")
+    db.addToken(Keyword, "Nowait")
     db.addToken(Keyword, "Context")
     db.addToken(Keyword, "Parallel")
     db.addToken(Keyword, "Loop")
@@ -74,7 +75,14 @@ def makeLexer():
     db.addToken(Keyword, "Shared")
     db.addToken(Keyword, "Atomic")
     db.addToken(Keyword, "Map")
-    db.addToken(Keyword, "Execution_unit")    
+    db.addToken(Keyword, "Execution_unit")
+    db.addToken(Keyword, "Block")
+    db.addToken(Keyword, "Extern")
+    db.addToken(Keyword, "Static")
+    db.addToken(Keyword, "Local")
+    db.addToken(Keyword, "Global") 
+    db.addToken(Keyword, "Shared") 
+    db.addToken(Keyword, "Idx", "Idx") 
     # ******************************************************************************
     #   Fundamental types
     # *****************************************************************************
@@ -135,6 +143,10 @@ def makeLexer():
     db.addToken(Operator, "Increment", "++")
     db.addToken(Operator, "Decrement", "--")
     db.addToken(Operator, "Ellipsis", "...")
+    db.addToken(Operator, "CompoundPlus", "+=")
+    db.addToken(Operator, "CompoundMinus", "-=")
+    db.addToken(Operator, "CompoundMultiply", "*=")
+    db.addToken(Operator, "CompoundDivide", "/=")
     # ******************************************************************************
     #   Characters
     # ******************************************************************************

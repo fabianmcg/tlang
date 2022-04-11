@@ -131,6 +131,11 @@ class GrammarParser:
             precedence[0] += 100
 
         add("=")
+        add("+=", "-=")
+        add("*=", "/=")
+        add("||")
+        add("&&")
+        #add("<<=", ">>=")
         add("<", ">", "<=", ">=")
         add("==", "!=")
         add("<<", ">>")
