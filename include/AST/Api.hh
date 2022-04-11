@@ -32,14 +32,17 @@ struct ASTApi: ASTContextReference {
   }
   ExternFunctionDecl* CreateExternFunction(const Identifier &identifier, QualType returnType, List<ParameterDecl*> &&parameters);
   template <typename ...Args>
-  ExternFunctionDecl* CreateExternFunction(const Identifier &identifier, QualType returnType, Args...args) {
+  ExternFunctionDecl* CreateExternFunction(const Identifier &identifier, QualType returnType, Args ...args) {
     return CreateExternFunction(identifier, returnType, CreateParameterList(std::forward<Args>(args)...));
   }
   FunctionDecl* CreateFunction(const Identifier &identifier, QualType returnType, List<ParameterDecl*> &&parameters);
+  FunctionDecl* CreateFunction(const Identifier &identifier, QualType returnType, List<ParameterDecl*> &&parameters, CompoundStmt* stmt);
   template <typename ...Args>
-  FunctionDecl* CreateFunction(const Identifier &identifier, QualType returnType, Args...args) {
+  FunctionDecl* CreateFunction(const Identifier &identifier, QualType returnType, Args ...args) {
     return CreateFunction(identifier, returnType, CreateParameterList(std::forward<Args>(args)...));
   }
+  ParenExpr* CreateParenExpr(Expr *expr);
+  BinaryOperator* CreateBinOp(BinaryOperator::Operator op, Expr *lhs, Expr *rhs);
 };
 }
 

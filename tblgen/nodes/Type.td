@@ -18,30 +18,31 @@ def ProtoType : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /*
 
 def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable qualifiers = EVar<[{cvr_qualifiers}]>;
+  Variable addressSpace = Var<[{int}]>;
   Child type = Child<Dynamic, [{Type}]>;
   Enum cvr_qualifiers = Enum<[EM<"None", [{0}]>, EM<"Reference", [{1}]>, EM<"Const", [{2}]>]>;
   ClassSection header = ClassSection<Header, Public, [{
     friend class TypeContext;
-    QualType(Type *type, cvr_qualifiers qualifiers = None);
+    QualType(Type *type, cvr_qualifiers qualifiers = None, int addressSpace = 0);
     QualType getCanonicalType();
     QualType modQuals(cvr_qualifiers qualifiers = None);
     QualType addQuals(cvr_qualifiers qualifiers = None);
     bool operator==(const QualType& other);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
-    QualType::QualType(Type *type, cvr_qualifiers qualifiers) : qualifiers(qualifiers), children(type) {
+    QualType::QualType(Type *type, cvr_qualifiers qualifiers, int addressSpace) : QualType(qualifiers, addressSpace, type) {
     }
     QualType QualType::getCanonicalType() {
       auto type = getType();
       if (type)
-        return QualType(type->getCanonicalType(), qualifiers);
+        return QualType(type->getCanonicalType(), qualifiers, addressSpace);
       return *this;
     }
     QualType QualType::modQuals(cvr_qualifiers qualifiers) {
-      return QualType(getType(), qualifiers);
+      return QualType(getType(), qualifiers, addressSpace);
     }
     QualType QualType::addQuals(cvr_qualifiers qualifiers) {
-      return QualType(getType(), (cvr_qualifiers) (qualifiers | this->qualifiers));
+      return QualType(getType(), (cvr_qualifiers) (qualifiers | this->qualifiers), addressSpace);
     }
     bool QualType::operator==(const QualType& other) {
       if (qualifiers != other.qualifiers)

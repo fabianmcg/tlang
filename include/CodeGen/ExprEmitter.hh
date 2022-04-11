@@ -65,6 +65,7 @@ public:
   llvm::Value* makeSubOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeMulOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeDivOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
+  llvm::Value* makeLogic(BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeCmp(QualType type, BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeLoad(QualType type, llvm::Value *value);
   llvm::Value* makeStore(llvm::Value *value, llvm::Value *ptr);
@@ -95,6 +96,8 @@ public:
   return_t<ArrayExpr> emitArrayExprImpl(ArrayExpr *expr);
   return_t<CastExpr> emitCastExprImpl(CastExpr *expr);
   return_t<ImplicitCastExpr> emitImplicitCastExprImpl(ImplicitCastExpr *expr);
+  return_t<TernaryOperator> emitTernaryOperatorImpl(TernaryOperator *expr);
+  return_t<IdxExpr> emitIdxExprImpl(IdxExpr *expr);
   return_t<Expr> emitExprAndLoad(Expr *node, bool loadValue);
   IRType_t<Expr> emitExpr(Expr *node) {
     return emitExprAndLoad(node, true).value;

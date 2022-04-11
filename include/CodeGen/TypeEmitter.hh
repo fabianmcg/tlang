@@ -58,7 +58,7 @@ public:
 protected:
   std::unordered_map<Decl*, llvm::Type*> decl2type { };
   llvm::LLVMContext &context;
-  int adressSpace { };
+  int addressSpace { };
 };
 } // namespace tlang::codegen
 

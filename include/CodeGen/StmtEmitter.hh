@@ -94,6 +94,7 @@ public:
   IRType_t<BreakStmt> emitBreakStmt(BreakStmt *stmt);
   IRType_t<ContinueStmt> emitContinueStmt(ContinueStmt *stmt);
   IRType_t<ReturnStmt> emitReturnStmt(ReturnStmt *stmt);
+  IRType_t<SyncStmt> emitSyncStmt(SyncStmt *stmt);
   inline IRType_t<Expr> emitExpr(Expr *node) {
     return exprEmitter.emitExpr(node);
   }

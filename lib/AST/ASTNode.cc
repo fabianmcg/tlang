@@ -1,5 +1,6 @@
 #include <AST/ASTNode.hh>
 #include <iostream>
+#include <Io/ASTIo.hh>
 
 namespace tlang {
 ASTNode::ASTNode() :
@@ -43,7 +44,7 @@ const SourceRange& ASTNode::getSourceRange() const {
   return range;
 }
 void ASTNode::dump(std::ostream &ost) const {
-
+  tlang::dump(const_cast<ASTNode*>(this), ost);
 }
 std::ostream& operator<<(std::ostream &ost, const ASTNode &node) {
   node.dump(ost);

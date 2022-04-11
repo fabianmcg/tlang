@@ -47,6 +47,8 @@ def ValueDecl : AbstractNode<NamedDecl, /* Abstract = */ 1, /* Implicit = */ 0> 
 }
 
 def FunctorDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
+  Enum GenKind = Enum<[EM<"Generic", [{0}]>, EM<"Kernel", [{1}]>]>;
+  Variable functionKind = EVar<[{GenKind}]>;
   Variable complete = Var<[{bool}]>;
   Child returnType = Child<Static, [{QualType}]>;
   Child parameters = Child<DynamicList, [{ParameterDecl}]>;
@@ -54,7 +56,7 @@ def FunctorDecl : AbstractNode<ValueDecl, /* Abstract = */ 0, /* Implicit = */ 0
   ClassSection header = ClassSection<Header, Public, [{
     template <typename... Args>
     FunctorDecl(const Identifier& identifier, Args &&...args)
-        : FunctorDecl(VariableContext(), false, std::forward<Args>(args)...) {
+        : FunctorDecl(VariableContext(), Generic, false, std::forward<Args>(args)...) {
       addArgs(getParameters());
       getIdentifier() = identifier;
     }

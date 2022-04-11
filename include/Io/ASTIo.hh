@@ -22,7 +22,8 @@ public:
     if (kind)
       ost << ((qualifiers & QualType::Const) == QualType::Const ? "const " : "");
     else
-      ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "") << " [" << node->getType() << "]";
+      ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "") << " [" << node->getType() << "]{"
+          << node->getAddressSpace() << "}";
     return visit;
   }
   visit_t visitFunctionType(FunctionType *node, VisitType kind) {

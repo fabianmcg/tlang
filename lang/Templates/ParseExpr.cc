@@ -1,6 +1,7 @@
 parse_result<Expr, return_kind::Dynamic> ParseBinOpRHS(int exprPrecedence, parse_result<Expr, return_kind::Dynamic> lhs) {
   using binary_t = parse_result<BinaryOperator, return_kind::Dynamic>;
   using member_t = parse_result<MemberExpr, return_kind::Dynamic>;
+  using ternary_t = parse_result<TernaryOperator, return_kind::Dynamic>;
   using memberCall_t = parse_result<MemberCallExpr, return_kind::Dynamic>;
   while (true) {
     auto bop = tokToOperator(peek().kind);
@@ -29,8 +30,11 @@ parse_result<Expr, return_kind::Dynamic> ParseBinOpRHS(int exprPrecedence, parse
       }
       else
         lhs = make<member_t>(*rhs, *lhs);
-    }
-    else
+    } else if ( bop == BinaryOperator::Ternary) {
+      match(token_kind::Colon, "BinOpRHS");
+      auto tmp = ParseTopExpr();
+      lhs = make<ternary_t>(*lhs, *rhs, *ParseBinOpRHS(0, std::move(tmp)));
+    } else
       lhs = make<binary_t>(bop, *lhs, *rhs);
     lhs.range(lhsRange.begin, rhsRange.end);
   }

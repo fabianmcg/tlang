@@ -13,6 +13,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IR/IntrinsicsNVPTX.h>
 #include <Support/Enumerate.hh>
 
 namespace tlang::codegen {
@@ -64,9 +65,19 @@ llvm::Value* ExprEmitter::makeDivOp(QualType type, llvm::Value *lhs, llvm::Value
     return builder.CreateFDiv(lhs, rhs, "");
   return nullptr;
 }
+llvm::Value* ExprEmitter::makeLogic(BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs) {
+  switch (kind) {
+  case BinaryOperator::Or:
+    return builder.CreateOr(lhs, rhs);
+  case BinaryOperator::And:
+    return builder.CreateAnd(lhs, rhs);
+  default:
+    return nullptr;
+  }
+}
 llvm::Value* ExprEmitter::makeCmp(QualType type, BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs) {
   llvm::CmpInst::Predicate predicate;
-  bool isInt = isa<IntType>(type.getType());
+  bool isInt = isa<IntType>(type.getType()) || isa<BoolType>(type.getType());
   bool isSigned = false;
   if (auto it = dyn_cast<IntType>(type.getType()))
     isSigned = it->getSign() == IntType::Signed;
@@ -101,7 +112,7 @@ llvm::Value* ExprEmitter::makeCmp(QualType type, BinaryOperator::Operator kind, 
 llvm::Value* ExprEmitter::makeLoad(QualType type, llvm::Value *value) {
   return builder.CreateLoad(emitQualType(type.modQuals()), value);
 }
-llvm::Value* ExprEmitter::makeStore(llvm::Value *value, llvm::Value *ptr) {
+llvm::Value* ExprEmitter::makeStore(llvm::Value *ptr, llvm::Value *value) {
   return builder.CreateStore(value, ptr);
 }
 IRType_t<CastExpr> ExprEmitter::makeCast(Type *dest, Type *source, llvm::Value *subExpr) {
@@ -224,6 +235,9 @@ ExprReturn<BinaryOperator> ExprEmitterVisitor::emitBinaryOperatorImpl(BinaryOper
   case BinaryOperator::LEQ:
   case BinaryOperator::GEQ:
     return makeCmp(type, op, lhs, rhs);
+  case BinaryOperator::And:
+  case BinaryOperator::Or:
+    return makeLogic(op, lhs, rhs);
   case BinaryOperator::Assign:
     makeStore(lhs, rhs);
     return {lhs, true};
@@ -274,7 +288,45 @@ ExprReturn<CastExpr> ExprEmitterVisitor::emitCastExprImpl(CastExpr *expr) {
   return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
 }
 ExprReturn<ImplicitCastExpr> ExprEmitterVisitor::emitImplicitCastExprImpl(ImplicitCastExpr *expr) {
+  expr->dump(std::cerr);
   auto subExpr = emitExprAndLoad(expr->getExpr(), true).value;
   return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
+}
+ExprReturn<TernaryOperator> ExprEmitterVisitor::emitTernaryOperatorImpl(TernaryOperator *expr) {
+  auto condition = emitExprAndLoad(expr->getCondition(), true).value;
+  auto tval = emitExprAndLoad(expr->getLhs(), true).value;
+  auto fval = emitExprAndLoad(expr->getRhs(), true).value;
+  return builder.CreateSelect(condition, tval, fval);
+}
+
+ExprReturn<IdxExpr> ExprEmitterVisitor::emitIdxExprImpl(IdxExpr *expr) {
+  std::vector<int> nums;
+  for (auto e : expr->getIndex()) {
+    if (auto il = dyn_cast<IntegerLiteral>(e)) {
+      nums.push_back(il->getValue());
+    } else
+      throw(std::runtime_error("Invalid IDX"));
+  }
+  if (nums.size() != 2)
+    throw(std::runtime_error("Invalid IDX"));
+  switch (nums[1]) {
+  case 0:
+    return
+        nums[0] == 0 ?
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_x, { }, { }) :
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_x, { }, { });
+  case 1:
+    return
+        nums[0] == 0 ?
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_y, { }, { }) :
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_y, { }, { });
+  case 2:
+    return
+        nums[0] == 0 ?
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_z, { }, { }) :
+            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_z, { }, { });
+  default:
+    return nullptr;
+  }
 }
 }

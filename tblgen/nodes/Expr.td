@@ -175,7 +175,8 @@ def BinaryOperator : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> 
     EM<"Dot">,
     EM<"Comma">,
     EM<"Colon">,
-    EM<"Semicolon">
+    EM<"Semicolon">,
+    EM<"Ternary">
   ]>;
   Variable op = EVar<[{Operator}]>;
   Child lhs = Child<Dynamic, [{Expr}]>;

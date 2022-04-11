@@ -3,6 +3,7 @@
 #include <CodeGen/DeclEmitter.hh>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Verifier.h>
+//#include <llvm/IR/Intr>
 
 namespace tlang::codegen {
 template <typename E>
@@ -78,6 +79,21 @@ IRType_t<FunctionDecl> DeclEmitterVisitor::emitFunctionDecl(FunctionDecl *functi
   if (irFunction->getReturnType()->isVoidTy() && !builder.GetInsertBlock()->getTerminator())
     builder.CreateRetVoid();
   verifyFunction(*irFunction);
+  if (function->isKernel()) {
+    llvm::SmallVector<llvm::Metadata*, 32> Ops; // Tuple operands
+
+    Ops.push_back(llvm::ValueAsMetadata::getConstant(irFunction));
+    Ops.push_back(llvm::MDString::get(context, "kernel"));
+
+    // get constant i32 1
+    llvm::Type *I32Ty = llvm::Type::getInt32Ty(context);
+    llvm::Constant *One = llvm::ConstantInt::get(I32Ty, 1);
+    Ops.push_back(llvm::ValueAsMetadata::getConstant(One));
+
+    auto *Node = llvm::MDTuple::get(context, Ops);
+    llvm::NamedMDNode *nvvmMetadataNode =  module.getOrInsertNamedMetadata("nvvm.annotations");
+    nvvmMetadataNode->addOperand(Node);
+  }
   return irFunction;
 }
 IRType_t<VariableDecl> DeclEmitterVisitor::emitVariableDecl(VariableDecl *variable) {

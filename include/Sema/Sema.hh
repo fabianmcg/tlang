@@ -8,6 +8,7 @@ class Sema {
 public:
   Sema(ASTContext &context);
   void run();
+  void resolveNames(ASTNode * node, bool setType = false);
 private:
   void completeTable();
   void resolveTypes();
