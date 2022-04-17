@@ -53,25 +53,25 @@ struct ParallelCodeGen: public ASTContextReference, public PassBase<ParallelCode
     ref.assign<Stmt, Stmt>(nullptr);
   }
   void genFunction(ModuleDecl *module, Stmt *stmt) {
-    if (auto section = dyn_cast<BlockStmt>(stmt)) {
-      List<ParameterDecl*> parameters;
-      for (auto expr : section->getPrivateVariables()) {
-        if (auto ref = dyn_cast<DeclRefExpr>(expr)) {
-          if (auto vd = dyn_cast<VariableDecl>(ref->getDecl().data())) {
-            auto type = vd->getType();
-            if (isa<PtrType>(type.getType()))
-              type.getAddressSpace() = 1;
-            parameters.push_back(builder.CreateParameter(vd->getIdentifier(), type));
-          }
-        }
-      }
-      auto function = builder.AddToContext(module,
-          builder.CreateFunction("nvptx_kernel", QualType(), move(parameters), dyn_cast<CompoundStmt>(section->getStmt())));
-      Sema sema(context);
-      sema.resolveNames(function);
-      function->getFunctionKind() = FunctorDecl::Kernel;
-      ChangeAS { }.traverseFunctionDecl(function);
-    }
+//    if (auto section = dyn_cast<BlockStmt>(stmt)) {
+//      List<ParameterDecl*> parameters;
+//      for (auto expr : section->getPrivateVariables()) {
+//        if (auto ref = dyn_cast<DeclRefExpr>(expr)) {
+//          if (auto vd = dyn_cast<VariableDecl>(ref->getDecl().data())) {
+//            auto type = vd->getType();
+//            if (isa<PtrType>(type.getType()))
+//              type.getAddressSpace() = 1;
+//            parameters.push_back(builder.CreateParameter(vd->getIdentifier(), type));
+//          }
+//        }
+//      }
+//      auto function = builder.AddToContext(module,
+//          builder.CreateFunction("nvptx_kernel", QualType(), move(parameters), dyn_cast<CompoundStmt>(section->getStmt())));
+//      Sema sema(context);
+//      sema.resolveNames(function);
+//      function->getFunctionKind() = FunctorDecl::Kernel;
+//      ChangeAS { }.traverseFunctionDecl(function);
+//    }
   }
   ASTApi builder { context };
 };

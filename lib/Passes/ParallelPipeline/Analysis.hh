@@ -1,8 +1,8 @@
 #ifndef PASSES_PARALLELPIPELINE_ANALYSIS_HH
 #define PASSES_PARALLELPIPELINE_ANALYSIS_HH
 
-#include <Passes/Passes/ParallelPipeline.hh>
 #include <AST/Visitors/ASTVisitor.hh>
+#include <Transformation/ParallelPipeline.hh>
 
 namespace tlang {
 struct ParallelAnalysis: ResultConcept {
@@ -21,12 +21,12 @@ struct ParallelAnalysisPass: public ASTContextReference, public PassBase<Paralle
     Visitor(ModuleDecl *module, ResultManager &manager) :
         module(module), manager(manager) {
     }
-    visit_t visitBlockStmt(BlockStmt *block, AnyASTNodeRef nodeRef) {
-      auto analysis = new ParallelAnalysis { };
-      analysis->parallelSections.push_back( { nodeRef, block });
-      manager.addResult(ParallelAnalysisPass::ID(), module, analysis);
-      return visit;
-    }
+//    visit_t visitBlockStmt(BlockStmt *block, AnyASTNodeRef nodeRef) {
+//      auto analysis = new ParallelAnalysis { };
+//      analysis->parallelSections.push_back( { nodeRef, block });
+//      manager.addResult(ParallelAnalysisPass::ID(), module, analysis);
+//      return visit;
+//    }
     ModuleDecl *module;
     ResultManager &manager;
   };
