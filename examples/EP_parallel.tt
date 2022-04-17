@@ -73,9 +73,8 @@ fn EP(x: f64*, q: f64*, A: f64, S: f64, sxC: f64*, syC: f64*, gcC: f64*, np: i32
     if (timers_enabled)
       timer_stop(1);
   }
-  for (i in 0 : NQ) {
-      atomic(+, q[i] , qq[i]);
-  }
+  for (i in 0 : NQ)
+    atomic(+, q[i] , qq[i]);
   }
   
   for (i in 0 : NQ)   // for (i = 0; i < NQ; i++) 

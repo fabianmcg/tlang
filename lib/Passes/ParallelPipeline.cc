@@ -1,5 +1,6 @@
-#include <Passes/Passes/ParallelPipeline.hh>
+#include <Transformation/ParallelPipeline.hh>
 #include <Passes/PassManager.hh>
+
 #include "ParallelPipeline/AddGpuFunctions.hh"
 #include "ParallelPipeline/Analysis.hh"
 #include "ParallelPipeline/ParallelCodeGen.hh"

@@ -92,40 +92,50 @@ def ReturnStmt : AbstractNode<ValueStmt, /* Abstract = */ 0, /* Implicit = */ 0>
   Child return = Child<Dynamic, [{Expr}]>;
 }
 
-def ContextStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable contextKind = Var<[{Identifier}]>;
+
+def ParallelBase : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
+}
+
+def ContextStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Kind = Enum<[EM<"Inherited">, EM<"Default">, EM<"CPU">, EM<"GPU">]>;
+  Variable parentContext = Var<[{reference<ContextStmt>}]>;
+  Variable contextKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def MapStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def MapStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable mapKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{Expr}]>;
   Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">]>;
 }
 
-def ParallelStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def ParallelContext : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Mapping = Enum<[EM<"None">, EM<"Vector", [{1}]>, EM<"Matrix", [{2}]>, EM<"Tensor", [{4}]>, EM<"All", [{7}]>]>;
+  Variable context = Var<[{reference<ContextStmt>}]>;
+  Variable parentContext = Var<[{reference<ParallelContext>}]>;
+  Variable mapping = EVar<[{Mapping}]>;
   Variable noWait = Var<[{bool}]>;
-  Variable execUnit = Var<[{std::string}], [{"Auto"}]>;
+  Child firstPrivateVariables = Child<DynamicList, [{Expr}]>;
   Child privateVariables = Child<DynamicList, [{Expr}]>;
   Child sharedVariables = Child<DynamicList, [{Expr}]>;
+  Child reduceList = Child<DynamicList, [{ReduceStmt}]>;
+  Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
+  Child launchParameters = Child<DynamicList, [{TupleExpr}]>;
+}
+
+def ParallelStmt : AbstractNode<ParallelContext, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def BlockStmt : AbstractNode<ParallelStmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Child dimensions = Child<DynamicList, [{TupleExpr}]>;
-}
-
-def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
-  Variable noWait = Var<[{bool}]>;
-  Child reduceList = Child<Dynamic, [{ReduceStmt}]>;
+def LoopStmt : AbstractNode<ParallelContext, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
   Child ranges = Child<DynamicList, [{RangeStmt}]>;
   Child body = Child<Dynamic, [{Stmt}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    LoopStmt(bool noWait, ReduceStmt* reduce, List<RangeStmt*>&& ranges, Stmt* stmt);
+    LoopStmt(ParallelContext&& context, List<RangeStmt*>&& ranges, Stmt* stmt);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{  
-    LoopStmt::LoopStmt(bool noWait, ReduceStmt* reduce, List<RangeStmt*>&& ranges, Stmt* stmt): LoopStmt(VariableContext(), noWait, reduce, std::move(ranges), stmt) {
+    LoopStmt::LoopStmt(ParallelContext&& context, List<RangeStmt*>&& ranges, Stmt* stmt): LoopStmt(std::move(context), VariableContext(), std::move(ranges), stmt) {
       auto &Ranges = getRanges();
       for (auto& range : Ranges)
         if (range->getDecl())
@@ -134,20 +144,21 @@ def LoopStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0>, Varia
   }]>;
 }
 
-def SyncStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable context = Var<[{reference<Stmt>}]>;
-  Child expr = Child<Dynamic, [{Expr}]>;
+def SyncStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Kind = Enum<[EM<"Default">, EM<"Vector", [{1}]>, EM<"Matrix", [{2}]>, EM<"Tensor", [{4}]>]>;
+  Variable context = Var<[{reference<ParallelContext>}]>;
+  Variable syncKind = EVar<[{Kind}]>;
 }
 
-def SingleStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def SingleStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def MainStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def MainStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def AtomicStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def AtomicStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
   Enum Operator = Enum<[
     EM<"Plus">,
     EM<"Minus">,
@@ -159,7 +170,7 @@ def AtomicStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child rhs = Child<Dynamic, [{Expr}]>;
 }
 
-def ReduceStmt : AbstractNode<Stmt, /* Abstract = */ 0, /* Implicit = */ 0> {
+def ReduceStmt : AbstractNode<ParallelBase, /* Abstract = */ 0, /* Implicit = */ 0> {
   Enum Operator = Enum<[
     EM<"Plus">,
     EM<"Minus">,

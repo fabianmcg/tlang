@@ -2,18 +2,18 @@
 #define PASSES_IMPL_PASSMANAGER_HH
 
 #include <vector>
-#include <Passes/Impl/Pass.hh>
 #include <AST/Visitors/EditVisitor.hh>
+#include <Passes/Impl/Pass.hh>
 
 namespace tlang::impl {
-template <typename ASTNode, typename ResultsManager, typename RT, typename ...Args>
-class PassManager: PassBase<PassManager<ASTNode, ResultsManager, RT, Args...>> {
+template <typename Node, typename ResultManager, typename RT, typename ...Args>
+class PassManager: PassBase<PassManager<Node, ResultManager, RT, Args...>> {
 protected:
-  using pass_concept = PassConcept<ASTNode, ResultsManager, RT, Args...>;
+  using pass_concept = PassConcept<Node, ResultManager, RT, Args...>;
   std::vector<std::unique_ptr<pass_concept>> passes;
 public:
   PassManager() = default;
-  RT run(ASTNode &unit, AnyASTNodeRef nodeRef, ResultsManager &manager, Args ...args) {
+  RT run(Node &unit, AnyASTNodeRef nodeRef, ResultManager &manager, Args ...args) {
     for (auto &pass : passes) {
       if (pass)
         pass->run(unit, nodeRef, manager, args...);
@@ -22,7 +22,7 @@ public:
   }
   template <typename Pass, std::enable_if_t<!std::is_same_v<Pass, PassManager>, int> = 0>
   void addPass(Pass &&pass) {
-    using PassModelT = PassModel<ASTNode, ResultsManager, Pass, RT, Args...>;
+    using PassModelT = PassModel<Node, ResultManager, Pass, RT, Args...>;
     passes.push_back(std::unique_ptr<pass_concept>(new PassModelT(std::forward<Pass>(pass))));
   }
   template <typename Pass, std::enable_if_t<std::is_same_v<Pass, PassManager>, int> = 0>
@@ -37,28 +37,33 @@ public:
     return true;
   }
 };
+
 template <typename >
 struct PassManagerTraits;
-template <typename ASTUnit, typename ResultsManager, typename RT, typename ...Args>
-struct PassManagerTraits<PassManager<ASTUnit, ResultsManager, RT, Args...>> {
-  using type = PassConcept<ASTUnit, ResultsManager, RT, Args...>;
+template <typename Node, typename ResultManager, typename RT, typename ...Args>
+struct PassManagerTraits<PassManager<Node, ResultManager, RT, Args...>> {
+  using node = Node;
+  using result_manager = ResultManager;
+  using return_type = RT;
+  using arguments = std::tuple<Args...>;
+  using concept = PassConcept<Node, ResultManager, RT, Args...>;
   template <typename Pass>
-  using model = PassModel<ASTUnit, ResultsManager, Pass, RT, Args...>;
+  using model = PassModel<Node, ResultManager, Pass, RT, Args...>;
 };
 
 template <typename, typename, typename >
 class PassManagerAdaptor;
-template <typename PassASTUnit, typename Pass, typename ASTUnit, typename ResultsManager, typename RT, typename ...Args>
-class PassManagerAdaptor<PassASTUnit, Pass, PassManager<ASTUnit, ResultsManager, RT, Args...>> : public PassBase<
-    PassManagerAdaptor<PassASTUnit, Pass, PassManager<ASTUnit, ResultsManager, RT, Args...>>> {
+template <typename PassNode, typename Pass, typename Node, typename ResultManager, typename RT, typename ...Args>
+class PassManagerAdaptor<PassNode, Pass, PassManager<Node, ResultManager, RT, Args...>> : public PassBase<
+    PassManagerAdaptor<PassNode, Pass, PassManager<Node, ResultManager, RT, Args...>>> {
 public:
   struct Visitor: public tlang::EditVisitor<Visitor, VisitorPattern::preOrder> {
     using VisitStatus = typename tlang::EditVisitor<Visitor, VisitorPattern::preOrder>::VisitStatus;
-    Visitor(Pass &pass, ResultsManager &manager, std::tuple<Args...> &&args) :
+    Visitor(Pass &pass, ResultManager &manager, std::tuple<Args...> &&args) :
         pass(pass), manager(manager), args(std::move(args)) {
     }
     VisitStatus visitASTNode(ASTNode *astNode, AnyASTNodeRef &nodeRef) {
-      auto node = dyn_cast<PassASTUnit>(astNode);
+      auto node = dyn_cast<PassNode>(astNode);
       if (!node)
         return VisitStatus::visit;
       if constexpr (sizeof...(Args)) {
@@ -71,13 +76,13 @@ public:
       return VisitStatus::visit;
     }
     Pass &pass;
-    ResultsManager &manager;
+    ResultManager &manager;
     std::tuple<Args...> args;
   };
   PassManagerAdaptor(Pass &&pass) :
       pass(std::move(pass)) {
   }
-  RT run(ASTUnit &node, AnyASTNodeRef nodeRef, ResultsManager &manager, Args ...args) {
+  RT run(Node &node, AnyASTNodeRef nodeRef, ResultManager &manager, Args ...args) {
     auto tuple = std::tuple<Args...> { std::forward<Args>(args)... };
     Visitor visitor { pass, manager, std::move(tuple) };
     visitor.dynamicTraverse(&node, nodeRef);
@@ -86,11 +91,11 @@ public:
 protected:
   Pass pass;
 };
-template <typename PassASTUnit, typename PassManager, typename Pass>
-PassManagerAdaptor<PassASTUnit, Pass, PassManager> makePassAdaptor(Pass &&pass) {
-  using PassConcept = typename PassManagerTraits<PassManager>::type;
+
+template <typename PassNode, typename PassManager, typename Pass>
+PassManagerAdaptor<PassNode, Pass, PassManager> makePassAdaptor(Pass &&pass) {
   using PassModelT = typename PassManagerTraits<PassManager>::model<Pass>;
-  return PassManagerAdaptor<PassASTUnit, Pass, PassManager>(std::move(pass));
+  return PassManagerAdaptor<PassNode, Pass, PassManager>(std::move(pass));
 }
 }
 

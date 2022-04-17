@@ -1,6 +1,6 @@
-#include <Passes/Passes/ParallelPipeline.hh>
+#include <Transformation/ParallelPipeline.hh>
+#include <Transformation/SimplifyExpr.hh>
 #include <Passes/PassManager.hh>
-#include <Passes/Passes/SimplifyExpr.hh>
 
 namespace tlang {
 template class impl::PassManager<ProgramDecl, ResultManager, bool>;
@@ -11,7 +11,7 @@ template class impl::PassManager<FunctorDecl, ResultManager, bool>;
 template class impl::PassManager<Stmt, ResultManager, bool>;
 template class impl::PassManager<Expr, ResultManager, bool>;
 
-int PassManager::run() {
+void PassManager::registerDefaultPipeline() {
   FunctorDeclPM FPM;
   ExprPM EPM;
   EPM.addPass(SimplifyExpr { context });
@@ -20,6 +20,9 @@ int PassManager::run() {
   ParallelPipeline parallelPipeline(context);
   parallelPipeline.init();
   program_manager.addPass(std::move(parallelPipeline));
+}
+
+int PassManager::run() {
   program_manager.run(**context, AnyASTNodeRef { }, results);
   return 0;
 }

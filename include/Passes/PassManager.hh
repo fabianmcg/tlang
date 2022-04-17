@@ -2,9 +2,9 @@
 #define PASSES_PASSMANAGER_HH
 
 #include <vector>
-#include <Passes/ResultManager.hh>
-#include <Passes/Impl/PassManager.hh>
 #include <AST/ASTContext.hh>
+#include <Passes/Impl/PassManager.hh>
+#include <Passes/ResultManager.hh>
 
 namespace tlang {
 extern template class impl::PassManager<ProgramDecl, ResultManager, bool>;
@@ -34,6 +34,11 @@ public:
       context(context) {
   }
   int run();
+  void registerDefaultPipeline();
+  template <typename T>
+  void appendPass(T &&pass) {
+    program_manager.addPass(std::move(pass));
+  }
 protected:
   ASTContext &context;
   ResultManager results;

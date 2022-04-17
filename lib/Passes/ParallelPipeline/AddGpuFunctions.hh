@@ -1,7 +1,7 @@
 #ifndef PP_AGPU_HH
 #define PP_AGPU_HH
-#include <Passes/Passes/ParallelPipeline.hh>
 #include <AST/Api.hh>
+#include <Transformation/ParallelPipeline.hh>
 
 namespace tlang {
 struct AddGPUFunctions: public ASTContextReference, public PassBase<AddGPUFunctions> {
