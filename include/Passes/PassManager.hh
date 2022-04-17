@@ -7,8 +7,8 @@
 #include <Passes/ResultManager.hh>
 
 namespace tlang {
-extern template class impl::PassManager<ProgramDecl, ResultManager, bool>;
-using ProgramPM = impl::PassManager<ProgramDecl, ResultManager, bool>;
+extern template class impl::PassManager<UniverseDecl, ResultManager, bool>;
+using ProgramPM = impl::PassManager<UniverseDecl, ResultManager, bool>;
 
 extern template class impl::PassManager<UnitDecl, ResultManager, bool>;
 using UnitPM = impl::PassManager<UnitDecl, ResultManager, bool>;

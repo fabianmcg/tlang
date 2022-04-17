@@ -2,9 +2,9 @@
 
 namespace tlang {
 ASTContext::ASTContext() {
-  program = make<ProgramDecl>();
+  program = make<UniverseDecl>();
 }
-ProgramDecl* ASTContext::operator*() const {
+UniverseDecl* ASTContext::operator*() const {
   return program;
 }
 void ASTContext::remove(ASTNode *node) {

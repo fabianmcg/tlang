@@ -6,7 +6,7 @@
 #include <Passes/ResultManager.hh>
 
 namespace tlang {
-struct ParallelPipeline: public ASTContextReference, public PassBase<ParallelPipeline>, public impl::PassManager<ProgramDecl, ResultManager, bool> {
+struct ParallelPipeline: public ASTContextReference, public PassBase<ParallelPipeline>, public impl::PassManager<UniverseDecl, ResultManager, bool> {
   using ASTContextReference::ASTContextReference;
   static llvm::StringRef name() {
     return "ParallelPipeline";

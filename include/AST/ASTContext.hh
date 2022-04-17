@@ -15,7 +15,7 @@ struct ASTContext {
   ASTContext(const ASTContext&) = delete;
   ASTContext& operator=(ASTContext&&) = default;
   ASTContext& operator=(const ASTContext&) = delete;
-  ProgramDecl* operator*() const;
+  UniverseDecl* operator*() const;
   template <typename T, typename ...Args>
   T* make(Args &&...args) {
     return addNode(std::make_unique<T>(std::forward<Args>(args)...));
@@ -44,7 +44,7 @@ struct ASTContext {
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> nodes;
   TypeContext type_context;
-  ProgramDecl *program { };
+  UniverseDecl *program { };
   UnitDecl *mainUnit { };
   template <typename T>
   T* addNode(std::unique_ptr<T> &&value) {

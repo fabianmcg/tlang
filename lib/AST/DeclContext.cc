@@ -2,21 +2,21 @@
 #include "AST/Decl.hh"
 #include <AST/Traits.hh>
 
-void tlang::ProgramContext::add(UnitDecl *decl) {
+void tlang::UniverseContext::add(UnitDecl *decl) {
   if (decl) {
-    auto &symbol = units[decl->getGenKind()] = symbol_type { decl };
+    auto &symbol = units[decl->getBackend()] = symbol_type { decl };
     push_back(&symbol);
   }
 }
 
-tlang::UnitDecl* tlang::ProgramContext::get(int kind) {
+tlang::UnitDecl* tlang::UniverseContext::get(int kind) {
   auto it = units.find(kind);
   if (it != units.end())
     return it->second.get<UnitDecl>();
   return nullptr;
 }
 
-tlang::ProgramContext::symbol_type tlang::ProgramContext::search(const key_type &key) const {
+tlang::UniverseContext::symbol_type tlang::UniverseContext::search(const key_type &key) const {
   return symbol_type { };
 }
 
