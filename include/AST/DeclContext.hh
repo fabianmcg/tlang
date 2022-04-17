@@ -12,7 +12,7 @@ class Decl;
 class UnitDecl;
 class ModuleDecl;
 using UniversalContext = symbol_table::UniversalSymbolTable<std::string, Decl>;
-class ProgramContext: public symbol_table::UniversalSymbolTable<std::string, Decl> {
+class UniverseContext: public symbol_table::UniversalSymbolTable<std::string, Decl> {
 public:
   void add(UnitDecl *decl);
   UnitDecl* get(int kind);
@@ -55,7 +55,7 @@ struct IsDeclContext: std::false_type {
 };
 
 template <>
-struct IsDeclContext<ProgramContext> : std::true_type {
+struct IsDeclContext<UniverseContext> : std::true_type {
 };
 
 template <>

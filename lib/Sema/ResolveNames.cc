@@ -58,6 +58,6 @@ void Sema::resolveNames(ASTNode *node, bool setType) {
   sema::ResolveNamesVisitor { context, setType }.dynamicTraverse(node);
 }
 void Sema::resolveNames() {
-  sema::ResolveNamesVisitor { context }.traverseProgramDecl(*context);
+  sema::ResolveNamesVisitor { context }.traverseUniverseDecl(*context);
 }
 }

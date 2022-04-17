@@ -5,13 +5,15 @@ include "ASTNode.td"
 def DeclHeader : CodeSection<Header, [{
 #include <AST/Type.hh>
 #include <AST/DeclContext.hh>
+#include <CodeGen/Backend.hh>
 }]>;
 
-class ProgramContext;
+class UniverseContext;
 class UnitContext;
 class DeclContext;
 class NoVisitDeclContext;
 class VariableContext;
+class Backend;
 
 def Decl : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
 }
@@ -25,12 +27,10 @@ def NamedDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
   }]>;
 }
 
-def ProgramDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0>, ProgramContext {
+def UniverseDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0>, UniverseContext {
 }
 
-def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, UnitContext {
-  Enum GenKind = Enum<[EM<"Generic", [{0}]>, EM<"Parallel", [{1}]>, EM<"NVPTX", [{2}]>]>;
-  Variable genKind = EVar<[{GenKind}], [{Generic}]>;
+def UnitDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, UnitContext, Backend {
 }
 
 def ModuleDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = */ 0>, DeclContext {

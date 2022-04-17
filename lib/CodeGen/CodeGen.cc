@@ -44,9 +44,9 @@ void initNVPTXTarget(llvm::Module *module) {
 std::unique_ptr<llvm::Module> makeModule(UnitDecl *unit, llvm::LLVMContext &context) {
   std::unique_ptr<llvm::Module> module;
   module = std::make_unique<llvm::Module>(unit->getIdentifier(), context);
-  if (unit->getGenKind() < UnitDecl::NVPTX)
+  if (unit->getBackend() < UnitDecl::NVPTX)
     initGenericTarget(module.get());
-  if (unit->getGenKind() == UnitDecl::NVPTX)
+  if (unit->getBackend() == UnitDecl::NVPTX)
     initNVPTXTarget(module.get());
   return module;
 }
@@ -74,7 +74,7 @@ llvm::Module* CodeGen::emit(UnitDecl *unit) {
   assert(unit);
   llvm::IRBuilder<> builder { *llvm_context };
   auto &module = getModule(unit);
-  if (unit->getGenKind() <= UnitDecl::NVPTX) {
+  if (unit->getBackend() <= UnitDecl::NVPTX) {
     GenericEmitter emitter = makeEmitter<GenericEmitter>(ast_context, *llvm_context, module, builder);
     emitter.run(unit);
   }

@@ -54,6 +54,6 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
 };
 }
 void Sema::completeTable() {
-  sema::SymbolTableVisitor { context }.traverseProgramDecl(*context);
+  sema::SymbolTableVisitor { context }.traverseUniverseDecl(*context);
 }
 }
