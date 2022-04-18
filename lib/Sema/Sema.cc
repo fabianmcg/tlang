@@ -1,7 +1,7 @@
 #include <Sema/Sema.hh>
 
 namespace tlang {
-Sema::Sema(ASTContext &context) :
+Sema::Sema(CompilerInvocation &context) :
     context(context) {
 }
 void Sema::run() {

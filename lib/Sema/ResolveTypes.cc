@@ -92,6 +92,6 @@ struct ResolveTypesVisitor: ASTVisitor<ResolveTypesVisitor, VisitorPattern::preP
 };
 }
 void Sema::resolveTypes() {
-  sema::ResolveTypesVisitor { context }.traverseUniverseDecl(*context);
+  sema::ResolveTypesVisitor { *context }.traverseUniverseDecl(**context);
 }
 }

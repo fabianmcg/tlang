@@ -168,16 +168,14 @@ public:
       if (status == terminate)                                                                                         \
         return false;                                                                                                  \
     }                                                                                                                  \
-    if (kind == preVisit) {                                                                                            \
+    if (kind == preVisit && status == visit) {                                                                         \
       std::unique_ptr<stack_t> _stack;                                                                                 \
       if (!stack) {                                                                                                    \
         _stack = std::make_unique<stack_t>();                                                                          \
         stack = _stack.get();                                                                                          \
       }                                                                                                                \
-      if (status == visit)                                                                                             \
-        stack->push_front({node, ref, postVisit});                                                                     \
-      if (status == visit)                                                                                             \
-        impl::EditAddChildren{}(StackNodePair<BASE>{stack, node});                                                         \
+      stack->push_front({node, postVisit, ref});                                                                       \
+      impl::EditAddChildren{}(StackNodePair<BASE>{stack, node});                                                       \
       if (_stack && !traverseStack(stack))                                                                             \
         return false;                                                                                                  \
     }                                                                                                                  \

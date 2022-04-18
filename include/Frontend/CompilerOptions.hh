@@ -7,12 +7,15 @@
 namespace tlang {
 class ParallelLangOpts {
 public:
+  typedef enum {
+    Host,
+    Device
+  } ContextKind;
   bool parallelize = true;
-  Target defaultTarget = { };
+  ContextKind defaultContext = Device;
   Target hostTarget = { };
   Target deviceTarget = { Target::NVPTX };
 };
-
 class CompilerOptions {
 public:
   CompilerOptions() = default;

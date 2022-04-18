@@ -16,6 +16,7 @@ class VariableContext;
 class Backend;
 
 def Decl : AbstractNode<ASTNode, /* Abstract = */ 1, /* Implicit = */ 0, /* Top = */ 1> {
+  Variable declContext = Var<[{reference<UniversalContext>}]>;
 }
 
 def NamedDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {

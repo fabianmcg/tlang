@@ -66,11 +66,12 @@ include(include/Lex/CMakeLists.txt)
 include(lib/Parser/Parser.cmake)
 include(lib/Sema/Sema.cmake)
 include(lib/Passes/Passes.cmake)
+include(lib/Parallel/Parallel.cmake)
 include(lib/CodeGen/CMakeLists.txt)
 #include(lib/Analysis/CMakeLists.txt)
 include(lib/Driver/Driver.cmake)
 
-add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON #[[USE_BOOST]] ON #[[USE_FRMT]] OFF "driver;ast;lex;parser;sema;rewriter;codegen;ast")
+add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON #[[USE_BOOST]] ON #[[USE_FRMT]] OFF "driver;ast;lex;parser;sema;parallel;passes;parallel;codegen;ast")
 
 add_subdirectory(runtime/)
 

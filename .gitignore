@@ -1,4 +1,5 @@
 ./tblgen/build/
+/tmp/
 /build/
 *.graphml
 *.dot
