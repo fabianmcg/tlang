@@ -75,7 +75,7 @@ llvm::Module* CodeGen::emit(UnitDecl *unit) {
   llvm::IRBuilder<> builder { *llvm_context };
   auto &module = getModule(unit);
   if (unit->getBackend() <= UnitDecl::NVPTX) {
-    GenericEmitter emitter = makeEmitter<GenericEmitter>(ast_context, *llvm_context, module, builder);
+    GenericEmitter emitter = makeEmitter<GenericEmitter>(*compiler_context, *llvm_context, module, builder);
     emitter.run(unit);
   }
   return &module;

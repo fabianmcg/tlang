@@ -5,7 +5,7 @@
 #include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>
 #include <llvm/Support/raw_ostream.h>
-#include <Passes/PassManager.hh>
+#include <Passes/Pipelines.hh>
 
 namespace tlang::driver {
 
@@ -15,13 +15,13 @@ int Driver::run(int argc, char **argv) {
     return stage;
   if (++stage && parseFiles())
     return stage;
-  if (++stage && semaAnalysis(context))
+  if (++stage && semaAnalysis(compilerContext))
     return stage;
 //  dump();
-  if (++stage && runPasses(context))
+  if (++stage && runPasses(compilerContext))
     return stage;
   dump();
-  if (++stage && codeGen(context, std::filesystem::path { cmdArguments.outputFile }))
+  if (++stage && codeGen(compilerContext, std::filesystem::path { cmdArguments.outputFile }))
     return stage;
   return 0;
 }
@@ -35,22 +35,21 @@ int Driver::parseCMD(int argc, char **argv) {
   args.add_opt("noCodeGen,n", args.flag_opt(cmdArguments.noCodegen), "Don't generate LLVM IR code");
   return args.parse(argc, argv, true);
 }
-int Driver::semaAnalysis(ASTContext &context) {
-  Sema sema(context);
+int Driver::semaAnalysis(CompilerInvocation &CI) {
+  Sema sema(CI);
   sema.run();
   return 0;
 }
-int Driver::runPasses(ASTContext &context) {
-  PassManager pm(context);
-  return pm.run();
+int Driver::runPasses(CompilerInvocation &CI) {
+  return MainPipeline::run(CI);
 }
-int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
+int Driver::codeGen(CompilerInvocation &CI, const std::filesystem::path &file) {
   if (cmdArguments.noCodegen)
     return 0;
   if (!file.empty()) {
-    codegen::CodeGen emitter(context);
+    codegen::CodeGen emitter(CI);
     std::filesystem::path path = std::filesystem::absolute(file).parent_path();
-    for (auto decl : (**context)) {
+    for (auto decl : (***CI)) {
       auto unit = static_cast<UnitDecl*>(decl);
       std::cerr << "Emitting: " << unit->getIdentifier() << std::endl;
       emitter.emit(unit);
@@ -75,6 +74,6 @@ int Driver::codeGen(ASTContext &context, const std::filesystem::path &file) {
 }
 void Driver::dump() {
   if (cmdArguments.dumpAST)
-    tlang::dump(*context);
+    tlang::dump(**compilerContext);
 }
 }

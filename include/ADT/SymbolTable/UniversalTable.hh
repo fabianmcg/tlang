@@ -119,7 +119,14 @@ public:
   inline bool visit() const {
     return visitContext;
   }
+  inline NodeType*& getTopContext() {
+    return rootContext;
+  }
+  inline const NodeType* getTopContext() const {
+    return rootContext;
+  }
 protected:
+  NodeType *rootContext { };
   virtual symbol_type search(const key_type &key) const = 0;
   UniversalSymbolTable *parent { };
   symbol_type *first_symbol { };

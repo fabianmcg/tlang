@@ -112,7 +112,7 @@ struct FileDB {
 int Driver::parseFiles() {
   if (cmdArguments.inputFiles.empty())
     return 1;
-  FileDB db(context, std::filesystem::path { cmdArguments.outputFile }, cmdArguments.inputFiles);
+  FileDB db(compilerContext.getContext(), std::filesystem::path { cmdArguments.outputFile }, cmdArguments.inputFiles);
   return db.run();
 }
 }

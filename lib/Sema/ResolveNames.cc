@@ -55,9 +55,9 @@ struct ResolveNamesVisitor: ASTVisitor<ResolveNamesVisitor, VisitorPattern::preP
 };
 }
 void Sema::resolveNames(ASTNode *node, bool setType) {
-  sema::ResolveNamesVisitor { context, setType }.dynamicTraverse(node);
+  sema::ResolveNamesVisitor { *context, setType }.dynamicTraverse(node);
 }
 void Sema::resolveNames() {
-  sema::ResolveNamesVisitor { context }.traverseUniverseDecl(*context);
+  sema::ResolveNamesVisitor { *context }.traverseUniverseDecl(**context);
 }
 }

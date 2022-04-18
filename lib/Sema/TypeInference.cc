@@ -243,6 +243,6 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
 };
 }
 void Sema::inferTypes() {
-  sema::TypeInferenceAST { context }.traverseUniverseDecl(*context);
+  sema::TypeInferenceAST { *context }.traverseUniverseDecl(**context);
 }
 }

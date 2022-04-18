@@ -5,13 +5,13 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
-#include <AST/ASTContext.hh>
+#include <Frontend/CompilerInvocation.hh>
 
 namespace tlang::codegen {
 class CodeGen {
 public:
-  CodeGen(ASTContext &ast_context) :
-      ast_context(ast_context) {
+  CodeGen(CompilerInvocation &ast_context) :
+      compiler_context(ast_context) {
     init();
   }
   llvm::Module* emit(UnitDecl *unit);
@@ -21,7 +21,7 @@ public:
 protected:
   void init();
   llvm::Module& getModule(UnitDecl *unit);
-  ASTContext &ast_context;
+  CompilerInvocation &compiler_context;
   std::unique_ptr<llvm::LLVMContext> llvm_context { };
   std::map<std::string, std::unique_ptr<llvm::Module>> modules;
 };

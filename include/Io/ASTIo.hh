@@ -154,22 +154,6 @@ public:
     }
     return visit;
   }
-//  visit_t visitExternFunctionDecl(ExternFunctionDecl *node, VisitType kind) {
-//    if (kind) {
-//      auto &type = node->getReturnType();
-//      ost << "'";
-//      dumpType(&type, false);
-//      ost << " (";
-//      auto &args = node->getParameters();
-//      for (size_t i = 0; i < args.size(); ++i) {
-//        dumpType(&(node->getParameters()[i]), false);
-//        if ((i + 1) < args.size())
-//          ost << ", ";
-//      }
-//      ost << ")'";
-//    }
-//    return visit;
-//  }
   visit_t visitVariableDecl(VariableDecl *node, VisitType kind) {
     if (kind) {
       auto &type = node->getType();
@@ -188,6 +172,32 @@ public:
     if (kind)
       ost << "'" << node->getValue()->to_string() << "' ";
     return visit;
+  }
+  visit_t visitParallelContext(ParallelContext *node, VisitType kind) {
+    if (kind) {
+      ost << "[" << node->getMapping() << ", " << (node->getNoWait() ? "nowait" : "wait") << "] -> " << node->getParentContext().data();
+    }
+    return visit;
+  }
+  visit_t visitContextStmt(ContextStmt *node, VisitType kind) {
+    std::string ck { };
+    switch (node->getContextKind()) {
+    case ContextStmt::Inherited:
+      ck = "inherited";
+      break;
+    case ContextStmt::Default:
+      ck = "default";
+      break;
+    case ContextStmt::Device:
+      ck = "device";
+      break;
+    case ContextStmt::Host:
+      ck = "host";
+      break;
+    }
+    if (kind)
+      ost << "[" << ck << "]";
+    return visit_t::visit;
   }
   visit_t visitQualType(QualType *node, VisitType kind) {
     return visit_t::skip;
