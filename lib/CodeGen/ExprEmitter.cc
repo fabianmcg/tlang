@@ -299,14 +299,14 @@ ExprReturn<TernaryOperator> ExprEmitterVisitor::emitTernaryOperatorImpl(TernaryO
   return builder.CreateSelect(condition, tval, fval);
 }
 
-ExprReturn<IdxExpr> ExprEmitterVisitor::emitIdxExprImpl(IdxExpr *expr) {
+ExprReturn<IdExpr> ExprEmitterVisitor::emitIdExprImpl(IdExpr *expr) {
   std::vector<int> nums;
-  for (auto e : expr->getIndex()) {
-    if (auto il = dyn_cast<IntegerLiteral>(e)) {
-      nums.push_back(il->getValue());
-    } else
-      throw(std::runtime_error("Invalid IDX"));
-  }
+//  for (auto e : expr->getIndex()) {
+//    if (auto il = dyn_cast<IntegerLiteral>(e)) {
+//      nums.push_back(il->getValue());
+//    } else
+//      throw(std::runtime_error("Invalid IDX"));
+//  }
   if (nums.size() != 2)
     throw(std::runtime_error("Invalid IDX"));
   switch (nums[1]) {

@@ -71,7 +71,6 @@ def makeLexer():
     db.addToken(Keyword, "Leading")
     db.addToken(Keyword, "Single")
     db.addToken(Keyword, "Sync")
-    db.addToken(Keyword, "Launch_parameters")
     db.addToken(Keyword, "Reduce")
     db.addToken(Keyword, "Nowait")
     db.addToken(Keyword, "Firstprivate")
@@ -83,7 +82,8 @@ def makeLexer():
     db.addToken(Keyword, "Local")
     db.addToken(Keyword, "Global") 
     db.addToken(Keyword, "Shared") 
-    db.addToken(Keyword, "Id", "Id") 
+    db.addToken(Keyword, "Tid") 
+    db.addToken(Keyword, "Dim") 
     # ******************************************************************************
     #   Fundamental types
     # *****************************************************************************

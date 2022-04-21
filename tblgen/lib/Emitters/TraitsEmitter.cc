@@ -38,7 +38,7 @@ template <typename T> inline constexpr bool isValidNode_v = ASTTraits_t<T>::vali
 template <typename S, typename T> inline constexpr bool isASTKind_v = ASTTraits_t<S>::is(T::kind);
 template <typename S, typename T> inline bool isa(T* node) {
   if constexpr (isValidNode_v<T>) 
-    return ASTTraits_t<S>::is(node->classof());
+    return node && ASTTraits_t<S>::is(node->classof());
   return false;
 }
 template <typename S, typename T, std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>, int> = 0>

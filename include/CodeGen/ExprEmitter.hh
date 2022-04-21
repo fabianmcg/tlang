@@ -97,7 +97,7 @@ public:
   return_t<CastExpr> emitCastExprImpl(CastExpr *expr);
   return_t<ImplicitCastExpr> emitImplicitCastExprImpl(ImplicitCastExpr *expr);
   return_t<TernaryOperator> emitTernaryOperatorImpl(TernaryOperator *expr);
-  return_t<IdxExpr> emitIdxExprImpl(IdxExpr *expr);
+  return_t<IdExpr> emitIdExprImpl(IdExpr *expr);
   return_t<Expr> emitExprAndLoad(Expr *node, bool loadValue);
   IRType_t<Expr> emitExpr(Expr *node) {
     return emitExprAndLoad(node, true).value;
