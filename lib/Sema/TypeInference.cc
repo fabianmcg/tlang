@@ -103,7 +103,13 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
     }
     return visit;
   }
-  visit_t visitIdxExpr(IdxExpr *node, VisitType isFirst) {
+  visit_t visitIdExpr(IdExpr *node, VisitType isFirst) {
+    if (isFirst == preVisit) {
+      node->getType() = context.makeType<IntType>(IntType::P_32, IntType::Signed);
+    }
+    return visit;
+  }
+  visit_t visitDimExpr(DimExpr *node, VisitType isFirst) {
     if (isFirst == preVisit) {
       node->getType() = context.makeType<IntType>(IntType::P_32, IntType::Signed);
     }

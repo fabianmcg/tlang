@@ -92,42 +92,42 @@ def ReturnStmt : AbstractNode<ValueStmt, /* Abstract = */ 0, /* Implicit = */ 0>
   Child return = Child<Dynamic, [{Expr}]>;
 }
 
-def ParallelBaseContext : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
+def ParallelConstruct : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
+  Variable context = Var<[{reference<ParallelConstruct>}]>;
 }
 
-def ContextStmt : AbstractNode<ParallelBaseContext, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Kind = Enum<[EM<"Inherited">, EM<"Default">, EM<"Host">, EM<"Device">, EM<"UserDefined">]>;
-  Variable parentContext = Var<[{reference<ParallelBaseContext>}]>;
+def ContextStmt : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Kind = Enum<[EM<"Inherited">, EM<"Default">, EM<"Host">, EM<"Device">]>;
   Variable contextKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def ParallelContext : AbstractNode<ParallelBaseContext, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Mapping = Enum<[EM<"None">, EM<"Vector", [{1}]>, EM<"Matrix", [{2}]>, EM<"Tensor", [{4}]>, EM<"All", [{7}]>]>;
-  Variable parentContext = Var<[{reference<ParallelBaseContext>}]>;
-  Variable mapping = EVar<[{Mapping}]>;
+def ParallelStmtOptions : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0> {
   Variable noWait = Var<[{bool}]>;
   Child firstPrivateVariables = Child<DynamicList, [{Expr}]>;
   Child privateVariables = Child<DynamicList, [{Expr}]>;
   Child sharedVariables = Child<DynamicList, [{Expr}]>;
   Child reduceList = Child<DynamicList, [{ReduceStmt}]>;
-  Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
-  Child launchParameters = Child<DynamicList, [{TupleExpr}]>;
 }
 
-def ParallelStmt : AbstractNode<ParallelContext, /* Abstract = */ 0, /* Implicit = */ 0> {
+def ParallelStmt : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child parallelOptions = Child<Dynamic, [{ParallelStmtOptions}]>;
+  Child launchParameters = Child<DynamicList, [{TupleExpr}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;
 }
 
-def LoopStmt : AbstractNode<ParallelContext, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
+def LoopStmt : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0>, VariableContext {
+  Enum Mapping = Enum<[EM<"Expand", [{-1}]>, EM<"Auto", [{0}]>, EM<"Scalar", [{1}]>, EM<"Vector", [{2}]>, EM<"Matrix", [{4}]>, EM<"Tensor", [{8}]>]>;
+  Variable mapping = EVar<[{Mapping}]>;
+  Child parallelOptions = Child<Dynamic, [{ParallelStmtOptions}]>;
   Child ranges = Child<DynamicList, [{RangeStmt}]>;
   Child body = Child<Dynamic, [{Stmt}]>;
   ClassSection header = ClassSection<Header, Public, [{
-    LoopStmt(ParallelContext&& context, List<RangeStmt*>&& ranges, Stmt* stmt);
+    LoopStmt(Mapping mapping, ParallelStmtOptions *parallelOptions, List<RangeStmt*>&& ranges, Stmt* stmt);
   }]>;
   ClassSection source = ClassSection<Source, Public, [{  
-    LoopStmt::LoopStmt(ParallelContext&& context, List<RangeStmt*>&& ranges, Stmt* stmt): LoopStmt(std::move(context), VariableContext(), std::move(ranges), stmt) {
+    LoopStmt::LoopStmt(Mapping mapping, ParallelStmtOptions *parallelOptions, List<RangeStmt*>&& ranges, Stmt* stmt): LoopStmt(VariableContext(), mapping, parallelOptions, std::move(ranges), stmt) {
       auto &Ranges = getRanges();
       for (auto& range : Ranges)
         if (range->getDecl())
@@ -136,14 +136,13 @@ def LoopStmt : AbstractNode<ParallelContext, /* Abstract = */ 0, /* Implicit = *
   }]>;
 }
 
-def ParallelIntrinsic : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 0> {
-  Variable parentContext = Var<[{reference<ParallelBaseContext>}]>;
+def ParallelIntrinsic : AbstractNode<ParallelConstruct, /* Abstract = */ 1, /* Implicit = */ 0> {
 }
 
 def MapStmt : AbstractNode<ParallelIntrinsic, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">]>;
   Variable mapKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{Expr}]>;
-  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">]>;
 }
 
 def SyncStmt : AbstractNode<ParallelIntrinsic, /* Abstract = */ 0, /* Implicit = */ 0> {

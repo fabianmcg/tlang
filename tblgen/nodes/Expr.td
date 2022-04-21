@@ -193,9 +193,80 @@ def TupleExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child elements = Child<DynamicList, [{Expr}]>;
 }
 
-def IdxExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Variable context = Var<[{reference<Stmt>}]>;
-  Child index = Child<DynamicList, [{Expr}]>;
+def IdExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Level = Enum<[EM<"Scalar", [{1}]>, EM<"Vector", [{2}]>, EM<"Matrix", [{4}]>]>;
+  Enum Coordinate = Enum<[EM<"X">, EM<"Y">, EM<"Z">]>;
+  Variable context = Var<[{reference<ParallelConstruct>}]>;
+  Variable level = EVar<[{Level}]>;
+  Variable coordinate = EVar<[{Coordinate}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    IdExpr(const std::pair<int, int>& level, int coordinate);
+    static Level getLevel(const std::pair<int, int>& level);
+    static Coordinate getCoordinate(int coordinate);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    IdExpr::IdExpr(const std::pair<int, int>& level, int coordinate): IdExpr(nullptr, getLevel(level), getCoordinate(coordinate)) {}
+    IdExpr::Level IdExpr::getLevel(const std::pair<int, int>& l) {
+      if (l.first == -1)
+        return static_cast<Level>(Scalar | Vector | Matrix);
+      else if (l.first == 0 && l.second == -1)
+        return static_cast<Level>(Scalar);
+      else if (l.first == 1 && l.second == -1)
+        return static_cast<Level>(Vector);
+      else if (l.first == 2 && l.second == -1)
+        return static_cast<Level>(Matrix);
+      else if (l.first == 1 && l.second == 0)
+        return static_cast<Level>(Vector | Scalar);
+      else if (l.first == 2 && l.second == 0)
+        return static_cast<Level>(Matrix | Scalar);
+      else if (l.first == 2 && l.second == 1)
+        return static_cast<Level>(Matrix | Vector);
+      else
+        throw(std::runtime_error("Invalid combination of levels"));
+    }
+    IdExpr::Coordinate IdExpr::getCoordinate(int coordinate) {
+      if (coordinate == 1) return Y;
+      else if (coordinate == 2) return Z;
+      return X;
+    }
+  }]>;
+}
+
+def DimExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Enum Level = Enum<[EM<"Scalar", [{1}]>, EM<"Vector", [{2}]>, EM<"Matrix", [{4}]>, EM<"Tensor", [{8}]>]>;
+  Enum Coordinate = Enum<[EM<"X">, EM<"Y">, EM<"Z">]>;
+  Variable context = Var<[{reference<ParallelConstruct>}]>;
+  Variable level = EVar<[{Level}]>;
+  Variable coordinate = EVar<[{Coordinate}]>;
+  ClassSection header = ClassSection<Header, Public, [{
+    DimExpr(const std::pair<int, int>& level, int coordinate);
+    static Level getLevel(const std::pair<int, int>& level);
+    static Coordinate getCoordinate(int coordinate);
+  }]>;
+  ClassSection source = ClassSection<Source, Public, [{
+    DimExpr::DimExpr(const std::pair<int, int>& level, int coordinate): DimExpr(nullptr, getLevel(level), getCoordinate(coordinate)) {}
+    DimExpr::Level DimExpr::getLevel(const std::pair<int, int>& l) {
+      if (l.first == -1)
+        return static_cast<Level>(Scalar | Vector | Matrix | Tensor);
+      else if (l.first == 0 && l.second == -1)
+        return static_cast<Level>(Scalar);
+      else if (l.first == 1 && l.second == -1)
+        return static_cast<Level>(Vector);
+      else if (l.first == 2 && l.second == -1)
+        return static_cast<Level>(Matrix);
+      else if (l.first == 3 && l.second == -1)
+        return static_cast<Level>(Tensor);
+      else if (l.first == 2 && l.second == 1)
+        return static_cast<Level>(Matrix | Vector);
+      else
+        throw(std::runtime_error("Invalid combination of levels"));
+    }
+    DimExpr::Coordinate DimExpr::getCoordinate(int coordinate) {
+      if (coordinate == 1) return Y;
+      else if (coordinate == 2) return Z;
+      return X;
+    }
+  }]>;
 }
 
 def DeclRefExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {

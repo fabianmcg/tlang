@@ -173,12 +173,12 @@ public:
       ost << "'" << node->getValue()->to_string() << "' ";
     return visit;
   }
-  visit_t visitParallelContext(ParallelContext *node, VisitType kind) {
-    if (kind) {
-      ost << "[" << node->getMapping() << ", " << (node->getNoWait() ? "nowait" : "wait") << "] -> " << node->getParentContext().data();
-    }
-    return visit;
-  }
+//  visit_t visitParallelContext(ParallelContext *node, VisitType kind) {
+//    if (kind) {
+//      ost << "[" << node->getMapping() << ", " << (node->getNoWait() ? "nowait" : "wait") << "] -> " << node->getParentContext().data();
+//    }
+//    return visit;
+//  }
   visit_t visitContextStmt(ContextStmt *node, VisitType kind) {
     std::string ck { };
     switch (node->getContextKind()) {
