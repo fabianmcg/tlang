@@ -1,7 +1,7 @@
 #include <Parallel/TransformContexts.hh>
 
 namespace tlang {
-void TransformContexts::removeContexts(ContextList &contexts) {
+void TransformContexts::removeContexts(ConstructDatabase &contexts) {
 
 }
 }

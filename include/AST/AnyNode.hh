@@ -91,6 +91,25 @@ private:
   ASTKind kind { };
   bool fromPtr { };
 };
+template <typename T>
+struct ASTData {
+  using type = T;
+  ASTData(T *node, AnyASTNodeRef reference = { }) :
+      node(node), reference(reference) {
+  }
+  T* operator*() {
+    return node;
+  }
+  AnyASTNodeRef* operator->() {
+    return &reference;
+  }
+  template <typename V>
+  V* get() {
+    return dyn_cast<V>(node);
+  }
+  T *node;
+  AnyASTNodeRef reference;
+};
 } // namespace tlang
 
 #endif
