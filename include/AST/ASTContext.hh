@@ -38,8 +38,8 @@ struct ASTContext {
     return QualType(T::get(&type_context, std::forward<Args>(args)...));
   }
   template <typename T, typename ...Args>
-  QualType makeQualType(QualType::cvr_qualifiers quals, Args &&...args) {
-    return QualType(quals, T::get(&type_context, std::forward<Args>(args)...));
+  QualType makeQualType(QualType::cvr_qualifiers quals, int as, Args &&...args) {
+    return QualType(quals, as, T::get(&type_context, std::forward<Args>(args)...));
   }
 protected:
   std::map<uint64_t, std::unique_ptr<ASTNode>> nodes;

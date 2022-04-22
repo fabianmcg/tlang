@@ -23,10 +23,22 @@ FunctionDecl* ASTApi::CreateFunction(const Identifier &identifier, QualType retu
     static_cast<UniversalContext*>(fn->getBody())->getParent() = static_cast<UniversalContext*>(fn);
   return fn;
 }
+
+VariableDecl* ASTApi::CreateVariable(const Identifier &identifier, QualType type, Expr *init, VariableDecl::StorageKind storage) {
+  VariableDecl var(storage, init);
+  var.getIdentifier() = identifier;
+  var.getType() = type;
+  return context.make<VariableDecl>(var);
+}
 ParameterDecl* ASTApi::CreateParameter(const Identifier &identifier, QualType type) {
   return context.make<ParameterDecl>(VariableDecl(identifier, std::move(type)));
 }
-
+DeclRefExpr*  ASTApi::CreateDeclRefExpr(ValueDecl* decl) {
+  assert(decl);
+  DeclRefExpr expr(decl->getIdentifier(), decl);
+  expr.getType() = decl->getType();
+  return context.make<DeclRefExpr>(expr);
+}
 ParenExpr* ASTApi::CreateParenExpr(Expr *expr) {
   ParenExpr *node = context.make<ParenExpr>(expr);
   node->getType() = expr->getType();
@@ -69,5 +81,35 @@ BinaryOperator* ASTApi::CreateBinOp(BinaryOperator::Operator op, Expr *lhsR, Exp
     }
   }
   return node;
+}
+UnaryOperator* ASTApi::CreateUnOp(UnaryOperator::Operator op, Expr *expr) {
+  UnaryOperator *node = context.make<UnaryOperator>(false, op, expr);
+  switch (op) {
+  case UnaryOperator::Dereference:
+    if (auto pt = dyn_cast<PtrType>(expr->getType().getType()))
+      node->getType() = QualType(QualType::Reference, expr->getType().getAddressSpace(), pt->getUnderlying());
+    break;
+  case UnaryOperator::Address:
+    node->getType() = QualType(QualType::None, 0, PtrType::get(&context.types(), expr->getType().getType()));
+    break;
+  default:
+    break;
+  }
+  return node;
+}
+DeclStmt* ASTApi::CreateDeclStmt(List<VariableDecl*> &&variables) {
+  return context.make<DeclStmt>(std::move(variables));
+}
+Stmt* ASTApi::PrependStmt(CompoundStmt *cs, Stmt *stmt) {
+  assert(cs);
+  if (stmt)
+    cs->addStmt(stmt);
+  return stmt;
+}
+Stmt* ASTApi::AppendStmt(CompoundStmt *cs, Stmt *stmt) {
+  assert(cs);
+  if (stmt)
+    cs->addStmt(stmt);
+  return stmt;
 }
 }

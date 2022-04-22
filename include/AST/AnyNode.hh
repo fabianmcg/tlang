@@ -43,6 +43,18 @@ public:
     }
     return nullptr;
   }
+  template <typename S>
+  bool makeNull() {
+    assert(this->node);
+    if (S::kind == kind) {
+      if (fromPtr)
+        *reinterpret_cast<S**>(this->node) = nullptr;
+      else
+        return false;
+      return true;
+    }
+    return false;
+  }
   template <typename S, typename T>
   bool assign(T *node) {
     assert(this->node);
