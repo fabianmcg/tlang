@@ -97,10 +97,13 @@ def ParallelConstruct : AbstractNode<Stmt, /* Abstract = */ 1, /* Implicit = */ 
 }
 
 def ContextStmt : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Kind = Enum<[EM<"Inherited">, EM<"Default">, EM<"Host">, EM<"Device">]>;
+  Enum Kind = Enum<[EM<"Inherited">, EM<"Default">, EM<"Sequential">, EM<"Host">, EM<"Device">]>;
   Variable contextKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{MapStmt}]>;
   Child stmt = Child<Dynamic, [{Stmt}]>;
+}
+
+def ImplicitContextStmt : AbstractNode<ContextStmt, /* Abstract = */ 0, /* Implicit = */ 1> {
 }
 
 def ParallelStmtOptions : AbstractNode<ParallelConstruct, /* Abstract = */ 0, /* Implicit = */ 0> {
@@ -140,7 +143,7 @@ def ParallelIntrinsic : AbstractNode<ParallelConstruct, /* Abstract = */ 1, /* I
 }
 
 def MapStmt : AbstractNode<ParallelIntrinsic, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">]>;
+  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">, EM<"destroy">, EM<"present">]>;
   Variable mapKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{Expr}]>;
 }

@@ -8,6 +8,7 @@ namespace tlang {
 class ParallelLangOpts {
 public:
   typedef enum {
+    Sequential,
     Host,
     Device
   } ContextKind;

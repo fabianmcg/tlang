@@ -36,7 +36,7 @@ struct CreateParallelContextHierarchy: public CompilerInvocationRef, PassBase<Cr
       if (kind == postVisit && parentContext == nullptr) {
         auto ps = CI.getContext().make<ParallelStmt>(nullptr, List<TupleExpr*>(), loop);
         loop->getContext() = ps;
-        auto cs = CI.getContext().make<ContextStmt>(ContextStmt::Inherited, List<MapStmt*>(), ps);
+        auto cs = CI.getContext().make<ImplicitContextStmt>(ContextStmt(ContextStmt::Inherited, List<MapStmt*>(), ps));
         ps->getContext() = cs;
         ref.assign<Stmt>(cs);
         resolveContextStmt(cs);
@@ -55,7 +55,9 @@ struct CreateParallelContextHierarchy: public CompilerInvocationRef, PassBase<Cr
       auto ck = CI.getOptions().langOpts.defaultContext;
       if (ck == ParallelLangOpts::Device)
         return ContextStmt::Device;
-      return ContextStmt::Host;
+      else if (ck == ParallelLangOpts::Host)
+        return ContextStmt::Host;
+      return ContextStmt::Sequential;
     }
     visit_t manageContextStack(ContextStmt *node, VisitType kind) {
       if (kind == preVisit)
