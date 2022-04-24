@@ -143,7 +143,7 @@ def ParallelIntrinsic : AbstractNode<ParallelConstruct, /* Abstract = */ 1, /* I
 }
 
 def MapStmt : AbstractNode<ParallelIntrinsic, /* Abstract = */ 0, /* Implicit = */ 0> {
-  Enum Kind = Enum<[EM<"to">, EM<"from">, EM<"toFrom">, EM<"create">, EM<"destroy">, EM<"present">]>;
+  Enum Kind = Enum<[EM<"to", [{1}]>, EM<"from", [{2}]>, EM<"create", [{4}]>, EM<"destroy", [{8}]>, EM<"present", [{16}]>, EM<"toFrom", [{to | from}]>]>;
   Variable mapKind = EVar<[{Kind}]>;
   Child mappedExprs = Child<DynamicList, [{Expr}]>;
 }

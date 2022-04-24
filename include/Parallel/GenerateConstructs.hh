@@ -18,6 +18,7 @@ public:
   void addAPI(ParallelConstructDatabase &constructs);
   void generateContext(ConstructData<ContextStmt> context);
   void generateContexts(ParallelConstructDatabase &constructs);
+  FunctionDecl* generateRegion(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
   void generateHostRegion(ConstructData<ParallelStmt> region);
   void generateDeviceRegion(ConstructData<ParallelStmt> region);
   void generateParallelRegions(ParallelConstructDatabase &constructs);
@@ -29,7 +30,10 @@ protected:
   UnitDecl *deviceUnit { };
   std::map<ParallelStmt*, FunctionDecl*> regions;
   std::map<FunctorDecl*, int> labels;
-  std::string makeRegionLabel(FunctorDecl* fn, const std::string &suffix = "");
+  std::string makeRegionLabel(FunctorDecl *fn, const std::string &suffix = "");
+  int incrementRegionLabel(FunctorDecl *fn) {
+    return labels[fn]++;
+  }
 };
 }
 

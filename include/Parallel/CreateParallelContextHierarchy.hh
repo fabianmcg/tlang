@@ -38,7 +38,7 @@ struct CreateParallelContextHierarchy: public CompilerInvocationRef, PassBase<Cr
         loop->getContext() = ps;
         auto cs = CI.getContext().make<ImplicitContextStmt>(ContextStmt(ContextStmt::Inherited, List<MapStmt*>(), ps));
         ps->getContext() = cs;
-        ref.assign<Stmt>(cs);
+        ref.assign<Stmt>(CI.getContext().make<CompoundStmt>(List<Stmt*>( { cs })));
         resolveContextStmt(cs);
         cs->getContext() = constructStack.size() ? constructStack.front() : nullptr;
       }

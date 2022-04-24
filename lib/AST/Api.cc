@@ -1,7 +1,9 @@
 #include <AST/Api.hh>
 
 namespace tlang {
-
+CompoundStmt* ASTApi::CreateCompoundStmt(List<Stmt*> &&stmts) {
+  return context.make<CompoundStmt>(std::move(stmts));
+}
 ExternFunctionDecl* ASTApi::CreateExternFunction(const Identifier &identifier, QualType returnType, List<ParameterDecl*> &&parameters) {
   ExternFunctionDecl function = ExternFunctionDecl(FunctorDecl(identifier, std::move(returnType), std::move(parameters), nullptr));
   function.setType(context.types());
@@ -33,16 +35,35 @@ VariableDecl* ASTApi::CreateVariable(const Identifier &identifier, QualType type
 ParameterDecl* ASTApi::CreateParameter(const Identifier &identifier, QualType type) {
   return context.make<ParameterDecl>(VariableDecl(identifier, std::move(type)));
 }
-DeclRefExpr*  ASTApi::CreateDeclRefExpr(ValueDecl* decl) {
+DeclRefExpr* ASTApi::CreateDeclRefExpr(ValueDecl *decl) {
   assert(decl);
   DeclRefExpr expr(decl->getIdentifier(), decl);
-  expr.getType() = decl->getType();
+  expr.getType() = decl->getType().addQuals(QualType::Reference);
   return context.make<DeclRefExpr>(expr);
+}
+CallExpr* ASTApi::CreateCallExpr(DeclRefExpr *callee, List<Expr*> &&args) {
+  assert(callee);
+  CallExpr expr(callee, std::move(args));
+  if (auto ft = dyn_cast<FunctionType>(callee->getType().getType()))
+    expr.getType() = ft->getReturnType();
+  return context.make<CallExpr>(expr);
 }
 ParenExpr* ASTApi::CreateParenExpr(Expr *expr) {
   ParenExpr *node = context.make<ParenExpr>(expr);
   node->getType() = expr->getType();
   return node;
+}
+BooleanLiteral* ASTApi::CreateLiteral(bool value) {
+  return context.make<BooleanLiteral>(context.types(), value);
+}
+IntegerLiteral* ASTApi::CreateLiteral(int64_t value, IntType::numeric_precision precision) {
+  return context.make<IntegerLiteral>(context.types(), value, precision);
+}
+UIntegerLiteral* ASTApi::CreateLiteral(uint64_t value, IntType::numeric_precision precision) {
+  return context.make<UIntegerLiteral>(context.types(), value, precision);
+}
+FloatLiteral* ASTApi::CreateLiteral(double value, FloatType::numeric_precision precision) {
+  return context.make<FloatLiteral>(context.types(), value, precision);
 }
 BinaryOperator* ASTApi::CreateBinOp(BinaryOperator::Operator op, Expr *lhsR, Expr *rhsR) {
   BinaryOperator *node = context.make<BinaryOperator>(op, lhsR, rhsR);
@@ -96,6 +117,9 @@ UnaryOperator* ASTApi::CreateUnOp(UnaryOperator::Operator op, Expr *expr) {
     break;
   }
   return node;
+}
+CastExpr* ASTApi::CreateCast(Expr *expr, QualType type) {
+  return context.make<CastExpr>(expr, std::move(type));
 }
 DeclStmt* ASTApi::CreateDeclStmt(List<VariableDecl*> &&variables) {
   return context.make<DeclStmt>(std::move(variables));

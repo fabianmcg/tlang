@@ -40,6 +40,7 @@ def BooleanLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit =
 def IntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit = */ 0> {
   ClassSection header = ClassSection<Header, Public, [{
     IntegerLiteral(TypeContext& context, const std::string& value, IntType::numeric_precision presicion);
+    IntegerLiteral(TypeContext& context, int64_t value, IntType::numeric_precision presicion);
     int64_t& getValue();
     int64_t getValue() const;
   }]>;
@@ -47,6 +48,11 @@ def IntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit =
     IntegerLiteral::IntegerLiteral(TypeContext& context, const std::string& value, IntType::numeric_precision presicion): 
       IntegerLiteral(0) {
       this->value = std::make_shared<IntValue>(std::stoll(value));
+      getType() = QualType(IntType::get(&context, presicion, IntType::Signed));
+    }
+    IntegerLiteral::IntegerLiteral(TypeContext& context, int64_t value, IntType::numeric_precision presicion): 
+      IntegerLiteral(0) {
+      this->value = std::make_shared<IntValue>(value);
       getType() = QualType(IntType::get(&context, presicion, IntType::Signed));
     }
     int64_t& IntegerLiteral::getValue() {
@@ -63,6 +69,7 @@ def IntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit =
 def UIntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit = */ 0> {
   ClassSection header = ClassSection<Header, Public, [{
     UIntegerLiteral(TypeContext& context, const std::string& value, IntType::numeric_precision presicion);
+    UIntegerLiteral(TypeContext& context, uint64_t value, IntType::numeric_precision presicion);
     uint64_t& getValue();
     uint64_t getValue() const;
   }]>;
@@ -70,6 +77,11 @@ def UIntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit 
     UIntegerLiteral::UIntegerLiteral(TypeContext& context, const std::string& value, IntType::numeric_precision presicion): 
       UIntegerLiteral(0) {
       this->value = std::make_shared<UIntValue>(std::stoull(value));
+      getType() = QualType(IntType::get(&context, presicion, IntType::Unsigned));
+    }
+    UIntegerLiteral::UIntegerLiteral(TypeContext& context, uint64_t value, IntType::numeric_precision presicion): 
+      UIntegerLiteral(0) {
+      this->value = std::make_shared<UIntValue>(value);
       getType() = QualType(IntType::get(&context, presicion, IntType::Unsigned));
     }
     uint64_t& UIntegerLiteral::getValue() {
@@ -86,6 +98,7 @@ def UIntegerLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit 
 def FloatLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit = */ 0> {
   ClassSection header = ClassSection<Header, Public, [{
     FloatLiteral(TypeContext& context, const std::string& value, FloatType::numeric_precision presicion);
+    FloatLiteral(TypeContext& context, double value, FloatType::numeric_precision presicion);
     double& getValue();
     double getValue() const;
   }]>;
@@ -93,6 +106,11 @@ def FloatLiteral : AbstractNode<LiteralExpr, /* Abstract = */ 0, /* Implicit = *
     FloatLiteral::FloatLiteral(TypeContext& context, const std::string& value, FloatType::numeric_precision presicion): 
       FloatLiteral(0) {
       this->value = std::make_shared<FloatValue>(std::stod(value));
+      getType() = QualType(FloatType::get(&context, presicion));
+    }
+    FloatLiteral::FloatLiteral(TypeContext& context, double value, FloatType::numeric_precision presicion): 
+      FloatLiteral(0) {
+      this->value = std::make_shared<FloatValue>(value);
       getType() = QualType(FloatType::get(&context, presicion));
     }
     double& FloatLiteral::getValue() {
