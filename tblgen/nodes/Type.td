@@ -29,6 +29,7 @@ def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
     QualType addQuals(cvr_qualifiers qualifiers = None);
     QualType changeAS(int addressSpace = 0);
     bool operator==(const QualType& other);
+    int64_t sizeOf() const;
   }]>;
   ClassSection source = ClassSection<Source, Public, [{
     QualType::QualType(Type *type, cvr_qualifiers qualifiers, int addressSpace) : QualType(qualifiers, addressSpace, type) {
@@ -61,11 +62,19 @@ def QualType : AbstractNode<ProtoType, /* Abstract = */ 0, /* Implicit = */ 0> {
         otherType = otherType->getCanonicalType();
       return otherType == type;
     }
+    int64_t QualType::sizeOf() const {
+      if (isReference())
+        return 8;
+      if (getType())
+        return getType()->getSizeOf();
+      return 0;
+    }
   }]>;
 }
 
 def Type : AbstractNode<ProtoType, /* Abstract = */ 1, /* Implicit = */ 0> {
   Variable canonicalType = Var<[{reference<Type>}]>;
+  Variable sizeOf = Var<[{int64_t}]>;
 }
 
 def DependentType : AbstractNode<Type, /* Abstract = */ 1, /* Implicit = */ 0> {

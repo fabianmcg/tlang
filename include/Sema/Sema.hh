@@ -8,7 +8,8 @@ class Sema {
 public:
   Sema(CompilerInvocation &context);
   void run();
-  void resolveNames(ASTNode * node, bool setType = false);
+  static void resolveNames(ASTNode *node);
+  static void resolveSymbolTables(UnitDecl *node);
 private:
   void completeTable();
   void resolveTypes();

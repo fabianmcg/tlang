@@ -33,6 +33,9 @@ struct ASTApi: ASTContextReference {
     QualType type = context.makeQualType<T>(quals, as, std::forward<Args>(args)...);
     return type;
   }
+  QualType CreateAddressType(int as = 0) {
+    return CreateFQType<AddressType>(QualType::None, as);
+  }
   VariableDecl* CreateVariable(const Identifier &identifier, QualType type, Expr *init = nullptr, VariableDecl::StorageKind storage =
       VariableDecl::Generic);
   ParameterDecl* CreateParameter(const Identifier &identifier, QualType type);
@@ -51,7 +54,21 @@ struct ASTApi: ASTContextReference {
   FunctionDecl* CreateFunction(const Identifier &identifier, QualType returnType, Args ...args) {
     return CreateFunction(identifier, returnType, CreateParameterList(std::forward<Args>(args)...));
   }
-  DeclRefExpr* CreateDeclRefExpr(ValueDecl* decl);
+  CompoundStmt* CreateCompoundStmt(List<Stmt*> &&stmts);
+  template <typename ...Args>
+  CompoundStmt* CreateCompoundStmt(Args *...args) {
+    return CreateCompoundStmt(List<Stmt*> { std::forward<Args>(args)... });
+  }
+  BooleanLiteral* CreateLiteral(bool value);
+  IntegerLiteral* CreateLiteral(int64_t value, IntType::numeric_precision precision = IntType::Default);
+  UIntegerLiteral* CreateLiteral(uint64_t value, IntType::numeric_precision precision = IntType::Default);
+  FloatLiteral* CreateLiteral(double value, FloatType::numeric_precision precision = FloatType::Default);
+  DeclRefExpr* CreateDeclRefExpr(ValueDecl *decl);
+  CallExpr* CreateCallExpr(DeclRefExpr *callee, List<Expr*> &&args);
+  template <typename ...Args>
+  CallExpr* CreateCallExpr(DeclRefExpr *callee, Args *...args) {
+    return CreateCallExpr(callee, List<Expr*> { args... });
+  }
   ParenExpr* CreateParenExpr(Expr *expr);
   BinaryOperator* CreateBinOp(BinaryOperator::Operator op, Expr *lhs, Expr *rhs);
   UnaryOperator* CreateUnOp(UnaryOperator::Operator op, Expr *expr);
@@ -60,6 +77,7 @@ struct ASTApi: ASTContextReference {
   DeclStmt* CreateDeclStmt(VariableDecl *var, VD *...vars) {
     return CreateDeclStmt(List<VariableDecl*> { var, vars... });
   }
+  CastExpr* CreateCast(Expr* expr, QualType type);
   Stmt* PrependStmt(CompoundStmt *cs, Stmt *stmt);
   Stmt* AppendStmt(CompoundStmt *cs, Stmt *stmt);
   template <typename T, typename ...Args>

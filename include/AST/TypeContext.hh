@@ -50,9 +50,11 @@ public:
       if (!canonicalType) {
         canonicalType = addType(PtrType(underlying->getCanonicalType().data()));
         canonicalType->getCanonicalType() = canonicalType;
+        canonicalType->getSizeOf() = 8;
       }
       type = addType(PtrType(underlying));
       type->getCanonicalType() = canonicalType;
+      type->getSizeOf() = 8;
       return type;
     }
     return nullptr;
@@ -69,6 +71,12 @@ public:
       st.get()->getDecl() = decl;
       st->getCanonicalType() = st.get();
       type = std::move(st);
+      int64_t size = 0;
+      for (auto member : *decl) {
+        if (auto vd = dyn_cast<VariableDecl>(member))
+          size += vd->getType().sizeOf();
+      }
+      type->getSizeOf() = size;
       return static_cast<StructType*>(type.get());
     }
     return nullptr;
@@ -87,7 +95,9 @@ public:
     return nullptr;
   }
   FunctionType* getFunctionType(QualType &&returnType, List<QualType> &&arguments) {
-    return addType(FunctionType(std::forward<QualType>(returnType), std::forward<List<QualType>>(arguments)));
+    auto type = addType(FunctionType(std::forward<QualType>(returnType), std::forward<List<QualType>>(arguments)));
+    type->getSizeOf() = 8;
+    return type;
   }
   void remove(Type *type) {
     auto it = types.find(type);
@@ -113,15 +123,20 @@ protected:
   }
   void init() {
     addres_type.getCanonicalType() = &addres_type;
+    addres_type.getSizeOf() = 8;
     bool_type.getCanonicalType() = &bool_type;
+    bool_type.getSizeOf() = 1;
     string_type.getCanonicalType() = &string_type;
+    string_type.getSizeOf() = 0;
     auto add_float = [&](FloatType::numeric_precision precision) {
       float_types[precision] = FloatType { precision };
       float_types[precision].getCanonicalType() = &(float_types[precision]);
+      float_types[precision].getSizeOf() = precision > 0 ? 1 << (precision - 1) : 4;
     };
     auto add_int = [&](IntType::numeric_precision precision, IntType::numeric_sign sign) {
       int_types[sign][precision] = IntType { precision, sign };
       int_types[sign][precision].getCanonicalType() = &(int_types[sign][precision]);
+      int_types[sign][precision].getSizeOf() = precision > 0 ? 1 << (precision - 1) : 4;
     };
     for (int p = FloatType::P_8; p <= FloatType::P_128; ++p)
       add_float(static_cast<FloatType::numeric_precision>(p));
@@ -187,8 +202,7 @@ inline std::pair<Type*, int> typePromotion(Type *lhs, Type *rhs) {
   }
   if (lhs->classof(ASTKind::PtrType) && rhs->classof(ASTKind::AddressType)) {
     return {lhs, 1};
-  }
-  else if (rhs->classof(ASTKind::PtrType) && lhs->classof(ASTKind::AddressType)) {
+  } else if (rhs->classof(ASTKind::PtrType) && lhs->classof(ASTKind::AddressType)) {
     return {rhs, 0};
   }
   return {nullptr, -1};

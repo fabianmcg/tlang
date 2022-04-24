@@ -69,6 +69,8 @@ struct ResolveTypesVisitor: ASTVisitor<ResolveTypesVisitor, VisitorPattern::preP
     return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitFunctorDecl(FunctorDecl *node, VisitType isFirst) {
+    if (isFirst == postVisit)
+      node->setType(context.types());
     return add_scope(static_cast<UniversalContext*>(node), isFirst);
   }
   visit_t visitForStmt(ForStmt *node, VisitType isFirst) {
