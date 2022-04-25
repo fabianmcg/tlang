@@ -36,9 +36,18 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       return visit;
     }
     visit_t visitArrayExpr(ArrayExpr *expr) {
+      if (expr->getArray()->getType().isReference())
+        expr->getArray() = builder.CreateImplicitCast(expr->getArray(), expr->getArray()->getType().modQuals());
       for (auto &index : expr->getIndex())
         if (index->getType().isReference())
           index = builder.CreateImplicitCast(index, index->getType().modQuals());
+      return visit;
+    }
+    visit_t visitVariableDecl(VariableDecl *decl) {
+      if (decl->getInit()) {
+        if (!decl->getType().isReference() && decl->getInit()->getType().isReference())
+          decl->getInit() = builder.CreateImplicitCast(decl->getInit(), decl->getInit()->getType().modQuals());
+      }
       return visit;
     }
     ASTApi builder { context };

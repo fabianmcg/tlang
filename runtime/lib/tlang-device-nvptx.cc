@@ -1,21 +1,26 @@
 #include <tlang-device-nvptx.h>
-#include <cuda_runtime.h>
-#include <unordered_map>
-#include <iostream>
+#include <cassert>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <unordered_map>
+#include <cuda_runtime.h>
+#include <cuda.h>
 
 #ifndef NDEBUG
 #define CUDA_CHECK(status) { cuda_check((status), __FILE__, __LINE__); }
 #else
 #define CUDA_CHECK(status) { status; }
 #endif
+
+namespace {
 inline void cuda_check(cudaError_t status, const char *file, int line) {
   if (status != cudaSuccess) {
     std::cerr << "CUDA RT error: " << cudaGetErrorString(status) << "\n\t" << file << ":" << line << "" << std::endl;
     std::exit(status);
   }
 }
-namespace {
+
 inline std::pair<dim3, dim3> getDefaultLaunchDims() {
   dim3 gsz(128), bsz(256);
   if (char *env = getenv("TLANG_NUM_TENSORS")) {
@@ -30,6 +35,52 @@ inline std::pair<dim3, dim3> getDefaultLaunchDims() {
   }
   return {gsz, bsz};
 }
+
+struct CUDAContext {
+  CUcontext context { };
+  CUdevice device { };
+  CUresult status = CUDA_SUCCESS;
+  CUDAContext() {
+    init();
+  }
+  ~CUDAContext() {
+    destroy();
+  }
+  int init() {
+    check(cuInit(0));
+    check(cuDeviceGet(&device, 0));
+    check(cuCtxCreate(&context, 0, device));
+    return 0;
+  }
+  inline void destroy() {
+    if (context)
+      check(cuCtxDestroy(context), false);
+    context = nullptr;
+  }
+  inline void check(CUresult status, bool emmitAssert = true) {
+    if (emmitAssert)
+      assert(status == CUDA_SUCCESS);
+    this->status = status;
+  }
+  void loadModule(const std::string &filename) {
+    std::ifstream t(filename);
+    if (!t.is_open()) {
+      std::cerr << filename << " not found\n";
+      std::exit(1);
+    }
+    std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+    check(cuModuleLoadDataEx(&cudaModule, str.c_str(), 0, 0, 0));
+  }
+  CUfunction loadFunction(const std::string &functionName) {
+    CUfunction function;
+    check(cuModuleGetFunction(&function, cudaModule, functionName.c_str()));
+    return function;
+  }
+//  void launch(CUfunction function, Vec3 tensor_dim, Vec3 matrix_dim, void **arguments) {
+//    check(cuLaunchKernel(function, tensor_dim.x, tensor_dim.y, tensor_dim.z, matrix_dim.x, matrix_dim.y, matrix_dim.z, 0, NULL, arguments, NULL));
+//  }
+  CUmodule cudaModule { };
+};
 struct TlangDeviceRuntime {
   typedef enum {
     to = 1,
@@ -39,7 +90,7 @@ struct TlangDeviceRuntime {
     present = 16
   } MapKind;
   TlangDeviceRuntime() :
-      mapping(512) {
+      mapping(512), context() {
     CUDA_CHECK(cudaStreamCreate(&stream))
   }
   ~TlangDeviceRuntime() {
@@ -48,6 +99,12 @@ struct TlangDeviceRuntime {
         cudaFree(mapped);
     if (stream)
       cudaStreamDestroy(stream);
+  }
+  void loadModule(const std::string &filename) {
+    context.loadModule(filename);
+  }
+  void* loadFunction(const std::string &functionName) {
+    return context.loadFunction(functionName);
   }
   address_type map(MapKind kind, address_type address, uint64_t size) {
     if (!address)
@@ -90,6 +147,7 @@ struct TlangDeviceRuntime {
   }
   std::unordered_map<address_type, address_type> mapping;
   cudaStream_t stream { };
+  CUDAContext context { };
 };
 TlangDeviceRuntime runtime { };
 }
@@ -101,7 +159,14 @@ address_type __tlang_device_map(int kind, address_type address, uint64_t size) {
 void __tlang_device_sync(int id) {
   runtime.sync();
 }
-void __tlang_device_run_kernel(const void *fn, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
+void __tlang_device_run_kernel(const void *fn, int id, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
   runtime.launch(fn, tensor_dim, matrix_dim, args);
+}
+int __tlang_device_load_module(const std::string &filename) {
+  runtime.loadModule(filename);
+  return 0;
+}
+void* __tlang_device_load_function(const std::string &functionname) {
+  return runtime.loadFunction(functionname);
 }
 }

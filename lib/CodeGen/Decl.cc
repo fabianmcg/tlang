@@ -30,7 +30,21 @@ struct VariableAllocator: ASTVisitor<VariableAllocator<E>, VisitorPattern::preOr
   }
   E &emitter;
 };
-
+template <typename E>
+struct FwdDeclarator: ASTVisitor<FwdDeclarator<E>, VisitorPattern::preOrder> {
+  using visit_t = typename ASTVisitor<FwdDeclarator<E>, VisitorPattern::preOrder>::visit_t;
+  FwdDeclarator(E &emitter) :
+      emitter(emitter) {
+  }
+  visit_t visitFunctorDecl(FunctorDecl *node) {
+    emitter.makeFunction(node);
+    return visit_t::skip;
+  }
+  E &emitter;
+};
+void GenericEmitter::emitForwardDecl(UnitDecl *unit) {
+  FwdDeclarator<GenericEmitter> { *this }.traverseUnitDecl(unit);
+}
 llvm::AllocaInst* GenericEmitter::makeVariable(VariableDecl *variable, const std::string &suffix) {
   llvm::Twine name = variable->getIdentifier() + suffix;
   llvm::AllocaInst *alloca = builder.CreateAlloca(emitQualType(variable->getType()), 0, name);
@@ -41,16 +55,23 @@ IRType_t<FunctionType> GenericEmitter::makeFunctionType(FunctorDecl *functor) {
   return emitFunctionType(dyn_cast<FunctionType>(functor->getType().getType()));
 }
 IRType_t<FunctorDecl> GenericEmitter::makeFunction(FunctorDecl *functor) {
+  auto &irFunction = get(functor);
+  if (irFunction)
+    return static_cast<IRType_t<FunctorDecl>>(irFunction);
   llvm::FunctionType *functionType = makeFunctionType(functor);
-  llvm::Function *irFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functor->getIdentifier(), module);
+  irFunction = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functor->getIdentifier(), module);
   get(functor) = irFunction;
-  return irFunction;
+  return static_cast<IRType_t<FunctorDecl>>(irFunction);
 }
 IRType_t<ModuleDecl> GenericEmitter::emitModuleDecl(ModuleDecl *node) {
   IRType_t<ModuleDecl> last { };
   for (auto symbol : *static_cast<DeclContext*>(node))
     last = emitDecl(symbol);
   return last;
+}
+IRType_t<ExternFunctionDecl> GenericEmitter::emitExternFunctionDecl(ExternFunctionDecl *function) {
+  llvm::Function *irFunction = makeFunction(function);
+  return irFunction;
 }
 IRType_t<FunctionDecl> GenericEmitter::emitFunctionDecl(FunctionDecl *function) {
   llvm::Function *irFunction = makeFunction(function);

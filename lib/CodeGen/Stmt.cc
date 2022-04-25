@@ -21,6 +21,14 @@
 #include <llvm/IR/IntrinsicsNVPTX.h>
 
 namespace tlang::codegen {
+IRType_t<CompoundStmt> GenericEmitter::emitCompoundStmt(CompoundStmt *stmt) {
+  IRType_t<CompoundStmt> last { };
+  auto &stmts = stmt->getStmts();
+  for (auto &stmt : stmts)
+    last = emitStmt(stmt);
+  return last;
+}
+
 IRType_t<IfStmt> GenericEmitter::emitIfStmt(IfStmt *stmt) {
   llvm::Function *function = builder.GetInsertBlock()->getParent();
   llvm::BasicBlock *then_block = llvm::BasicBlock::Create(context, makeLabel(ASTKind::IfStmt, "IfStmt"), function);
@@ -101,6 +109,18 @@ IRType_t<ForStmt> GenericEmitter::emitForStmt(ForStmt *stmt) {
     function->getBasicBlockList().push_back(end_for);
     builder.SetInsertPoint(end_for);
     std::swap(tmp_block, end_block);
+  }
+  return nullptr;
+}
+
+IRType_t<DeclStmt> GenericEmitter::emitDeclStmt(DeclStmt *stmt) {
+  for (auto vd : stmt->getDecl()) {
+    if (vd->getInit()) {
+      auto val = emitExpr(vd->getInit());
+      auto alloca = get(vd);
+      assert(alloca);
+      makeStore(val, alloca);
+    }
   }
   return nullptr;
 }
