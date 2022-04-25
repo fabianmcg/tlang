@@ -1,6 +1,7 @@
 #include <AST/Api.hh>
 #include <AST/Visitors/ASTVisitor.hh>
 #include <Parallel/GenerateConstructs.hh>
+#include <Sema/Sema.hh>
 
 namespace tlang {
 bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results) {
@@ -8,18 +9,14 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
   auto constructs = results.getResult<ParallelConstructDatabase>(CreateConstructDatabase::ID(), &decl);
   if (constructs) {
     print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Transforming parallel constructs\n");
-    removeContexts(*constructs);
     addAPI(*constructs);
     generateParallelRegions(*constructs);
     generateContexts(*constructs);
+    Sema { CI }.resolveSymbolTables(&decl);
+    generateLaunchCalls(*constructs);
     print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green), "Finished transforming parallel constructs\n");
   }
   return true;
-}
-
-void GenerateConstructs::removeContexts(ParallelConstructDatabase &constructs) {
-//  for (auto &c : constructs.contexts)
-//    c.construct.reference.makeNull<Stmt>();
 }
 
 std::string GenerateConstructs::makeRegionLabel(FunctorDecl *fn, const std::string &suffix) {
@@ -31,21 +28,11 @@ void GenerateConstructs::addHostAPI() {
 
 void GenerateConstructs::addDeviceAPI() {
   ASTApi builder { CI.getContext() };
-//  builder.AddToContext(APIModule,
-//      builder.CreateExternFunction("__tlang_device_malloc", builder.CreateType<AddressType>(),
-//          builder.CreateParameter("kind", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)),
-//          builder.CreateParameter("size", builder.CreateType<IntType>(IntType::P_64, IntType::Unsigned))));
-//  builder.AddToContext(APIModule,
-//      builder.CreateExternFunction("__tlang_device_free", builder.CreateType<AddressType>(),
-//          builder.CreateParameter("address", builder.CreateType<AddressType>())));
   builder.AddToContext(APIModule,
       builder.CreateExternFunction("__tlang_device_map", builder.CreateType<AddressType>(),
           builder.CreateParameter("kind", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)),
           builder.CreateParameter("address", builder.CreateType<AddressType>()),
           builder.CreateParameter("size", builder.CreateType<IntType>(IntType::P_64, IntType::Unsigned))));
-  builder.AddToContext(APIModule,
-      builder.CreateExternFunction("__tlang_device_get_mapped", builder.CreateType<AddressType>(),
-          builder.CreateParameter("address", builder.CreateType<AddressType>())));
   builder.AddToContext(APIModule,
       builder.CreateExternFunction("__tlang_device_sync", builder.CreateVoid(),
           builder.CreateParameter("id", builder.CreateType<IntType>(IntType::P_32, IntType::Signed))));
@@ -110,8 +97,9 @@ void GenerateConstructs::generateHostRegion(ConstructData<ParallelStmt> region) 
   auto fn = generateRegion(region, ContextStmt::Host);
   builder.AddToContext(hostModule, fn);
   regions[region.construct.node] = fn;
-  auto lfn = builder.CreateExternFunction(makeRegionLabel(region.functor, "launch"), builder.CreateVoid());
+  auto lfn = builder.CreateExternFunction(makeRegionLabel(region.functor, "_launch"), builder.CreateVoid());
   builder.AddToContext(APIModule, lfn);
+  launchFunctions[region.construct.node] = lfn;
   region.construct.reference.makeNull<Stmt>();
   incrementRegionLabel(region.functor);
 }
@@ -122,8 +110,9 @@ void GenerateConstructs::generateDeviceRegion(ConstructData<ParallelStmt> region
   builder.AddToContext(deviceModule, fn);
   fn->getFunctionKind() = FunctionDecl::Kernel;
   regions[region.construct.node] = fn;
-  auto lfn = builder.CreateExternFunction(makeRegionLabel(region.functor, "launch"), builder.CreateVoid());
+  auto lfn = builder.CreateExternFunction(makeRegionLabel(region.functor, "_launch"), builder.CreateVoid());
   builder.AddToContext(APIModule, lfn);
+  launchFunctions[region.construct.node] = lfn;
   region.construct.reference.makeNull<Stmt>();
   incrementRegionLabel(region.functor);
 }
@@ -148,27 +137,122 @@ void GenerateConstructs::generateParallelRegions(ParallelConstructDatabase &cons
 //
 //};
 
+namespace {
+Stmt* mapToDevice(MapStmt::Kind mapKind, Expr *exprToMap, FunctorDecl *mapFn, ASTApi &builder) {
+  Expr *address { };
+  Expr *kind { };
+  Expr *size { };
+  QualType type;
+  std::string id { };
+  if (auto ae = dyn_cast<ArrayExpr>(exprToMap)) {
+    address = builder.CreateImplicitCast(ae->getArray(), builder.CreateAddressType());
+    size = builder.CreateBinOp(BinaryOperator::Multiply, ae->getIndex().at(0),
+        builder.CreateLiteral((int64_t) exprToMap->getType().getType()->getSizeOf()));
+    if (auto re = dyn_cast<DeclRefExpr>(ae->getArray())) {
+      id = re->getIdentifier();
+      type = ae->getArray()->getType().modQuals();
+    } else
+      assert(false);
+  } else if (exprToMap->getType().isReference()) {
+    address = builder.CreateImplicitCast(builder.CreateUnOp(UnaryOperator::Address, exprToMap), builder.CreateAddressType());
+    size = builder.CreateLiteral((int64_t) exprToMap->getType().getType()->getSizeOf());
+    if (auto re = dyn_cast<DeclRefExpr>(exprToMap)) {
+      id = re->getIdentifier();
+      type = builder.CreateType<PtrType>(re->getType().getType());
+    } else
+      assert(false);
+  } else
+    assert(false);
+  kind = builder.CreateLiteral(static_cast<int64_t>(mapKind));
+  Expr *cexpr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapFn), kind, address, size);
+  if (mapKind == MapStmt::destroy || mapKind == MapStmt::from)
+    return cexpr;
+  return builder.CreateDeclStmt(builder.CreateVariable(id + ".mapped", type, builder.CreateImplicitCast(cexpr, type)));
+}
+}
+
 void GenerateConstructs::generateContext(ConstructData<ContextStmt> context) {
-  auto ctx = context.construct.node;
-  if (ctx->getContextKind() == ContextStmt::Device) {
-    auto fn = dyn_cast<FunctorDecl>(APIModule->find("__tlang_device_map").get().get());
+  auto context_construct = context.construct.node;
+  if (auto ic = dyn_cast<ImplicitContextStmt>(context_construct))
+    implicitRefs[ic] = context.construct.reference;
+  if (context_construct->getContextKind() == ContextStmt::Device) {
+    auto mapFn = dyn_cast<FunctorDecl>(APIModule->find("__tlang_device_map").get().get());
     ASTApi builder { CI.getContext() };
     auto cs = builder.CreateCompoundStmt();
+    contextCS[context_construct] = cs;
+    std::cerr << cs << std::endl;
+    std::cerr << static_cast<UniversalContext*>(cs)->getParent() << std::endl;
     context.construct.reference.assign<Stmt>(cs);
-    for (auto ms : ctx->getMappedExprs()) {
-      if (ms->getMapKind() == MapStmt::destroy || ms->getMapKind() == MapStmt::from)
+    for (auto ms : context_construct->getMappedExprs()) {
+      if (ms->isDestroy() || ms->isFrom())
         continue;
-      for (auto me : ms->getMappedExprs()) {
-        cs->addStmt(builder.CreateCallExpr(builder.CreateDeclRefExpr(fn), builder.CreateLiteral((int64_t) ms->getMapKind())));
-      }
+      for (auto me : ms->getMappedExprs())
+        cs->addStmt(mapToDevice(ms->getMapKind() == MapStmt::toFrom ? MapStmt::to : ms->getMapKind(), me, mapFn, builder));
     }
-    cs->addStmt(ctx->getStmt());
+    cs->addStmt(context_construct->getStmt());
+    for (auto ms : context_construct->getMappedExprs()) {
+      if (ms->isDestroy() || ms->isFrom() || ms->isToFrom())
+        for (auto me : ms->getMappedExprs())
+          cs->addStmt(mapToDevice(ms->getMapKind() == MapStmt::toFrom ? MapStmt::from : ms->getMapKind(), me, mapFn, builder));
+      else
+        continue;
+    }
   } else
-    context.construct.reference.assign<Stmt>(ctx->getStmt());
+    context.construct.reference.assign<Stmt>(context_construct->getStmt());
 }
 
 void GenerateConstructs::generateContexts(ParallelConstructDatabase &constructs) {
   for (auto ctx : constructs.contexts)
     generateContext(ctx);
+}
+
+void GenerateConstructs::generateHostLaunch(ConstructData<ParallelStmt> region) {
+  ASTApi builder { CI.getContext() };
+  List<Expr*> arguments;
+  if (auto opts = region.construct.node->getParallelOptions()) {
+    for (auto &expr : opts->getFirstPrivateVariables())
+      arguments.push_back(expr);
+    for (auto &expr : opts->getSharedVariables())
+      arguments.push_back(builder.CreateUnOp(UnaryOperator::Address, expr));
+  }
+  ExternFunctionDecl *lfn = launchFunctions[region.construct.node];
+  assert(lfn);
+  AnyASTNodeRef ref = implicitRefs[dyn_cast<ImplicitContextStmt>(region.construct.node->getContext().data())];
+  assert(ref);
+  ref.assign<Stmt>(builder.CreateCallExpr(builder.CreateDeclRefExpr(lfn), std::move(arguments)));
+}
+void GenerateConstructs::generateDeviceLaunch(ConstructData<ParallelStmt> region) {
+  ASTApi builder { CI.getContext() };
+  List<Expr*> arguments;
+  auto cs = contextCS[dyn_cast<ContextStmt>(region.construct.node->getContext().data())];
+  assert(cs);
+  if (auto opts = region.construct.node->getParallelOptions()) {
+    for (auto &expr : opts->getFirstPrivateVariables()) {
+      auto re = dyn_cast<DeclRefExpr>(expr);
+      if (auto pt = dyn_cast<PtrType>(re->getType().getType())) {
+        auto mv = cs->find(re->getIdentifier() + ".mapped", false);
+        assert(mv);
+        arguments.push_back(builder.CreateDeclRefExpr(dyn_cast<VariableDecl>(mv.get())));
+      } else
+        arguments.push_back(expr);
+    }
+    for (auto &expr : opts->getSharedVariables()) {
+      auto re = dyn_cast<DeclRefExpr>(expr);
+      auto mv = cs->find(re->getIdentifier() + ".mapped", false);
+      assert(mv);
+      arguments.push_back(builder.CreateDeclRefExpr(dyn_cast<VariableDecl>(mv.get())));
+    }
+  }
+  ExternFunctionDecl *lfn = launchFunctions[region.construct.node];
+  assert(lfn);
+//  AnyASTNodeRef ref = implicitRefs[dyn_cast<ImplicitContextStmt>(region.construct.node->getContext().data())];
+//  assert(ref);
+  cs->addStmt(builder.CreateCallExpr(builder.CreateDeclRefExpr(lfn), std::move(arguments)));
+}
+void GenerateConstructs::generateLaunchCalls(ParallelConstructDatabase &constructs) {
+  for (auto &region : constructs.deviceRegions)
+    generateDeviceLaunch(region);
+  for (auto &region : constructs.hostRegions)
+    generateHostLaunch(region);
 }
 }

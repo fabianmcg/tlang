@@ -58,7 +58,7 @@ struct SymbolTableVisitor: ASTVisitor<SymbolTableVisitor, VisitorPattern::prePos
     return visit_t::skip;
   }
   visit_t addScope(UniversalContext *table, VisitType isFirst) {
-    if (isFirst) {
+    if (isFirst == preVisit) {
       table->getParent() = getParentContext();
       table_stack.push_front(table);
     } else

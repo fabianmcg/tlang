@@ -38,7 +38,7 @@ struct AnalysisVisitor: public ASTVisitor<AnalysisVisitor, VisitorPattern::prePo
   }
   void addExpr(Expr *expr, std::set<VariableDecl*> &variables) {
     if (auto re = dyn_cast<DeclRefExpr>(expr))
-      if (auto varDecl = dynamic_cast<VariableDecl*>(re))
+      if (auto varDecl = dynamic_cast<VariableDecl*>(re->getDecl().data()))
         variables.insert(varDecl);
   }
   void addVariables(List<Expr*> &exprs, std::set<VariableDecl*> &variables) {

@@ -26,6 +26,15 @@ public:
   }
   static TransformationPipeline createPipeline(CompilerInvocation &CI);
 };
+
+class LoweringPipeline: public CompilerInvocationRef, public PassBase<LoweringPipeline>, public UnitPM {
+public:
+  using CompilerInvocationRef::CompilerInvocationRef;
+  static llvm::StringRef name() {
+    return "LoweringPipeline";
+  }
+  static LoweringPipeline createPipeline(CompilerInvocation &CI);
+};
 }
 
 #endif
