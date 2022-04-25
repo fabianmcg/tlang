@@ -48,27 +48,7 @@ int Driver::codeGen(CompilerInvocation &CI, const std::filesystem::path &file) {
     return 0;
   if (!file.empty()) {
     codegen::CodeGen emitter(CI);
-    std::filesystem::path path = std::filesystem::absolute(file).parent_path();
-    for (auto decl : (***CI)) {
-      auto unit = static_cast<UnitDecl*>(decl);
-      std::cerr << "Emitting: " << unit->getIdentifier() << std::endl;
-      emitter.emit(unit);
-      std::cerr << "Finished emitting: " << unit->getIdentifier() << std::endl;
-    }
-    for (auto& [k, v] : emitter.getModules()) {
-      auto file = path;
-      file /= k;
-      std::cerr << "Generating: " << file << std::endl;
-      std::error_code code;
-      llvm::raw_fd_ostream os(file.string(), code);
-      if (code) {
-        std::cerr << code.message() << std::endl;
-        return 1;
-      }
-      v->print(os, nullptr);
-      std::cerr << "Finished generating: " << file << std::endl;
-    }
-    return 0;
+    return emitter.emit(file);
   }
   return 1;
 }

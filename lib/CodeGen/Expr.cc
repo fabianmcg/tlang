@@ -2,6 +2,7 @@
 #include <AST/Expr.hh>
 #include <AST/Stmt.hh>
 #include <AST/Type.hh>
+#include <AST/Api.hh>
 #include <CodeGen/GenericEmitter.hh>
 #include <Support/Enumerate.hh>
 #include <llvm/ADT/APFloat.h>
@@ -17,7 +18,6 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Verifier.h>
-#include <llvm/IR/IntrinsicsNVPTX.h>
 
 namespace tlang::codegen {
 IRType_t<BooleanLiteral> GenericEmitter::makeBooleanLiteral(BooleanLiteral *literal) {
@@ -262,7 +262,7 @@ IRType_t<CallExpr> GenericEmitter::emitCallExpr(CallExpr *expr) {
     std::vector<llvm::Value*> arguments(expr->getArgs().size());
     for (auto [i, arg] : tlang::enumerate(expr->getArgs())) {
       arguments[i] = emitExpr(arg);
-      if (!arguments.back())
+      if (!arguments[i])
         throw(std::runtime_error("Invalid call expr"));
     }
     return builder.CreateCall(function, arguments);
@@ -270,6 +270,7 @@ IRType_t<CallExpr> GenericEmitter::emitCallExpr(CallExpr *expr) {
   return nullptr;
 }
 IRType_t<ArrayExpr> GenericEmitter::emitArrayExpr(ArrayExpr *expr) {
+//  std::cerr << *expr << std::endl;
   auto type = emitQualType(expr->getType().modQuals());
   auto array = emitExpr(expr->getArray());
   auto index = emitExpr(expr->getIndex()[0]);
@@ -277,11 +278,18 @@ IRType_t<ArrayExpr> GenericEmitter::emitArrayExpr(ArrayExpr *expr) {
 }
 IRType_t<CastExpr> GenericEmitter::emitCastExpr(CastExpr *expr) {
   auto subExpr = emitExpr(expr->getExpr());
+  auto &ft = expr->getType();
+  auto st = expr->getExpr()->getType();
+  if (ft.getType() == st.getType() && !ft.isReference() && st.isReference())
+    return makeLoad(ft, subExpr);
   return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
 }
 IRType_t<ImplicitCastExpr> GenericEmitter::emitImplicitCastExpr(ImplicitCastExpr *expr) {
-  expr->dump(std::cerr);
   auto subExpr = emitExpr(expr->getExpr());
+  auto &ft = expr->getType();
+  auto st = expr->getExpr()->getType();
+  if (ft.getType() == st.getType() && !ft.isReference() && st.isReference())
+    return makeLoad(ft, subExpr);
   return makeCast(expr->getType().getCanonicalType().getType(), expr->getExpr()->getType().getCanonicalType().getType(), subExpr);
 }
 IRType_t<TernaryOperator> GenericEmitter::emitTernaryOperator(TernaryOperator *expr) {
@@ -290,35 +298,10 @@ IRType_t<TernaryOperator> GenericEmitter::emitTernaryOperator(TernaryOperator *e
   auto fval = emitExpr(expr->getRhs());
   return builder.CreateSelect(condition, tval, fval);
 }
-
+IRType_t<DimExpr> GenericEmitter::emitDimExpr(DimExpr *expr) {
+  return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 1));
+}
 IRType_t<IdExpr> GenericEmitter::emitIdExpr(IdExpr *expr) {
-  std::vector<int> nums;
-  //  for (auto e : expr->getIndex()) {
-  //    if (auto il = dyn_cast<IntegerLiteral>(e)) {
-  //      nums.push_back(il->getValue());
-  //    } else
-  //      throw(std::runtime_error("Invalid IDX"));
-  //  }
-  if (nums.size() != 2)
-    throw(std::runtime_error("Invalid IDX"));
-  switch (nums[1]) {
-  case 0:
-    return
-        nums[0] == 0 ?
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_x, { }, { }) :
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_x, { }, { });
-  case 1:
-    return
-        nums[0] == 0 ?
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_y, { }, { }) :
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_y, { }, { });
-  case 2:
-    return
-        nums[0] == 0 ?
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_z, { }, { }) :
-            builder.CreateIntrinsic(llvm::Intrinsic::nvvm_read_ptx_sreg_tid_z, { }, { });
-  default:
-    return nullptr;
-  }
+  return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 0));
 }
 }

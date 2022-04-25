@@ -8,6 +8,7 @@ namespace tlang::codegen {
 class GenericEmitter: public impl::EmitterVisitor<GenericEmitter>, public Emitter {
 public:
   using Emitter::Emitter;
+  virtual ~GenericEmitter() = default;
   /******************************************************************************
    * Emit types
    ******************************************************************************/
@@ -26,10 +27,12 @@ public:
   /******************************************************************************
    * Emit declarations
    ******************************************************************************/
+  void emitForwardDecl(UnitDecl *unit);
   llvm::AllocaInst* makeVariable(VariableDecl *variable, const std::string &suffix = "");
   IRType_t<FunctionType> makeFunctionType(FunctorDecl *functor);
   IRType_t<FunctorDecl> makeFunction(FunctorDecl *functor);
   IRType_t<ModuleDecl> emitModuleDecl(ModuleDecl *module);
+  IRType_t<ExternFunctionDecl> emitExternFunctionDecl(ExternFunctionDecl *function);
   IRType_t<FunctionDecl> emitFunctionDecl(FunctionDecl *function);
   IRType_t<VariableDecl> emitVariableDecl(VariableDecl *variable);
   IRType_t<ParameterDecl> emitParameterDecl(ParameterDecl *variable);
@@ -53,7 +56,8 @@ public:
   void resetCounters() {
     counters.clear();
   }
-
+  IRType_t<CompoundStmt> emitCompoundStmt(CompoundStmt *stmt);
+  IRType_t<DeclStmt> emitDeclStmt(DeclStmt *stmt);
   IRType_t<IfStmt> emitIfStmt(IfStmt *stmt);
   IRType_t<ForStmt> emitForStmt(ForStmt *stmt);
   IRType_t<WhileStmt> emitWhileStmt(WhileStmt *stmt);
@@ -92,7 +96,8 @@ public:
   IRType_t<CastExpr> emitCastExpr(CastExpr *expr);
   IRType_t<ImplicitCastExpr> emitImplicitCastExpr(ImplicitCastExpr *expr);
   IRType_t<TernaryOperator> emitTernaryOperator(TernaryOperator *expr);
-  IRType_t<IdExpr> emitIdExpr(IdExpr *expr);
+  virtual IRType_t<IdExpr> emitIdExpr(IdExpr *expr);
+  virtual IRType_t<DimExpr> emitDimExpr(DimExpr *expr);
 protected:
   std::unordered_map<Decl*, llvm::Type*> decl2type { };
   std::map<ASTKind, int> counters;

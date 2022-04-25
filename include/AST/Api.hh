@@ -79,6 +79,7 @@ struct ASTApi: ASTContextReference {
   }
   CastExpr* CreateCast(Expr* expr, QualType type);
   ImplicitCastExpr* CreateImplicitCast(Expr* expr, QualType type);
+  CXXDecl* CreateCXX(const std::string& code);
   Stmt* PrependStmt(CompoundStmt *cs, Stmt *stmt);
   Stmt* AppendStmt(CompoundStmt *cs, Stmt *stmt);
   template <typename T, typename ...Args>

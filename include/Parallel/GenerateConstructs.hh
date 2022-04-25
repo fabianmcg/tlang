@@ -17,6 +17,9 @@ public:
   void addAPI(ParallelConstructDatabase &constructs);
   void generateContext(ConstructData<ContextStmt> context);
   void generateContexts(ParallelConstructDatabase &constructs);
+  void generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind, List<ParameterDecl*>& parameters);
+  List<ParameterDecl*> generateLaunchParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
+  List<ParameterDecl*> generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
   FunctionDecl* generateRegion(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
   void generateHostRegion(ConstructData<ParallelStmt> region);
   void generateDeviceRegion(ConstructData<ParallelStmt> region);
@@ -29,7 +32,9 @@ protected:
   ModuleDecl *APIModule { };
   ModuleDecl *hostModule { };
   ModuleDecl *deviceModule { };
+  ModuleDecl *cxxModule { };
   UnitDecl *deviceUnit { };
+  UnitDecl *cxxUnit { };
   std::map<ParallelStmt*, FunctionDecl*> regions;
   std::map<ParallelStmt*, ExternFunctionDecl*> launchFunctions;
   std::map<ImplicitContextStmt*, AnyASTNodeRef> implicitRefs;

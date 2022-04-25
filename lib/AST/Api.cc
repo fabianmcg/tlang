@@ -127,6 +127,9 @@ ImplicitCastExpr* ASTApi::CreateImplicitCast(Expr *expr, QualType type) {
 DeclStmt* ASTApi::CreateDeclStmt(List<VariableDecl*> &&variables) {
   return context.make<DeclStmt>(std::move(variables));
 }
+CXXDecl* ASTApi::CreateCXX(const std::string &code) {
+  return context.make<CXXDecl>(code);
+}
 Stmt* ASTApi::PrependStmt(CompoundStmt *cs, Stmt *stmt) {
   assert(cs);
   if (stmt)

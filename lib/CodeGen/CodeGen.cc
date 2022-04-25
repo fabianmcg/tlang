@@ -1,5 +1,7 @@
 #include <CodeGen/CodeGen.hh>
 #include <CodeGen/GenericEmitter.hh>
+#include <CodeGen/CXXEmitter.hh>
+#include <Support/Format.hh>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetRegistry.h>
@@ -8,6 +10,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <CodeGen/NVPTXEmitter.hh>
 
 namespace tlang::codegen {
 namespace {
@@ -80,5 +83,59 @@ llvm::Module* CodeGen::emit(UnitDecl *unit) {
       emitter.emitModuleDecl(dyn_cast<ModuleDecl>(module));
   }
   return &module;
+}
+void CodeGen::emit(UnitDecl *unit, llvm::raw_ostream &ost) {
+  assert(unit);
+  if (unit->getBackend() != Backend::CXX) {
+    llvm::IRBuilder<> builder { *llvm_context };
+    auto &module = getModule(unit);
+    if (unit->getBackend() < UnitDecl::NVPTX) {
+      GenericEmitter emitter = makeEmitter<GenericEmitter>(*compiler_context, *llvm_context, module, builder);
+      emitter.emitForwardDecl(unit);
+      for (auto module : *unit)
+        emitter.emitModuleDecl(dyn_cast<ModuleDecl>(module));
+    } else if (unit->getBackend() == UnitDecl::NVPTX) {
+      NVPTXEmitter emitter = makeEmitter<NVPTXEmitter>(*compiler_context, *llvm_context, module, builder);
+      emitter.emitForwardDecl(unit);
+      for (auto module : *unit)
+        emitter.emitModuleDecl(dyn_cast<ModuleDecl>(module));
+    }
+    module.print(ost, nullptr);
+  } else {
+    for (auto module : *unit)
+      CXXEmitter { }.emitModuleDecl(dyn_cast<ModuleDecl>(module), ost);
+  }
+}
+int CodeGen::emit(std::filesystem::path output) {
+  std::filesystem::path path = std::filesystem::absolute(output).parent_path();
+  std::filesystem::path basename = output.stem();
+  for (auto decl : (***compiler_context)) {
+    auto unit = static_cast<UnitDecl*>(decl);
+    auto file = path;
+    switch (unit->getBackend()) {
+    case Backend::AMDGPU:
+    case Backend::NVPTX:
+      file /= basename;
+      file += std::filesystem::path(".device.ll");
+      break;
+    case Backend::CXX:
+      file /= basename;
+      file += std::filesystem::path(".rt.cpp");
+      break;
+    default:
+      file /= output.filename();
+      break;
+    }
+    std::cerr << "Emitting: " << file << std::endl;
+    std::error_code code;
+    llvm::raw_fd_ostream os(file.string(), code);
+    if (code) {
+      std::cerr << code.message() << std::endl;
+      return 1;
+    }
+    emit(unit, os);
+    std::cerr << "Finished emitting: " << file << std::endl;
+  }
+  return 0;
 }
 }
