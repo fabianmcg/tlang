@@ -4,6 +4,9 @@
 
 namespace tlang {
 void GenerateConstructs::addHostAPI() {
+  ASTApi builder { CI.getContext() };
+  builder.AddToContext(APIModule, builder.CreateExternFunction("__tlang_host_sync", builder.CreateVoid()));
+  builder.AddToContext(APIModule, builder.CreateExternFunction("__tlang_host_num_tensors", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)));
 }
 
 void GenerateConstructs::generateHostRegion(ConstructData<ParallelStmt> region) {

@@ -136,6 +136,7 @@ void GenerateConstructs::generateParallelRegions(ParallelConstructDatabase &cons
     cxxModule->add(builder.CreateCXX("#include <tlang-host.h>"));
   }
   if (constructs.deviceQ()) {
+    auto target = CI.getOptions().langOpts.deviceTarget;
     deviceModule = CI.getContext().make<ModuleDecl>(NamedDecl("tlang.device.functions"), DeclContext());
     deviceUnit = CI.getContext().addUnit("tlang.device", UnitDecl::NVPTX);
     CI.getContext().addModule(deviceUnit, deviceModule);
