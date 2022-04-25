@@ -12,7 +12,6 @@ public:
     static PassID pid { };
     return &pid;
   }
-  void removeContexts(ParallelConstructDatabase &constructs);
   void addHostAPI();
   void addDeviceAPI();
   void addAPI(ParallelConstructDatabase &constructs);
@@ -22,6 +21,9 @@ public:
   void generateHostRegion(ConstructData<ParallelStmt> region);
   void generateDeviceRegion(ConstructData<ParallelStmt> region);
   void generateParallelRegions(ParallelConstructDatabase &constructs);
+  void generateHostLaunch(ConstructData<ParallelStmt> region);
+  void generateDeviceLaunch(ConstructData<ParallelStmt> region);
+  void generateLaunchCalls(ParallelConstructDatabase &constructs);
 protected:
   UnitDecl *unit { };
   ModuleDecl *APIModule { };
@@ -29,6 +31,9 @@ protected:
   ModuleDecl *deviceModule { };
   UnitDecl *deviceUnit { };
   std::map<ParallelStmt*, FunctionDecl*> regions;
+  std::map<ParallelStmt*, ExternFunctionDecl*> launchFunctions;
+  std::map<ImplicitContextStmt*, AnyASTNodeRef> implicitRefs;
+  std::map<ContextStmt*, CompoundStmt*> contextCS;
   std::map<FunctorDecl*, int> labels;
   std::string makeRegionLabel(FunctorDecl *fn, const std::string &suffix = "");
   int incrementRegionLabel(FunctorDecl *fn) {

@@ -78,6 +78,7 @@ struct ASTApi: ASTContextReference {
     return CreateDeclStmt(List<VariableDecl*> { var, vars... });
   }
   CastExpr* CreateCast(Expr* expr, QualType type);
+  ImplicitCastExpr* CreateImplicitCast(Expr* expr, QualType type);
   Stmt* PrependStmt(CompoundStmt *cs, Stmt *stmt);
   Stmt* AppendStmt(CompoundStmt *cs, Stmt *stmt);
   template <typename T, typename ...Args>

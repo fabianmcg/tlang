@@ -121,6 +121,9 @@ UnaryOperator* ASTApi::CreateUnOp(UnaryOperator::Operator op, Expr *expr) {
 CastExpr* ASTApi::CreateCast(Expr *expr, QualType type) {
   return context.make<CastExpr>(expr, std::move(type));
 }
+ImplicitCastExpr* ASTApi::CreateImplicitCast(Expr *expr, QualType type) {
+  return context.make<ImplicitCastExpr>(expr, std::move(type));
+}
 DeclStmt* ASTApi::CreateDeclStmt(List<VariableDecl*> &&variables) {
   return context.make<DeclStmt>(std::move(variables));
 }

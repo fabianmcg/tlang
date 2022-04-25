@@ -176,4 +176,8 @@ def EnumMemberDecl : AbstractNode<NamedDecl, /* Abstract = */ 0, /* Implicit = *
   }]>;
 }
 
+def CXXDecl : AbstractNode<Decl, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Variable source = Var<[{std::string}], [{""}]>;
+}
+
 #endif

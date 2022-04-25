@@ -11,6 +11,8 @@ public:
   AnyASTNodeRef() = default;
   AnyASTNodeRef(AnyASTNodeRef&&) = default;
   AnyASTNodeRef(const AnyASTNodeRef&) = default;
+  AnyASTNodeRef& operator=(AnyASTNodeRef&&) = default;
+  AnyASTNodeRef& operator=(const AnyASTNodeRef&) = default;
   template <typename T, std::enable_if_t<!std::is_same_v<T, AnyASTNodeRef>, int> = 0>
   explicit AnyASTNodeRef(T &node) {
     static_assert(isValidNode_v<T>);
