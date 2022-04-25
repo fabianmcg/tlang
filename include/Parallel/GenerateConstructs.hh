@@ -8,24 +8,26 @@ class GenerateConstructs: public CompilerInvocationRef, public PassBase<Generate
 public:
   using CompilerInvocationRef::CompilerInvocationRef;
   bool run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results);
-  static PassID* ID() {
-    static PassID pid { };
-    return &pid;
-  }
   void addHostAPI();
   void addDeviceAPI();
   void addAPI(ParallelConstructDatabase &constructs);
+
+  void generateDeviceContext(ConstructData<ContextStmt> context);
   void generateContext(ConstructData<ContextStmt> context);
   void generateContexts(ParallelConstructDatabase &constructs);
+
   void generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind, List<ParameterDecl*>& parameters);
   List<ParameterDecl*> generateLaunchParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
   List<ParameterDecl*> generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
-  FunctionDecl* generateRegion(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
+
   void generateHostRegion(ConstructData<ParallelStmt> region);
-  void generateDeviceRegion(ConstructData<ParallelStmt> region);
-  void generateParallelRegions(ParallelConstructDatabase &constructs);
   void generateHostLaunch(ConstructData<ParallelStmt> region);
+  FunctionDecl* generateRegion(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
+
+  void generateDeviceRegion(ConstructData<ParallelStmt> region);
   void generateDeviceLaunch(ConstructData<ParallelStmt> region);
+
+  void generateParallelRegions(ParallelConstructDatabase &constructs);
   void generateLaunchCalls(ParallelConstructDatabase &constructs);
 protected:
   UnitDecl *unit { };
