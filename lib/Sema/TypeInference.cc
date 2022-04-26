@@ -11,10 +11,22 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
   TypeInferenceAST(ASTContext &context) :
       context(context) {
   }
-  visit_t visitParenExpr(ParenExpr *node, VisitType isFirst) {
-    if (isFirst == postVisit) {
-      node->getType() = node->getExpr()->getType();
+  visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
+    if (isFirst == preVisit) {
+      auto decl = node->getDecl().data();
+      assert(decl);
+      if (auto vd = dyn_cast<VariableDecl>(decl))
+        node->getType() = vd->getType().addQuals(QualType::Reference);
+      else if (auto fd = dyn_cast<FunctorDecl>(decl))
+        node->getType() = QualType(fd->getType());
+      else
+        assert(false);
     }
+    return visit;
+  }
+  visit_t visitParenExpr(ParenExpr *node, VisitType isFirst) {
+    if (isFirst == postVisit)
+      node->getType() = node->getExpr()->getType();
     return visit;
   }
   visit_t visitMemberExpr(MemberExpr *node, VisitType isFirst) {
@@ -40,20 +52,6 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
           throw(std::runtime_error("Invalid member value"));
       } else
         throw(std::runtime_error("Invalid member expression"));
-    }
-    return visit;
-  }
-  visit_t visitDeclRefExpr(DeclRefExpr *node, VisitType isFirst) {
-    if (isFirst) {
-      if (auto symbol = declContext->find(node->getIdentifier(), false)) {
-        auto decl = *symbol;
-        if (auto vd = dyn_cast<VariableDecl>(decl)) {
-          node->getType() = vd->getType().addQuals(QualType::Reference);
-        } else if (auto fd = dyn_cast<FunctionDecl>(decl)) {
-          node->getType() = QualType(fd->getType());
-        }
-      } else
-        throw(std::runtime_error("Undefined symbol: " + node->getIdentifier()));
     }
     return visit;
   }
@@ -100,6 +98,12 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
         }
       }
       //TODO Implicit cast to arg
+    }
+    return visit;
+  }
+  visit_t visitReduceExpr(ReduceExpr *node, VisitType isFirst) {
+    if (isFirst == postVisit) {
+      node->getType() = node->getExpr()->getType().modQuals();
     }
     return visit;
   }
@@ -218,6 +222,16 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
   }
   visit_t visitUnitDecl(UnitDecl *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalContext*>(node), isFirst);
+  }
+  visit_t visitVariableDecl(VariableDecl *node, VisitType isFirst) {
+    if (postVisit == isFirst)
+      if (node->getInit()) {
+        auto lhs = node->getType().getType()->getCanonicalType().data();
+        auto rhs = node->getInit()->getType().getType()->getCanonicalType().data();
+        if (lhs != rhs)
+          node->getInit() = context.make<ImplicitCastExpr>(node->getInit(), node->getType().modQuals());
+      }
+    return visit;
   }
   visit_t visitModuleDecl(ModuleDecl *node, VisitType isFirst) {
     return add_scope(static_cast<UniversalContext*>(node), isFirst);

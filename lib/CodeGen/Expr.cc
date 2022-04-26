@@ -20,6 +20,9 @@
 #include <llvm/IR/Verifier.h>
 
 namespace tlang::codegen {
+llvm::Value* GenericEmitter::makeInt32(int64_t value, bool signedQ) {
+  return llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), value, signedQ);
+}
 IRType_t<BooleanLiteral> GenericEmitter::makeBooleanLiteral(BooleanLiteral *literal) {
   uint64_t value = static_cast<uint64_t>(literal->getValue());
   return llvm::ConstantInt::get(emitQualType(literal->getType()), value, false);
@@ -270,10 +273,20 @@ IRType_t<CallExpr> GenericEmitter::emitCallExpr(CallExpr *expr) {
   return nullptr;
 }
 IRType_t<ArrayExpr> GenericEmitter::emitArrayExpr(ArrayExpr *expr) {
-//  std::cerr << *expr << std::endl;
-  auto type = emitQualType(expr->getType().modQuals());
+  llvm::Type *type;
+  if (isa<ArrayType>(expr->getArray()->getType().getType()))
+    type = emitQualType(expr->getArray()->getType().modQuals());
+  else
+    type = emitQualType(expr->getType().modQuals());
   auto array = emitExpr(expr->getArray());
   auto index = emitExpr(expr->getIndex()[0]);
+
+  if (isa<ArrayType>(expr->getArray()->getType().getType())) {
+    std::vector<llvm::Value*> indxs;
+    indxs.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0, true));
+    indxs.push_back(index);
+    return builder.CreateGEP(type, array, indxs);
+  }
   return builder.CreateGEP(type, array, index);
 }
 IRType_t<CastExpr> GenericEmitter::emitCastExpr(CastExpr *expr) {

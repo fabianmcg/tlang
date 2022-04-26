@@ -10,76 +10,82 @@
 #include "AST/Stmt.hh"
 #include <AST/Visitors/ASTVisitor.hh>
 #include <Io/IOStream.hh>
+#include <Io/StringEmitter.hh>
 
 namespace tlang {
-struct DumpType: public ASTVisitor<DumpType, VisitorPattern::prePostOrder> {
-public:
-  DumpType(std::ostream &ost) :
-      ost(ost) {
+namespace io {
+struct DumpType: public StringEmitterVisitor<DumpType> {
+  std::string emitBoolType(BoolType *type) {
+    return "bool";
   }
-  visit_t visitQualType(QualType *node, VisitType kind) {
-    auto qualifiers = node->getQualifiers();
-    if (kind)
-      ost << ((qualifiers & QualType::Const) == QualType::Const ? "const " : "");
-    else
-      ost << ((qualifiers & QualType::Reference) == QualType::Reference ? " &" : "") << " [" << node->getType() << "]{"
-          << node->getAddressSpace() << "}";
-    return visit;
+  std::string emitAddressType(AddressType *type) {
+    return "address";
   }
-  visit_t visitFunctionType(FunctionType *node, VisitType kind) {
-    if (kind) {
-      ost << "F! ";
-      traverseQualType(&(node->getReturnType()));
-      ost << "(";
-      auto &args = node->getParemeters();
-      for (auto &arg : args) {
-        traverseQualType(&arg);
-        ost << ",";
-      }
-      ost << ")";
+  std::string emitIntType(IntType *type) {
+    switch (type->getPrecision()) {
+    case IntType::P_8:
+      return type->isSigned() ? "i8" : "u8";
+    case IntType::P_16:
+      return type->isSigned() ? "i16" : "u16";
+    case IntType::P_32:
+      return type->isSigned() ? "i32" : "u32";
+    case IntType::P_64:
+      return type->isSigned() ? "i64" : "u64";
+    default:
+      return type->isSigned() ? "int" : "uint";
     }
-    return visit_t::skip;
   }
-  visit_t visitVariadicType(VariadicType *node, VisitType kind) {
-    if (kind) {
-      if (node->getUnderlying())
-        dynamicTraverse(node->getUnderlying());
-      ost << "...";
+  std::string emitFloatType(FloatType *type) {
+    switch (type->getPrecision()) {
+    case FloatType::P_8:
+      return "f8";
+    case FloatType::P_16:
+      return "f16";
+    case FloatType::P_32:
+      return "f32";
+    case FloatType::P_64:
+      return "f64";
+    default:
+      return "float";
     }
-    return visit_t::skip;
   }
-  visit_t visitUnresolvedType(UnresolvedType *node, VisitType kind) {
-    if (kind)
-      ost << "#" << node->getIdentifier() << "#";
-    return visit_t::skip;
+  std::string emitVariadicType(VariadicType *type) {
+    return "...";
   }
-  visit_t visitBuiltinType(BuiltinType *node, VisitType kind) {
-    if (kind)
-      ost << tlang::to_string(node->classof());
-    return visit;
+  std::string emitUnresolvedType(UnresolvedType *node) {
+    return frmt("#{}#", node->getIdentifier());
   }
-  visit_t visitPtrType(PtrType *node, VisitType kind) {
-    if (!kind)
-      ost << "*";
-    return visit_t::visit;
+  std::string emitDefinedType(DefinedType *node) {
+    assert(node->getDecl());
+    return frmt("D! {}({})#", node->getDecl()->getIdentifier(), static_cast<void*>(node->getDecl().data()));
   }
-  visit_t visitDefinedType(DefinedType *node, VisitType kind) {
-    if (kind) {
-      std::string id { };
-      if (node->getDecl())
-        id = node->getDecl()->getIdentifier();
-      ost << "S!" << id << " " << "(" << node->getDecl().data() << ")";
+  std::string emitPtrType(PtrType *type) {
+    return frmt("{}*", emitType(type->getUnderlying()));
+  }
+  std::string emitFunctionType(FunctionType *node) {
+    std::string value = frmt("F! {}(", emitQualType(node->getReturnType()));
+    auto &args = node->getParemeters();
+    for (auto [i, arg] : tlang::enumerate(args)) {
+      value += emitQualType(arg);
+      if (i + 1 < args.size())
+        value += ", ";
     }
-    return visit_t::visit;
+    return value + ")";
   }
-  visit_t visitArrayType(ArrayType *node, VisitType kind) {
-    if (!kind)
-      ost << "[]";
-    return visit_t::visit;
+  std::string visitArrayType(ArrayType *node) {
+    return frmt("{}[]", emitType(node->getUnderlying()));
   }
-private:
-  std::ostream &ost;
+  std::string emitQualType(QualType node) {
+    auto qualifiers = node.getQualifiers();
+    auto preQual = (qualifiers & QualType::Const) == QualType::Const ? "const " : "";
+    auto type = node.getType() ? emitType(node.getType()) : "void";
+    auto postQual = (qualifiers & QualType::Reference) == QualType::Reference ? "&" : "";
+    auto extraInfo = node.getAddressSpace() ? frmt(" <{}>", node.getAddressSpace()) : std::string();
+    return frmt("{}{}{}{}", preQual, type, postQual, extraInfo);
+  }
 };
+}
+
 struct DumpAST: ASTVisitor<DumpAST, VisitorPattern::prePostOrder | VisitorPattern::postWalk> {
 public:
   DumpAST() {
@@ -252,7 +258,7 @@ private:
       cst() << "'";
     else
       cst();
-    DumpType { ost }.traverseQualType(node);
+    ost << io::DumpType { }.emitQualType(*node);
     if (quotes)
       ost << "'";
     pop_color();

@@ -78,21 +78,21 @@ T* tlang_nvptx_malloc(size_t size) {
   return reinterpret_cast<T*>(tlang_nvptx_malloc(size * sizeof(T)));
 }
 template <size_t N>
-struct tlang_nvptx_kernel_args {
+struct __tlang_nvptx_kernel_args {
   void *arguments[N];
   operator void**() {
     return arguments;
   }
 };
 template <>
-struct tlang_nvptx_kernel_args<0> {
+struct __tlang_nvptx_kernel_args<0> {
   operator void**() {
     return nullptr;
   }
 };
 template <typename ...Args>
-tlang_nvptx_kernel_args<sizeof...(Args)> tlang_nvptx_argument_list(Args &...args) {
-  return tlang_nvptx_kernel_args<sizeof...(Args)> { &args... };
+__tlang_nvptx_kernel_args<sizeof...(Args)> __tlang_nvptx_argument_list(Args &...args) {
+  return __tlang_nvptx_kernel_args<sizeof...(Args)> { &args... };
 }
 #endif
 #endif

@@ -2,6 +2,7 @@
 #include <Parallel/Pipeline.hh>
 #include <Transformation/SimplifyExpr.hh>
 #include <Transformation/AddImplicit.hh>
+#include <Transformation/FixAS.hh>
 
 namespace tlang {
 MainPipeline MainPipeline::createPipeline(CompilerInvocation &CI) {
@@ -31,6 +32,7 @@ LoweringPipeline LoweringPipeline::createPipeline(CompilerInvocation &CI) {
   ModulePM EPM;
   EPM.addPass(AddImplicitExpr { CI.getContext() });
   pipeline.addPass(impl::makePassAdaptor<ModuleDecl, UnitPM>(std::move(EPM)));
+  pipeline.addPass(FixAddressSpace(CI));
   return pipeline;
 }
 }

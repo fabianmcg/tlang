@@ -3,20 +3,33 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <cuda_runtime.h>
 #include <cuda.h>
 
-#ifndef NDEBUG
-#define CUDA_CHECK(status) { cuda_check((status), __FILE__, __LINE__); }
-#else
-#define CUDA_CHECK(status) { status; }
-#endif
+//#ifndef NDEBUG
+#define CUDA_CHECK(status) { cuda_rt_check((status), __FILE__, __LINE__); }
+#define CUDA_DRIVER_CHECK(status) { cuda_driver_check((status), __FILE__, __LINE__); }
+//#else
+//#define CUDA_CHECK(status) { status; }
+//#define CUDA_DRIVER_CHECK(status) { status; }
+//#endif
 
 namespace {
-inline void cuda_check(cudaError_t status, const char *file, int line) {
+inline void cuda_rt_check(cudaError_t status, const char *file, int line) {
   if (status != cudaSuccess) {
     std::cerr << "CUDA RT error: " << cudaGetErrorString(status) << "\n\t" << file << ":" << line << "" << std::endl;
+    std::exit(status);
+  }
+}
+inline void cuda_driver_check(CUresult status, const char *file, int line) {
+  if (status != CUDA_SUCCESS) {
+    const char *errorString { };
+    cuGetErrorString(status, &errorString);
+    const char *errorName { };
+    cuGetErrorName(status, &errorName);
+    std::cerr << "CUDA Driver error: " << errorName << ": " << errorString << "\n\t" << file << ":" << line << "" << std::endl;
     std::exit(status);
   }
 }
@@ -47,20 +60,15 @@ struct CUDAContext {
     destroy();
   }
   int init() {
-    check(cuInit(0));
-    check(cuDeviceGet(&device, 0));
-    check(cuCtxCreate(&context, 0, device));
+    CUDA_DRIVER_CHECK(cuInit(0));
+    CUDA_DRIVER_CHECK(cuDeviceGet(&device, 0));
+    CUDA_DRIVER_CHECK(cuCtxCreate(&context, 0, device));
     return 0;
   }
   inline void destroy() {
     if (context)
-      check(cuCtxDestroy(context), false);
+      CUDA_DRIVER_CHECK(cuCtxDestroy(context));
     context = nullptr;
-  }
-  inline void check(CUresult status, bool emmitAssert = true) {
-    if (emmitAssert)
-      assert(status == CUDA_SUCCESS);
-    this->status = status;
   }
   void loadModule(const std::string &filename) {
     std::ifstream t(filename);
@@ -69,16 +77,17 @@ struct CUDAContext {
       std::exit(1);
     }
     std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-    check(cuModuleLoadDataEx(&cudaModule, str.c_str(), 0, 0, 0));
+    CUDA_DRIVER_CHECK(cuModuleLoadDataEx(&cudaModule, str.c_str(), 0, 0, 0));
   }
   CUfunction loadFunction(const std::string &functionName) {
     CUfunction function;
-    check(cuModuleGetFunction(&function, cudaModule, functionName.c_str()));
+    CUDA_DRIVER_CHECK(cuModuleGetFunction(&function, cudaModule, functionName.c_str()));
     return function;
   }
-//  void launch(CUfunction function, Vec3 tensor_dim, Vec3 matrix_dim, void **arguments) {
-//    check(cuLaunchKernel(function, tensor_dim.x, tensor_dim.y, tensor_dim.z, matrix_dim.x, matrix_dim.y, matrix_dim.z, 0, NULL, arguments, NULL));
-//  }
+  void launch(CUfunction function, Vec3 tensor_dim, Vec3 matrix_dim, void **arguments, cudaStream_t stream) {
+    CUDA_DRIVER_CHECK(
+        cuLaunchKernel(function, tensor_dim.x, tensor_dim.y, tensor_dim.z, matrix_dim.x, matrix_dim.y, matrix_dim.z, 0, stream, arguments, NULL));
+  }
   CUmodule cudaModule { };
 };
 struct TlangDeviceRuntime {
@@ -141,32 +150,38 @@ struct TlangDeviceRuntime {
     CUDA_CHECK(cudaStreamSynchronize(stream))
   }
   inline void launch(const void *fn, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
-    CUDA_CHECK(
-        cudaLaunchKernel(fn, dim3(tensor_dim.x, tensor_dim.y, tensor_dim.z), dim3(matrix_dim.x, matrix_dim.y, matrix_dim.z), args, 0,
-            stream))
+    context.launch(static_cast<CUfunction>(const_cast<void*>(fn)), tensor_dim, matrix_dim, args, stream);
+//    CUDA_CHECK(
+//        cudaLaunchKernel(fn, dim3(tensor_dim.x, tensor_dim.y, tensor_dim.z), dim3(matrix_dim.x, matrix_dim.y, matrix_dim.z), args, 0,
+//            stream))
   }
   std::unordered_map<address_type, address_type> mapping;
   cudaStream_t stream { };
   CUDAContext context { };
 };
-TlangDeviceRuntime runtime { };
+std::unique_ptr<TlangDeviceRuntime> runtime { };
+inline TlangDeviceRuntime& getRuntime() {
+  if (!runtime)
+    runtime = std::unique_ptr<TlangDeviceRuntime> { new TlangDeviceRuntime() };
+  return *runtime;
+}
 }
 
 extern "C" {
 address_type __tlang_device_map(int kind, address_type address, uint64_t size) {
-  return runtime.map(static_cast<TlangDeviceRuntime::MapKind>(kind), address, size);
+  return getRuntime().map(static_cast<TlangDeviceRuntime::MapKind>(kind), address, size);
 }
 void __tlang_device_sync(int id) {
-  runtime.sync();
+  getRuntime().sync();
 }
 void __tlang_device_run_kernel(const void *fn, int id, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
-  runtime.launch(fn, tensor_dim, matrix_dim, args);
+  getRuntime().launch(fn, tensor_dim, matrix_dim, args);
 }
 int __tlang_device_load_module(const std::string &filename) {
-  runtime.loadModule(filename);
+  getRuntime().loadModule(filename);
   return 0;
 }
 void* __tlang_device_load_function(const std::string &functionname) {
-  return runtime.loadFunction(functionname);
+  return getRuntime().loadFunction(functionname);
 }
 }
