@@ -27,7 +27,7 @@ parser:
 .PHONY: run
 run:
 ifneq ($(file),)
-	$(TC) $(file) $(FLAGS) -o $(addsuffix .ll,$(basename $(file)))
+	$(TC) $(file) $(FLAGS) -o pact-samples/add.ll
 endif
 
 .PHONY: dump

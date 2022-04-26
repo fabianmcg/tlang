@@ -64,10 +64,12 @@ public:
   IRType_t<BreakStmt> emitBreakStmt(BreakStmt *stmt);
   IRType_t<ContinueStmt> emitContinueStmt(ContinueStmt *stmt);
   IRType_t<ReturnStmt> emitReturnStmt(ReturnStmt *stmt);
-  IRType_t<SyncStmt> emitSyncStmt(SyncStmt *stmt);
+  virtual IRType_t<SyncStmt> emitSyncStmt(SyncStmt *stmt);
+  IRType_t<AtomicStmt> emitAtomicStmt(AtomicStmt *stmt);
   /******************************************************************************
    * Emit expressions
    ******************************************************************************/
+  llvm::Value* makeInt32(int64_t value, bool signedQ = false);
   llvm::Value* makeAddOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeSubOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
   llvm::Value* makeMulOp(QualType type, llvm::Value *lhs, llvm::Value *rhs);
@@ -98,6 +100,9 @@ public:
   IRType_t<TernaryOperator> emitTernaryOperator(TernaryOperator *expr);
   virtual IRType_t<IdExpr> emitIdExpr(IdExpr *expr);
   virtual IRType_t<DimExpr> emitDimExpr(DimExpr *expr);
+  virtual IRType_t<ReduceExpr> emitReduceExpr(ReduceExpr *expr) {
+    return nullptr;
+  }
 protected:
   std::unordered_map<Decl*, llvm::Type*> decl2type { };
   std::map<ASTKind, int> counters;

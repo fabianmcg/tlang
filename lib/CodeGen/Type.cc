@@ -48,7 +48,8 @@ IRType_t<FloatType> GenericEmitter::emitFloatType(FloatType *type, int addressSp
   }
 }
 IRType_t<ArrayType> GenericEmitter::emitArrayType(ArrayType *type, int addressSpace) {
-  return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), addressSpace);
+  auto base = static_cast<llvm::Type*>(emitType(type->getUnderlying()));
+  return llvm::ArrayType::get(base, 1);
 }
 IRType_t<PtrType> GenericEmitter::emitPtrType(PtrType *type, int addressSpace) {
   return makePointer(static_cast<llvm::Type*>(emitType(type->getUnderlying())), addressSpace);

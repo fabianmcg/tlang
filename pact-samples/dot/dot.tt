@@ -1,0 +1,26 @@
+extern fn __tlang_device_map(K: i32, A: address, S: i64) -> address;
+extern fn __tlang_device_sync(ID: i32);
+
+fn dot_tlang(x: f64*, y: f64*, n: i32) -> f64 {
+  let result:f64 = 0;
+  let x_dev:f64* = __tlang_device_map(1, x, 8 * n),
+      y_dev:f64* = __tlang_device_map(1, y, 8 * n),
+      r_dev:f64* = __tlang_device_map(1, &result, 8);
+  let gsz: i32 = (n + 127) / 128;
+  context<device>
+  parallel<(gsz, 1, 1), (512, 1, 1)> 
+  [firstprivate(r_dev, x_dev, y_dev, n)] {
+    let i: i32 = tid<m:s>.x + dim<m>.x * tid<m>.x;
+    let [shared] redultShared: f64 = 0;
+    let tmp:f64 = 0;
+    if (i < n)
+      tmp = x_dev[i] * y_dev[i];
+    tmp = reduce(tmp);
+    if (tid<v:s>.x == 0) {
+      atomic(+, redultShared, tmp);
+      atomic(+, r_dev, redultShared);
+    }
+  }
+  __tlang_device_map(2, &result, 8);
+  return result;
+}

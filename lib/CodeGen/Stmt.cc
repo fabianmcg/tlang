@@ -119,7 +119,7 @@ IRType_t<DeclStmt> GenericEmitter::emitDeclStmt(DeclStmt *stmt) {
       auto val = emitExpr(vd->getInit());
       auto alloca = get(vd);
       assert(alloca);
-      makeStore(val, alloca);
+      makeStore(alloca, val);
     }
   }
   return nullptr;
@@ -131,6 +131,16 @@ IRType_t<BreakStmt> GenericEmitter::emitBreakStmt(BreakStmt *stmt) {
   return nullptr;
 }
 IRType_t<ContinueStmt> GenericEmitter::emitContinueStmt(ContinueStmt *stmt) {
+  return nullptr;
+}
+IRType_t<AtomicStmt> GenericEmitter::emitAtomicStmt(AtomicStmt *stmt) {
+  auto ptr = emitExpr(stmt->getLhs());
+  auto value = emitExpr(stmt->getRhs());
+  if (isa<FloatType>(stmt->getRhs()->getType().getType()))
+    return builder.CreateAtomicRMW(llvm::AtomicRMWInst::FAdd, ptr, value, llvm::MaybeAlign(), llvm::AtomicOrdering::SequentiallyConsistent);
+  if (isa<IntType>(stmt->getRhs()->getType().getType()))
+    return builder.CreateAtomicRMW(llvm::AtomicRMWInst::Add, ptr, value, llvm::MaybeAlign(), llvm::AtomicOrdering::SequentiallyConsistent);
+  assert(false);
   return nullptr;
 }
 IRType_t<ReturnStmt> GenericEmitter::emitReturnStmt(ReturnStmt *stmt) {

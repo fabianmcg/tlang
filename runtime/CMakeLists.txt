@@ -25,4 +25,4 @@ find_package(CUDAToolkit)
 #target_link_libraries(tlang-nvptx pthread CUDA::cuda_driver)
 
 add_library(tlang-device-nvptx STATIC lib/tlang-device-nvptx.cc)
-target_link_libraries(tlang-device-nvptx pthread CUDA::cudart)
+target_link_libraries(tlang-device-nvptx pthread CUDA::cudart_static CUDA::cuda_driver)

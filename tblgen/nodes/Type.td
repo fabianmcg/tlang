@@ -203,7 +203,7 @@ def ArrayType : AbstractNode<Type, /* Abstract = */ 0, /* Implicit = */ 0> {
       return context->getArrayType(underlying, std::forward<List<Expr*>>(layout));
     }
   }]>;
-  code irType = [{llvm::PointerType*}];
+  code irType = [{llvm::ArrayType*}];
 }
 
 def DefinedType : AbstractNode<Type, /* Abstract = */ 1, /* Implicit = */ 0> {

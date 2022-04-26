@@ -359,4 +359,8 @@ def AllocateExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
   Child expr = Child<Dynamic, [{Expr}]>;
 }
 
+def ReduceExpr : AbstractNode<Expr, /* Abstract = */ 0, /* Implicit = */ 0> {
+  Child expr = Child<Dynamic, [{Expr}]>;
+}
+
 #endif

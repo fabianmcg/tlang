@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_UTIL_HH
-#define EXAMPLES_UTIL_HH
+#ifndef SAMPLES_UTIL_HH
+#define SAMPLES_UTIL_HH
 
 #include <chrono>
 #include <iomanip>
@@ -55,6 +55,7 @@ struct timer {
     return clock_ns::frmt(ns);
   }
 };
+
 struct cpu_timer: timer {
   using timer::timer;
   clockid_t type = CLOCK_MONOTONIC;
@@ -123,6 +124,7 @@ void random_int(T *array, size_t n, T a = 0, T b = 10) {
   for (size_t i = 0; i < n; ++i)
     array[i] = distribution(generator);
 }
+
 template <typename T>
 inline void random(T *array, size_t n, T a, T b) {
   if constexpr (std::is_integral_v<T>)
@@ -130,6 +132,7 @@ inline void random(T *array, size_t n, T a, T b) {
   else if constexpr (std::is_floating_point_v<T>)
     random_real(array, n, a, b);
 }
+
 template <typename T>
 inline T random(T a, T b) {
   T value;
@@ -139,6 +142,7 @@ inline T random(T a, T b) {
     random_real(&value, 1, a, b);
   return value;
 }
+
 template <typename T>
 bool equal(const std::vector<T> &A, const std::vector<T> &B, bool ignore_size_check = false) {
   if (B.size() == A.size() || ignore_size_check) {
@@ -152,6 +156,7 @@ bool equal(const std::vector<T> &A, const std::vector<T> &B, bool ignore_size_ch
   }
   return false;
 }
+
 template <typename T>
 bool numeric_equal(const std::vector<T> &A, const std::vector<T> &B, bool ignore_size_check = false, T eps = 1e-6) {
   if (B.size() == A.size() || ignore_size_check) {
@@ -165,6 +170,7 @@ bool numeric_equal(const std::vector<T> &A, const std::vector<T> &B, bool ignore
   }
   return false;
 }
+
 template <typename T>
 std::vector<T> random_vector(size_t n, T a, T b) {
   std::vector<T> A(n);
