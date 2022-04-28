@@ -87,7 +87,7 @@ struct NVPTXEmitter: public GenericEmitter {
         auto hi = builder.CreateTrunc(value, i32t);
         lo = builder.CreateZExt(makeBasicShfl(mask, lo, lane), i64t);
         hi = builder.CreateZExt(makeBasicShfl(mask, hi, lane), i64t);
-        hi = builder.CreateShl(hi, 32);
+        hi = builder.CreateShl(hi, 32, "", true);
         value = builder.CreateOr(hi, lo);
         return builder.CreateBitCast(value, llvm::Type::getDoubleTy(context));
       }
