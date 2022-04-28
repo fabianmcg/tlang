@@ -40,8 +40,6 @@ download: $(CMAKE_TAR)
 
 extract: $(CMAKE_DIR)
 
-build: $(CMAKE_BUILD)
-
 install: $(CMAKE_INSTALL)
 
 .PHONY: module
@@ -53,9 +51,9 @@ $(CMAKE_TAR):
 $(CMAKE_DIR): $(CMAKE_TAR)
 	tar -xzf $(CMAKE_TAR)
 
-$(CMAKE_BUILD): $(CMAKE_DIR)
+build:
 	mkdir -pv $(CMAKE_BUILD)
-	cd $(CMAKE_BUILD) && cmake ../$(CMAKE_DIR) -DCMAKE_INSTALL_PREFIX=$(CMAKE_INSTALL)
+	cd $(CMAKE_BUILD) && cmake ../$(CMAKE_DIR) -DCMAKE_INSTALL_PREFIX=$(CMAKE_INSTALL) -DCMAKE_USE_OPENSSL=OFF
 	$(MAKE) -C $(CMAKE_BUILD) $(MAKE_FLAGS)
 
 $(CMAKE_INSTALL): $(CMAKE_BUILD)
@@ -71,7 +69,7 @@ $(CMAKE_VER):
 .PHONY: clean
 clean:
 	rm -f $(CMAKE_BUILD)
-	
+
 .PHONY: purge
 purge:
 	rm -rf ./$(CMAKE_BUILD) ./$(CMAKE_DIR) ../cmake $(CMAKE_VER) ./$(CMAKE_TAR)
