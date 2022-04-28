@@ -74,8 +74,9 @@ IRType_t<ForStmt> GenericEmitter::emitForStmt(ForStmt *stmt) {
     llvm::BasicBlock *iteration_block = llvm::BasicBlock::Create(context, makeLabel(ASTKind::ForStmt, "ForIt"), function);
     llvm::BasicBlock *end_for = llvm::BasicBlock::Create(context, makeLabel(ASTKind::ForStmt, "EndForStmt"));
     incrementLabel(ASTKind::ForStmt);
-    llvm::BasicBlock *tmp_block = end_for;
-    std::swap(tmp_block, end_block);
+
+    ForInfo this_loop(stmt, for_preamble, iteration_block, for_body, end_for);
+    std::swap(this_loop, current_loop);
 
     // Emit preamble
     emitBranch(for_preamble);
@@ -108,7 +109,7 @@ IRType_t<ForStmt> GenericEmitter::emitForStmt(ForStmt *stmt) {
     // Emit EndFor
     function->getBasicBlockList().push_back(end_for);
     builder.SetInsertPoint(end_for);
-    std::swap(tmp_block, end_block);
+    std::swap(this_loop, current_loop);
   }
   return nullptr;
 }
@@ -128,9 +129,13 @@ IRType_t<WhileStmt> GenericEmitter::emitWhileStmt(WhileStmt *stmt) {
   return nullptr;
 }
 IRType_t<BreakStmt> GenericEmitter::emitBreakStmt(BreakStmt *stmt) {
+  if (current_loop && current_loop.epilogue)
+    emitBranch(current_loop.epilogue);
   return nullptr;
 }
 IRType_t<ContinueStmt> GenericEmitter::emitContinueStmt(ContinueStmt *stmt) {
+  if (current_loop && current_loop.iteration)
+    emitBranch(current_loop.iteration);
   return nullptr;
 }
 IRType_t<AtomicStmt> GenericEmitter::emitAtomicStmt(AtomicStmt *stmt) {

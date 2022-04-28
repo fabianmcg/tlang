@@ -204,7 +204,7 @@ IRType_t<UnaryOperator> GenericEmitter::emitUnaryOperator(UnaryOperator *expr) {
   case UnaryOperator::Address:
     return subExpr;
   case UnaryOperator::Dereference:
-    return subExpr;
+    return makeLoad(expr->getExpr()->getType(), subExpr);
   default:
     return nullptr;
   }
@@ -229,7 +229,7 @@ IRType_t<BinaryOperator> GenericEmitter::emitBinaryOperator(BinaryOperator *expr
   case BinaryOperator::Greater:
   case BinaryOperator::LEQ:
   case BinaryOperator::GEQ:
-    return makeCmp(type, op, lhs, rhs);
+    return makeCmp(expr->getLhs()->getType(), op, lhs, rhs);
   case BinaryOperator::And:
   case BinaryOperator::Or:
     return makeLogic(op, lhs, rhs);

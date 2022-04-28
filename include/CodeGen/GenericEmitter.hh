@@ -6,6 +6,26 @@
 
 namespace tlang::codegen {
 class GenericEmitter: public impl::EmitterVisitor<GenericEmitter>, public Emitter {
+protected:
+  struct ForInfo {
+    ForInfo(ForStmt *stmt, llvm::BasicBlock *prologue, llvm::BasicBlock *iteration, llvm::BasicBlock *body, llvm::BasicBlock *epilogue) :
+        stmt(stmt), prologue(prologue), iteration(iteration), body(body), epilogue(epilogue) {
+    }
+    ForInfo() = default;
+    ~ForInfo() = default;
+    ForInfo(ForInfo&&) = default;
+    ForInfo(const ForInfo&) = default;
+    ForInfo& operator=(ForInfo&&) = default;
+    ForInfo& operator=(const ForInfo&) = default;
+    operator bool() const {
+      return stmt;
+    }
+    ForStmt *stmt { };
+    llvm::BasicBlock *prologue { };
+    llvm::BasicBlock *iteration { };
+    llvm::BasicBlock *body { };
+    llvm::BasicBlock *epilogue { };
+  };
 public:
   using Emitter::Emitter;
   virtual ~GenericEmitter() = default;
@@ -106,7 +126,7 @@ public:
 protected:
   std::unordered_map<Decl*, llvm::Type*> decl2type { };
   std::map<ASTKind, int> counters;
-  llvm::BasicBlock *end_block { };
+  ForInfo current_loop { };
 };
 }
 
