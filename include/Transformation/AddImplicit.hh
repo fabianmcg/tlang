@@ -12,6 +12,13 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
   using ASTContextReference::ASTContextReference;
   struct Visitor: ASTVisitor<Visitor, VisitorPattern::postOrder>, public ASTContextReference {
     using ASTContextReference::ASTContextReference;
+    visit_t visitUnaryOperator(UnaryOperator *expr) {
+      auto op = expr->getOp();
+      auto &lhs = expr->getExpr();
+      if (lhs->getType().isReference() && op == UnaryOperator::Dereference)
+        lhs = builder.CreateImplicitCast(lhs, lhs->getType().modQuals(QualType::Reference));
+      return visit;
+    }
     visit_t visitBinaryOperator(BinaryOperator *expr) {
       auto op = expr->getOp();
       auto &lhs = expr->getLhs();
@@ -61,7 +68,7 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       return visit;
     }
     visit_t visitImplicitCastExpr(ImplicitCastExpr *expr) {
-      if (expr->getType().getType() != expr->getExpr()->getType().getType()) {
+      if (expr->getType().getType() != expr->getExpr()->getType().getType() && expr->getExpr()->getType().isReference()) {
         expr->getExpr() = builder.CreateImplicitCast(expr->getExpr(), expr->getExpr()->getType().modQuals());
       }
       return visit;
@@ -88,6 +95,16 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       if (rhs->getType().isReference()) {
         rhs = builder.CreateImplicitCast(rhs, rhs->getType().modQuals());
       }
+      return visit;
+    }
+    visit_t visitRangeExpr(RangeExpr *stmt) {
+      auto toRvalue = [&](Expr *&expr) {
+        if (expr && expr->getType().isReference())
+          expr = builder.CreateImplicitCast(expr, expr->getType().modQuals());
+      };
+      toRvalue(stmt->getStart());
+      toRvalue(stmt->getStep());
+      toRvalue(stmt->getStop());
       return visit;
     }
     ASTApi builder { context };

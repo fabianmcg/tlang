@@ -46,9 +46,8 @@ void GenericEmitter::emitForwardDecl(UnitDecl *unit) {
   FwdDeclarator<GenericEmitter> { *this }.traverseUnitDecl(unit);
 }
 llvm::AllocaInst* GenericEmitter::makeVariable(VariableDecl *variable, const std::string &suffix) {
-  llvm::Twine name = variable->getIdentifier() + suffix;
-  llvm::AllocaInst *alloca = builder.CreateAlloca(emitQualType(variable->getType()), (unsigned) (variable->isShared() ? 3 : 0), nullptr,
-      name);
+  std::string name = variable->getIdentifier() + suffix;
+  llvm::AllocaInst *alloca = builder.CreateAlloca(emitQualType(variable->getType()), nullptr, name);
   get(variable) = alloca;
   return alloca;
 }
@@ -114,9 +113,8 @@ IRType_t<VariableDecl> GenericEmitter::emitVariableDecl(VariableDecl *variable) 
   if (variable->getStorage() == VariableDecl::Shared) {
     llvm::GlobalVariable *gv = module.getGlobalVariable(variable->getIdentifier());
     if (!gv)
-    gv = new llvm::GlobalVariable(module, emitQualType(variable->getType()), false,
-        llvm::GlobalVariable::InternalLinkage, nullptr, variable->getIdentifier(), nullptr,
-        llvm::GlobalValue::ThreadLocalMode::NotThreadLocal, 3);
+      gv = new llvm::GlobalVariable(module, emitQualType(variable->getType()), false, llvm::GlobalVariable::InternalLinkage, nullptr,
+          variable->getIdentifier(), nullptr, llvm::GlobalValue::ThreadLocalMode::NotThreadLocal, 3);
     get(variable) = gv;
     gv->setUnnamedAddr(llvm::GlobalVariable::UnnamedAddr::None);
     gv->setInitializer(llvm::Constant::getNullValue(emitQualType(variable->getType())));

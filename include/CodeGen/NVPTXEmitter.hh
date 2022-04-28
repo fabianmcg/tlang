@@ -7,6 +7,7 @@
 
 namespace tlang::codegen {
 struct NVPTXEmitter: public GenericEmitter {
+  static constexpr int warp_size = 32;
   using GenericEmitter::GenericEmitter;
   IRType_t<IdExpr> emitIdExpr(IdExpr *expr) {
     auto level = expr->getLevel();
@@ -22,38 +23,45 @@ struct NVPTXEmitter: public GenericEmitter {
     };
     if (level == IdExpr::Scalar || level == (IdExpr::Scalar | IdExpr::Matrix))
       return builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { });
-    if (level == IdExpr::Matrix)
+    else if (level == IdExpr::Matrix)
       return builder.CreateIntrinsic(si(false, expr->getCoordinate()), { }, { });
-    if (level == (IdExpr::Scalar | IdExpr::Vector)) {
+    else if (level == (IdExpr::Scalar | IdExpr::Vector)) {
       llvm::Value *tid = builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { });
-      return builder.CreateSRem(tid, makeInt32(32, true));
+      return builder.CreateURem(tid, makeInt32(warp_size, false));
+    } else if (level == (IdExpr::Vector | IdExpr::Matrix)) {
+      llvm::Value *tid = builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { });
+      return builder.CreateUDiv(tid, makeInt32(warp_size, false));
     }
     return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 0));
   }
   IRType_t<DimExpr> emitDimExpr(DimExpr *expr) {
     auto level = expr->getLevel();
-    auto si = [](bool tid, DimExpr::Coordinate c) {
+    auto si = [](bool block, DimExpr::Coordinate c) {
       switch (c) {
       case DimExpr::Y:
-        return tid ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_y : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_y;
+        return block ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_y : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_y;
       case DimExpr::Z:
-        return tid ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_z : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_z;
+        return block ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_z : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_z;
       default:
-        return tid ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_x : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_x;
+        return block ? llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_x : llvm::Intrinsic::nvvm_read_ptx_sreg_nctaid_x;
       }
     };
-    if (level == DimExpr::Scalar || level == (DimExpr::Scalar | DimExpr::Matrix))
-      return builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { });
+    if (level == DimExpr::Vector)
+      return makeInt32(warp_size, false);
     if (level == DimExpr::Matrix)
+      return builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { });
+    if (level == DimExpr::Tensor)
       return builder.CreateIntrinsic(si(false, expr->getCoordinate()), { }, { });
-    return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 1));
+    if (level == (DimExpr::Scalar | DimExpr::Matrix))
+      return builder.CreateUDiv(builder.CreateIntrinsic(si(true, expr->getCoordinate()), { }, { }), makeInt32(warp_size, false));
+    return makeInt32(1, false);
   }
   llvm::Value* makeBasicShfl(llvm::Value *mask, llvm::Value *value, llvm::Value *lane) {
     auto type = value->getType();
     std::vector<llvm::Type*> types = { llvm::IntegerType::getInt32Ty(context), value->getType(), llvm::IntegerType::getInt32Ty(context),
         llvm::IntegerType::getInt32Ty(context) };
     std::vector<llvm::Value*> args;
-    llvm::Value *ci32 = llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(context), 32);
+    llvm::Value *ci32 = llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(context), 31);
     args.push_back(mask);
     args.push_back(value);
     args.push_back(lane);

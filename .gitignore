@@ -1,5 +1,8 @@
 ./tblgen/build/
 *.rt.cpp
+*.a
+*.ptxas
+*.devbin
 /tmp/
 /build/
 *.graphml
