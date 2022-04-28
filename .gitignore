@@ -1,4 +1,5 @@
 ./tblgen/build/
+*cmake-*
 *.tar.gz
 *.rt.cpp
 *.a
