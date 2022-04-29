@@ -40,7 +40,7 @@ __tlang_device_kernel_args<sizeof...(Args)> __tlang_device_argument_list(Args &.
 }
 template <typename ...Args>
 void __tlang_device_run_kernel_rt(const void *fn, int id, Vec3 tensor_dim, Vec3 matrix_dim, Args ...args) {
-  auto kernel_args = __tlang_nvptx_argument_list(args...);
+  auto kernel_args = __tlang_device_argument_list(args...);
   __tlang_device_run_kernel(fn, id, tensor_dim, matrix_dim, kernel_args);
 }
 
