@@ -1,0 +1,190 @@
+#include <Parser/Parser.hh>
+#include <stdexcept>
+#include <optional>
+#include <type_traits>
+#include <variant>
+#include <AST/Attr.hh>
+#include <AST/Expr.hh>
+#include <AST/Decl.hh>
+#include <AST/Type.hh>
+#include <AST/Stmt.hh>
+
+
+namespace tlang::parser {
+enum class return_kind {
+  Dynamic,
+  Static,
+};
+enum class result_status {
+  Empty,
+  Success,
+  Fail,
+};
+template <typename T, return_kind K>
+class parse_result {
+  public:
+  template <typename, return_kind> friend class parse_result;
+  static constexpr return_kind kind = K;
+  using type = T;
+  using container_type = std::conditional_t<kind == return_kind::Dynamic, reference<type>, std::optional<type>>;
+  using value_type = std::conditional_t<kind == return_kind::Dynamic, type*, type>;
+  parse_result(result_status status) :
+      __status(status) {
+  }
+  parse_result(container_type &&data, result_status status) :
+      __data(std::move(data)), __status(status) {
+  }
+  parse_result() = default;
+  ~parse_result() = default;
+  parse_result(parse_result&&) = default;
+  parse_result(const parse_result&) = default;
+  parse_result& operator=(parse_result&&) = default;
+  parse_result& operator=(const parse_result&) = default;
+  operator bool () const {
+    return __status == result_status::Success && __data;
+  }
+  value_type &operator*() {
+    if constexpr(kind == return_kind::Dynamic)
+      return __data.data();
+    else
+      return *__data;
+  }
+  template <typename V>
+  parse_result& operator=(parse_result<V, kind> &&result) {
+    __status = result.__status;
+    __range = result.__range;
+    if (result.isSuccess()) {
+      __data = std::move(result.__data);
+      if (!__data)
+        __status = result_status::Fail;
+    }
+    return *this;
+  }
+  parse_result& operator=(const SourceRange& range) {
+    __range = range;
+    return *this;
+  }
+  template <typename V>
+  static parse_result success(V&& value) {
+    return parse_result { std::forward<V>(value), result_status::Success };
+  }
+  static parse_result empty() {
+    return parse_result { result_status::Empty };
+  }
+  static parse_result fail() {
+    return parse_result { result_status::Fail };
+  }
+  bool isSuccess() const {
+    return __status == result_status::Success;
+  }
+  bool isFail() const {
+    return __status == result_status::Fail;
+  }
+  bool isEmpty() const {
+    return __status == result_status::Empty;
+  }
+  inline auto& begin() {
+    return __range.begin;
+  }
+  inline auto& end() {
+    return __range.end;
+  }
+  inline auto begin() const {
+    return __range.begin;
+  }
+  inline auto end() const {
+    return __range.end;
+  }
+  inline auto& range() {
+    return __range;
+  }
+  inline auto range() const {
+    return __range;
+  }
+  template <bool setLoc = true>
+  inline void range(const SourceLocation& begin, const SourceLocation& end) {
+    __range = SourceRange(begin, end);
+    if constexpr (setLoc)
+      if (isSuccess() && __data)
+        __data->getSourceRange() = __range;
+  }
+  template <bool setLoc = true>
+  inline void range(const SourceRange& ext) {
+    __range = ext;
+    if constexpr (setLoc)
+      if (isSuccess() && __data)
+        __data->getSourceRange() = __range;
+  }
+protected:
+  container_type __data { };
+  SourceRange __range { };
+  result_status __status { result_status::Empty };
+};
+class ParserHelper {
+public:
+  ParserHelper(Parser &parser, ASTContext &ctx, const std::string &module_name) : parser(parser), ctx(ctx), typeContext(ctx.types()), module_name(module_name) {} {{ PARSE_METHODS }}private:
+  Parser &parser;
+  ASTContext &ctx;
+  TypeContext &typeContext;
+  std::string module_name;
+  inline const token& peek() const { return parser.peekToken(); }
+  inline auto consume() { return parser.consumeToken(); }
+  inline token match(tok_k kind, const std::string& parsing_function) {
+    auto tok = peek();
+    if (tok.isNot(kind))
+      syntaxError(parsing_function);
+    consume();
+    return tok;
+  }
+  template <typename T>
+  inline void check(const T& result, const std::string& non_terminal, const std::string& parsing_function) {
+    if (result.isFail())
+      syntaxError(parsing_function);
+  }
+  void syntaxError(const std::string& parsing_function) {
+    throw(std::runtime_error("Error while parsing: " + parsing_function + ", got unexpected: " + peek().to_string()));
+  }
+  template <typename R, typename ...Args>
+  R make(Args &&...args) {
+    using type = typename R::type;
+    constexpr return_kind kind = R::kind;
+    if constexpr (kind == return_kind::Dynamic)
+      return R::success(ctx.template make<type>(std::forward<Args>(args)...));
+    else
+      return R::success(std::make_optional<type>(std::forward<Args>(args)...));
+  }
+  template <typename R, bool asReturn = true, typename T = void>
+  R create(T &&value) {
+    using type = std::conditional_t<asReturn, typename R::type, T>;
+    constexpr return_kind kind = R::kind;
+    if constexpr (kind == return_kind::Dynamic)
+      return R::success(ctx.template create<type>(std::forward<T>(value)));
+    else
+      return R::success(std::make_optional<type>(std::forward<T>(value)));
+  }
+  template <typename T, return_kind kind>
+  void init(parse_result<T, kind>& value, const SourceLocation& begin = {}, const SourceLocation& end = {}) {
+    if (!value) {
+      value = make<parse_result<T, kind>>();
+      value.template range<false>(begin, end);
+    }
+  }
+  template <typename T, typename ...Args>
+  T* make_node(Args &&...args) {
+    return ctx.template make<T>(std::forward<Args>(args)...);
+  }
+  template <typename T>
+  T* create_node(T &&value) {
+    return ctx.template create<T>(std::forward<T>(value));
+  }
+  template <typename T>
+  parse_result<T, return_kind::Dynamic> make_type(T *value) {
+    using type = parse_result<T, return_kind::Dynamic>;
+    return type::success(value);
+  }
+};
+ModuleDecl* Parser::parse(ASTContext& ctx, const std::string &module_name) {
+  auto result = ParserHelper(*this, ctx, module_name).ParseTop();
+  return *result;
+}
+} // namespace _pnp_

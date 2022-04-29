@@ -1,0 +1,1 @@
+add_lib(driver "${CMAKE_CURRENT_LIST_DIR}/Driver.cc;${CMAKE_CURRENT_LIST_DIR}/ParseFiles.cc;${CMAKE_CURRENT_LIST_DIR}/ParseCMD.cc" #[[USE_LLVM]] ON "")

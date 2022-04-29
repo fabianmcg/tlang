@@ -1,0 +1,164 @@
+extern fn timer_start(i32);
+extern fn timer_stop(i32);
+extern fn randlc(f64*, f64) -> f64;
+extern fn vranlc(i32, f64*, f64, f64*);
+extern fn sqrt(f64) -> f64;
+extern fn print(i32, i32);
+
+fn conj_grad(colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*,
+               p: f64*, q: f64*, r: f64*, rnorm: f64*, firstrow: i32,
+               lastrow: i32, firstcol: i32, lastcol: i32, naa: i32) {
+  let j: i32, k: i32;
+  let cgit: i32, cgitmax: i32 = 25;
+  let d: f64, sum: f64, rho: f64, rho0: f64, alpha: f64, beta: f64;
+
+  rho = 0.0;
+  
+  cgitmax = 25;
+
+  for (j in 0 : naa + 1) /* for (j = 0; j < naa + 1; j++) */ {
+    q[j] = 0.0;
+    z[j] = 0.0;
+    r[j] = x[j];
+    p[j] = r[j];
+  }
+
+  for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    rho = rho + r[j] * r[j];
+  }
+
+  for(cgit in 1 : cgitmax + 1) /* for (cgit = 1; cgit <= cgitmax; cgit++) */ {
+    for (j in 0 : lastrow - firstrow + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      sum = 0.0;
+      for (k in rowstr[j] : rowstr[j + 1]) /* for (k = rowstr[j]; k < rowstr[j + 1]; k++) */ {
+        sum = sum + a[k] * p[colidx[k]];
+      }
+      q[j] = sum;
+    }
+
+    d = 0.0;
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      d = d + p[j] * q[j];
+    }
+
+    alpha = rho / d;
+
+    rho0 = rho;
+
+    rho = 0.0;
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      z[j] = z[j] + alpha * p[j];
+      r[j] = r[j] - alpha * q[j];
+    }
+
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      rho = rho + r[j] * r[j];
+    }
+
+    beta = rho / rho0;
+
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      p[j] = r[j] + beta * p[j];
+    }
+  } // end of do cgit=1,cgitmax
+  sum = 0.0;
+  for (j in 0 : lastrow - firstrow + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    d = 0.0;
+    for (k in rowstr[j] : rowstr[j + 1]) /* for (k = rowstr[j]; k < rowstr[j + 1]; k++) */ {
+      d = d + a[k] * z[colidx[k]];
+    }
+    r[j] = d;
+  }
+  for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    d = x[j] - r[j];
+    sum = sum + d * d;
+  }
+
+  rnorm[0] = sqrt(sum);
+}
+
+fn CG(Z: f64*, colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*, p: f64*, q: f64*, r: f64*, amult: f64, tran: f64, NA: i32, NITER: i32,
+        naa: i32, nzz: i32, firstrow: i32, lastrow: i32, firstcol: i32, lastcol: i32,
+        timeron: i32, SHIFT: f64) {
+  let i: i32, j: i32, k: i32, it: i32;
+
+  let zeta: f64;
+  let rnorm: f64;
+  let norm_temp1: f64, norm_temp2: f64;
+
+  for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    for (k in rowstr[j] : rowstr[j + 1]) /* for (k = rowstr[j]; k < rowstr[j + 1]; k++) */ {
+      colidx[k] = colidx[k] - firstcol;
+    }
+  }
+
+  for (i in 0 : NA + 1) /* for (i = 0; i < NA + 1; i++) */ {
+    x[i] = 1.0;
+  }
+  for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    q[j] = 0.0;
+    z[j] = 0.0;
+    r[j] = 0.0;
+    p[j] = 0.0;
+  }
+
+  zeta = 0.0;
+
+  for (it in 1 : 2) /* for (it = 1; it <= 1; it++) */ {
+    conj_grad(colidx, rowstr, x, z, a, p, q, r, &rnorm, firstrow, lastrow,
+              firstcol, lastcol, naa);
+
+    norm_temp1 = 0.0;
+    norm_temp2 = 0.0;
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      norm_temp1 = norm_temp1 + x[j] * z[j];
+      norm_temp2 = norm_temp2 + z[j] * z[j];
+    }
+
+    norm_temp2 = 1.0 / sqrt(norm_temp2);
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      x[j] = norm_temp2 * z[j];
+    }
+  } // end of do one iteration untimed
+
+  for (i in 0 : NA + 1) /* for (i = 0; i < NA + 1; i++) */ {
+    x[i] = 1.0;
+  }
+
+  zeta = 0.0;
+
+  timer_stop(0);
+
+  //   printf(" Initialization time = %15.3f seconds\n", timer_read(0));
+
+  timer_start(1);
+
+  for (it in 1 : NITER + 1) /* for (it = 1; it <= NITER; it++) */ {
+    if (timeron)
+      timer_start(2);
+    conj_grad(colidx, rowstr, x, z, a, p, q, r, &rnorm, firstrow, lastrow,
+              firstcol, lastcol, naa);
+    if (timeron)
+      timer_stop(2);
+
+    norm_temp1 = 0.0;
+    norm_temp2 = 0.0;
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      norm_temp1 = norm_temp1 + x[j] * z[j];
+      norm_temp2 = norm_temp2 + z[j] * z[j];
+    }
+
+    norm_temp2 = 1.0 / sqrt(norm_temp2);
+
+    zeta = SHIFT + 1.0 / norm_temp1;
+    //     if (it == 1)
+    //       printf("\n   iteration           ||r||                 zeta\n");
+    //     printf("    %5d       %20.14E%20.13f\n", it, rnorm, zeta);
+
+    for (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      x[j] = norm_temp2 * z[j];
+    }
+  } // end of main iter inv pow meth
+  Z[0] = zeta;
+  timer_stop(1);
+}

@@ -1,0 +1,11 @@
+
+fn add(alpha: f64, x: f64*, y: f64*, n: i32) {
+  let blockSize: i32 = 128;
+  parallel [private(alpha, x, y, n, blockSize)] block [((n + blockSize - 1) / blockSize) (blockSize)] {
+    let i: i32;
+    i = Idx[0, 0] * blockSize + Idx[1, 0];
+    if (i < n)
+      x[i] = alpha * x[i] + y[i];
+  }
+}
+

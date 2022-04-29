@@ -1,0 +1,156 @@
+extern fn timer_start(i32);
+extern fn timer_stop(i32);
+extern fn randlc(f64*, f64) -> f64;
+extern fn vranlc(i32, f64*, f64, f64*);
+extern fn sqrt(f64) -> f64;
+extern fn __tlang_tid() -> i32;
+
+fn conj_grad(colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*,
+               p: f64*, q: f64*, r: f64*, rnorm: f64*, firstrow: i32,
+               lastrow: i32, firstcol: i32, lastcol: i32, naa: i32) {
+  let j: i32, k: i32;
+  let cgit: i32, cgitmax: i32 = 25;
+  let d: f64, sum: f64, suml: f64, rho: f64, rho0: f64, alpha: f64, beta: f64;
+
+  rho = 0.0;
+  sum = 0.0;
+  
+  cgitmax = 25;
+  parallel [private(j,k,cgit,suml,alpha,beta) shared(d,rho0,rho,sum)] {
+  loop (j in 0 : naa + 1) /* for (j = 0; j < naa + 1; j++) */ {
+    q[j] = 0.0;
+    z[j] = 0.0;
+    r[j] = x[j];
+    p[j] = r[j];
+  }
+
+  loop[reduce(+, rho)] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    rho = rho + r[j] * r[j];
+  }
+
+  for(cgit in 1 : cgitmax + 1) /* for (cgit = 1; cgit <= cgitmax; cgit++) */ {
+    if (__tlang_tid() == 0) {
+      rho0 = rho;
+      d = 0.0;
+      rho = 0.0;
+    }
+    sync;
+    loop (j in 0 : lastrow - firstrow + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      suml = 0.0;
+      for (k in rowstr[j] : rowstr[j + 1]) /* for (k = rowstr[j]; k < rowstr[j + 1]; k++) */ {
+        suml = suml + a[k] * p[colidx[k]];
+      }
+      q[j] = suml;
+    }
+
+    loop[reduce(+, d)] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      d = d + p[j] * q[j];
+    }
+
+    alpha = rho0 / d;
+    
+    loop[reduce(+, rho)] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      z[j] = z[j] + alpha * p[j];
+      r[j] = r[j] - alpha * q[j];
+      rho = rho + r[j] * r[j];
+    }
+
+    beta = rho / rho0;
+
+    loop (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      p[j] = r[j] + beta * p[j];
+    }
+  } // end of do cgit=1,cgitmax
+  loop (j in 0 : lastrow - firstrow + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    suml = 0.0;
+    for (k in rowstr[j] : rowstr[j + 1]) /* for (k = rowstr[j]; k < rowstr[j + 1]; k++) */ {
+      suml = suml + a[k] * z[colidx[k]];
+    }
+    r[j] = suml;
+  }
+  loop[reduce(+, sum) nowait] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+    suml = x[j] - r[j];
+    sum = sum + suml * suml;
+  }
+  }
+  rnorm[0] = sqrt(sum);
+}
+
+fn CG(Z: f64*, colidx: i32*, rowstr: i32*, x: f64*, z: f64*, a: f64*, p: f64*, q: f64*, r: f64*, amult: f64, tran: f64, NA: i32, NITER: i32,
+        naa: i32, nzz: i32, firstrow: i32, lastrow: i32, firstcol: i32, lastcol: i32,
+        timeron: i32, SHIFT: f64) {
+  let i: i32, j: i32, k: i32, it: i32;
+
+  let zeta: f64;
+  let rnorm: f64;
+  let norm_temp1: f64, norm_temp2: f64;
+
+  zeta = 0.0;
+
+  for (it in 1 : 2) /* for (it = 1; it <= 1; it++) */ {
+    conj_grad(colidx, rowstr, x, z, a, p, q, r, &rnorm, firstrow, lastrow,
+              firstcol, lastcol, naa);
+
+    norm_temp1 = 0.0;
+    norm_temp2 = 0.0;
+    parallel [private(j) shared(norm_temp1, norm_temp2)] {
+    loop[reduce(+, norm_temp1, norm_temp2)] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      norm_temp1 = norm_temp1 + x[j] * z[j];
+      norm_temp2 = norm_temp2 + z[j] * z[j];
+    }
+    }
+    norm_temp2 = 1.0 / sqrt(norm_temp2);
+    parallel[private(j) shared(norm_temp2)] {
+    loop (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      x[j] = norm_temp2 * z[j];
+    }
+    }
+  } // end of do one iteration untimed
+
+  parallel[private(i) shared(x)] {
+  loop (i in 0 : NA + 1) /* for (i = 0; i < NA + 1; i++) */ {
+    x[i] = 1.0;
+  }
+  }
+  
+  zeta = 0.0;
+
+  timer_stop(0);
+
+  //   printf(" Initialization time = %15.3f seconds\n", timer_read(0));
+
+  timer_start(1);
+
+  for (it in 1 : NITER + 1) /* for (it = 1; it <= NITER; it++) */ {
+    if (timeron)
+      timer_start(2);
+    conj_grad(colidx, rowstr, x, z, a, p, q, r, &rnorm, firstrow, lastrow,
+              firstcol, lastcol, naa);
+    if (timeron)
+      timer_stop(2);
+
+    norm_temp1 = 0.0;
+    norm_temp2 = 0.0;
+    parallel [private(j) shared(norm_temp1, norm_temp2)] {
+    loop [reduce(+, norm_temp1, norm_temp2)] (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      norm_temp1 = norm_temp1 + x[j] * z[j];
+      norm_temp2 = norm_temp2 + z[j] * z[j];
+    }
+    }
+
+    norm_temp2 = 1.0 / sqrt(norm_temp2);
+
+    zeta = SHIFT + 1.0 / norm_temp1;
+    //     if (it == 1)
+    //       printf("\n   iteration           ||r||                 zeta\n");
+    //     printf("    %5d       %20.14E%20.13f\n", it, rnorm, zeta);
+
+    parallel[private(j) shared(norm_temp2)] {
+    loop (j in 0 : lastcol - firstcol + 1) /* for (j = 0; j < lastcol - firstcol + 1; j++) */ {
+      x[j] = norm_temp2 * z[j];
+    }
+    }
+  } // end of main iter inv pow meth
+  Z[0] = zeta;
+  timer_stop(1);
+}

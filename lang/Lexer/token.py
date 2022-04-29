@@ -13,12 +13,25 @@ class Token:
         self.rules = list(rules)
 
     def __str__(self) -> str:
-        return self.identifier + ": " + (str(self.rules[0]) if len(self.rules) == 1 else str(self.rules))
+        return self.parseStr()
 
-    __repr__ = __str__
+    def __repr__(self) -> str:
+        return str(self)
 
-    def shortRepr(self):
-        return self.identifier
+    def __hash__(self) -> int:
+        return hash(self.identifier)
+
+    def __eq__(self, other):
+        return other.identifier == self.identifier
+
+    def cxx(self):
+        return "tok_k::{}".format(self.identifier)
+
+    def parseRepr(self):
+        return self.rules[0]
+
+    def parseStr(self):
+        return self.parseRepr()
 
 
 class Keyword(Token):
@@ -26,19 +39,29 @@ class Keyword(Token):
         super().__init__(identifier, keyword if keyword != None else identifier.lower())
 
 
-class Literal(Token):
-    def __init__(self, identifier, keyword):
-        super().__init__(identifier, keyword)
-
-
-class Character(Token):
+class Punctuation(Token):
     def __init__(self, identifier, character):
         super().__init__(identifier, character)
+
+    def parseStr(self):
+        return '"{}"'.format(self.rules[0])
+
+
+class Operator(Punctuation):
+    def __init__(self, identifier, character, name=None):
+        super().__init__(identifier, character)
+        self.name = name if name else identifier
+
+    def parseStr(self):
+        return '"{}"'.format(self.rules[0])
 
 
 class Rule(Token):
     def __init__(self, identifier, *rules):
         super().__init__(identifier, *rules)
+
+    def parseRepr(self):
+        return self.identifier
 
 
 class Definition(Token):

@@ -4,9 +4,7 @@
 %option yyclass="YFlexLexer"
 
 %top{
-#include <macros.hh>
-#include <toks.hh>
-#include <lexer.hh>
+#include <Lex/Lexer.hh>
 #include <iostream>
 #include <memory>
 }
@@ -39,16 +37,16 @@ void comment(YFlexLexer &ylex);
 {WS}*                         {}
 \n                            { __yybufpos = 1; }{% endraw %}
 {% for rule, value in rules.items() -%}
-{{ "{: <30}{{ return static_cast<int>(_lnp_::tok_k::{}); }}".format(rule, value) }}
-{% endfor %}{% raw %}.                             { throw(_lnp_::lexer_exception(_lnp_::token::create(YYText(), _lnp_::tok_k::UNKW, lineno(), colno()))); }
+{{ "{: <30}{{ return static_cast<int>(tlang::lex::tok_k::{}); }}".format(rule, value) }}
+{% endfor %}{% raw %}.                             { throw(tlang::lex::lexer_exception(tlang::lex::token::create(YYText(), tlang::lex::tok_k::UNKW, lineno(), colno()))); }
 
 %%
-bool _lnp_::Lexer::valid() const { return _lexer.has_value() && get_lexer(_lexer) && !_finished; }
-void _lnp_::Lexer::init() { this->_lexer = std::make_shared<YFlexLexer>(this->in, this->out); }
-_lnp_::token _lnp_::Lexer::consume_token() {
+bool tlang::lex::Lexer::valid() const { return _lexer.has_value() && get_lexer(_lexer) && !_finished; }
+void tlang::lex::Lexer::init() { this->_lexer = std::make_shared<YFlexLexer>(this->in, this->out); }
+tlang::lex::token tlang::lex::Lexer::consume_token() {
   auto ylex = get_lexer(_lexer);
   int tok = ylex->yylex();
-  return _lnp_::token::create(ylex->YYText(), static_cast<_lnp_::tok_k>(tok), ylex->lineno(), ylex->colno());
+  return tlang::lex::token::create(ylex->YYText(), static_cast<tlang::lex::tok_k>(tok), ylex->lineno(), ylex->colno());
 }
 void comment(YFlexLexer &ylex) {
   int c;
@@ -60,7 +58,7 @@ void comment(YFlexLexer &ylex) {
       if (c == '/')
         return;
       if (c == 0)
-        throw(_lnp_::lexer_exception(_lnp_::token::create(ylex.YYText(), _lnp_::tok_k::UNKW, ylex.lineno(), ylex.colno())));
+        throw(tlang::lex::lexer_exception(tlang::lex::token::create(ylex.YYText(), tlang::lex::tok_k::UNKW, ylex.lineno(), ylex.colno())));
     }
   }
 }
