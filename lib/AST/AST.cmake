@@ -1,2 +1,2 @@
 file(GLOB_RECURSE AST_SOURCES_LIST ${CMAKE_CURRENT_LIST_DIR}/*.cc)
-add_lib(ast "${AST_SOURCES_LIST}" #[[USE_LLVM]] ON #[[USE_BOOST]] OFF #[[USE_FRMT]] OFF "")
+add_lib(ast "${AST_SOURCES_LIST}" #[[USE_LLVM]] ON "")

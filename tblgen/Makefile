@@ -8,7 +8,7 @@ CXX_COMPILER ?= clang++
 .PHONY: build
 build:
 	mkdir -pv build
-	cd build/ && cmake ../ -DCMAKE_C_COMPILER=$(C_COMPILER) -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) && $(MAKE) -j4
+	cd build/ && cmake ../ -DCMAKE_C_COMPILER=$(C_COMPILER) -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) && $(MAKE) -j8
 
 .PHONY: clean_build
 clean_build: purge build
