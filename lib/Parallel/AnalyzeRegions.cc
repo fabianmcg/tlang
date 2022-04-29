@@ -106,10 +106,10 @@ struct AnalysisVisitor: public ASTVisitor<AnalysisVisitor, VisitorPattern::prePo
 bool AnalyzeRegions::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results) {
   auto constructs = results.getResult<ParallelConstructDatabase>(CreateConstructDatabase::ID(), &decl);
   if (constructs) {
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Analyzing parallel constructs\n");
+    print(std::cerr, "Analyzing parallel constructs\n");
     for (auto c : constructs->contexts)
       AnalysisVisitor { CI.getContext(), visited }.traverseContextStmt(c.construct.node);
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green), "Finished analyzing parallel constructs\n");
+    print(std::cerr, "Finished analyzing parallel constructs\n");
   }
   return true;
 }

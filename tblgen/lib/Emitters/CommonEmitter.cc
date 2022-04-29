@@ -17,11 +17,11 @@ void emitEnum(AST<AbstractNode> &ast, llvm::raw_ostream &ost) {
     if (node.children().size())
       ost << "last" << an->getName() << ",\n";
   };
-  frmts(ost, "enum class {} {{\n", C::kind_v);
+  formats(ost, "enum class {0} {\n", C::kind_v);
   ast.bfsRecursive(pre, post);
   ost << "};\n";
-  ost << frmt("std::string to_string({} kind);\n", C::kind_v);
-  ost << frmt("std::ostream& operator<<(std::ostream& ost, const {}& kind);\n", C::kind_v);
+  ost << format("std::string to_string({0} kind);\n", C::kind_v);
+  ost << format("std::ostream& operator<<(std::ostream& ost, const {0}& kind);\n", C::kind_v);
 }
 void emitForward(AST<AbstractNode> &ast, llvm::raw_ostream &ost) {
   auto visitor = [&ost](auto &node) {
@@ -42,7 +42,7 @@ void CommonEmitter::run(llvm::raw_ostream &ost) {
     include(ost, "iostream", true);
     include(ost, "string", true);
     printPrologueSections(ost, records, true);
-    frmts(ost, "namespace {} {{\n", C::namespace_v);
+    formats(ost, "namespace {0} {{\n", C::namespace_v);
     emitEnum(ast, ost);
     emitForward(ast, ost);
     ost << "}";
@@ -51,18 +51,18 @@ void CommonEmitter::run(llvm::raw_ostream &ost) {
   } else {
     include(ost, "AST/Common.hh", true);
     printPrologueSections(ost, records, false);
-    frmts(ost, "namespace {} {{\n", C::namespace_v);
+    formats(ost, "namespace {0} {{\n", C::namespace_v);
     auto to_string_m = R""""(
 std::string to_string({0} kind) {{
   switch(kind) {{
 #define AST_MACRO(BASE, PARENT) case {0}::BASE: return #BASE;
 #include "AST/Nodes.inc"
-  }}
+  }
   return "";
-}}
+}
 )"""";
-    frmts(ost, to_string_m, C::kind_v);
-    frmts(ost, "std::ostream& operator<<(std::ostream& ost, const {}& kind){{ ost << to_string(kind); return ost; }}\n", C::kind_v);
+    formats(ost, to_string_m, C::kind_v);
+    formats(ost, "std::ostream& operator<<(std::ostream& ost, const {0}& kind){{ ost << to_string(kind); return ost; }\n", C::kind_v);
     ost << "}";
     printEpilogueSections(ost, records, false);
   }

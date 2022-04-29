@@ -5,7 +5,8 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <fmt/core.h>
+#include <llvm/Support/FormatVariadic.h>
+//#include <fmt/core.h>
 
 void formatFile(const std::filesystem::path &path);
 
@@ -62,25 +63,25 @@ std::string join(C &&container, F &&printer, const std::string &sep = ", ") {
 }
 
 template <typename ...Args>
-std::string sfrmt(const fmt::format_string<Args...> &str, Args &&...args) {
-  return fmt::format(str, std::forward<Args>(args)...);
-}
-
-template <typename ...Args>
 std::string frmt(const std::string &str, Args &&...args) {
-  return fmt::format(fmt::runtime(str), std::forward<Args>(args)...);
+  return llvm::formatv(str.c_str(), std::forward<Args>(args)...);
 }
 
 template <typename O, typename ...Args>
-O& sfrmts(O &ost, const fmt::format_string<Args...> &str, Args &&...args) {
-  auto fs = sfrmt(str, std::forward<Args>(args)...);
+O& frmts(O &ost, const std::string &str, Args &&...args) {
+  auto fs = frmt(str, std::forward<Args>(args)...);
   if (fs.size())
     ost << fs;
   return ost;
 }
 
+template <typename ...Args>
+std::string format(const std::string &str, Args &&...args) {
+  return llvm::formatv(str.c_str(), std::forward<Args>(args)...);
+}
+
 template <typename O, typename ...Args>
-O& frmts(O &ost, const std::string &str, Args &&...args) {
+O& formats(O &ost, const std::string &str, Args &&...args) {
   auto fs = frmt(str, std::forward<Args>(args)...);
   if (fs.size())
     ost << fs;

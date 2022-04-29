@@ -62,7 +62,7 @@ void printPrologueSections(llvm::raw_ostream &ost, llvm::RecordKeeper &records, 
     if (section.location().isHeader() == isHeader) {
       auto inside = section.insideNamespace();
       if (inside)
-        frmts(ost, "namespace {} {{\n", C::namespace_v);
+        formats(ost, "namespace {0} {\n", C::namespace_v);
       ost << section.source() << "\n";
       if (inside)
         ost << "}\n";
@@ -83,7 +83,7 @@ void printEpilogueSections(llvm::raw_ostream &ost, llvm::RecordKeeper &records, 
     if (section.location().isHeader() == isHeader) {
       auto inside = section.insideNamespace();
       if (inside)
-        frmts(ost, "namespace {} {{\n", C::namespace_v);
+        formats(ost, "namespace {0} {\n", C::namespace_v);
       ost << section.source() << "\n";
       if (inside)
         ost << "}\n";

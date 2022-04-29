@@ -46,13 +46,13 @@ void GenerateConstructs::generateHostLaunch(ConstructData<ParallelStmt> region) 
   auto cxxFn = CXXIOVisitor { }.emitExternFunctionDecl(lfn);
   auto cxxKernel = CXXIOVisitor { }.emitExternFunctorDecl(rfn) + ";\n";
   {
-    std::string args = frmt("num_threads, reinterpret_cast<void*>({})", rfn->getIdentifier());
+    std::string args = frmt("num_threads, reinterpret_cast<void*>({0})", rfn->getIdentifier());
     auto sz = lfn->getParameters().size();
     for (auto [i, arg] : tlang::enumerate(lfn->getParameters())) {
       if (i > 0)
-        args += frmt(", {}", arg->getIdentifier());
+        args += frmt(", {0}", arg->getIdentifier());
     }
-    cxxFn = frmt("{} {{\n  __tlang_host_run_kernel_rt({});\n}}\n", cxxFn, args);
+    cxxFn = frmt("{0} {{\n  __tlang_host_run_kernel_rt({1});\n}\n", cxxFn, args);
   }
   cxxModule->add(builder.CreateCXX(cxxKernel));
   cxxModule->add(builder.CreateCXX(cxxFn));

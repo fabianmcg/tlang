@@ -60,32 +60,32 @@ public:
   } Kind;
   template <typename List, std::enable_if_t<std::is_same_v<typename List::value_type, std::pair<std::string, CXXVariable>>, int> = 0>
   static std::string constructor(Kind kind, const std::string &identifier, const List &arguments, const std::string &body = "") {
-    auto header = frmt("{}({})", identifier, join(arguments, [](auto &o, auto &e) {
+    auto header = format("{0}({1})", identifier, join(arguments, [](auto &o, auto &e) {
       o << e.second.decl();
     }));
     if (decl == kind)
       return header + ";\n";
     auto init = sjoin(arguments, [](auto &e) -> std::string {
-      return e.first.empty() || e.first == "children" ? std::string { } : frmt("{}({})", e.first, e.second.asInit());
+      return e.first.empty() || e.first == "children" ? std::string { } : format("{0}({1})", e.first, e.second.asInit());
     });
     auto tmp = sjoin(arguments, [](auto &e) -> std::string {
       return e.first != "children" ? std::string { } : e.second.asInit();
     });
     if (tmp.size())
-        tmp = frmt("children({})", tmp);
+        tmp = format("children({0})", tmp);
     init = init + (init.size() && tmp.size() ? ", " : "" ) + tmp;
-    return frmt("{}::{}{}{{{}}}\n", identifier, header, init.empty() ? std::string { } : ": " + init, body);
+    return format("{0}::{1}{2}{{{3}}\n", identifier, header, init.empty() ? std::string { } : ": " + init, body);
   }
   static std::string constructor(Kind kind, ASTNode &node, const std::string &body, bool withKind, bool isConst);
   template <typename List, std::enable_if_t<std::is_same_v<typename List::value_type, CXXVariable>, int> = 0>
   static std::string function(Kind kind, const std::string &identifier, const CXXType &returnType, const List &arguments,
       const std::string &body = "", const std::string &preffix = "") {
-    auto header = frmt("{}{} {}({})", preffix, returnType.qualified(), identifier, join(arguments, [](auto &o, auto &e) {
+    auto header = format("{0}{1} {2}({3})", preffix, returnType.qualified(), identifier, join(arguments, [](auto &o, auto &e) {
       o << e.decl();
     }));
     if (decl == kind)
       return header + ";\n";
-    return frmt("{}{{{}}}\n", header, body);
+    return format("{0}{{{1}}\n", header, body);
   }
 };
 

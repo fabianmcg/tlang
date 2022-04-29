@@ -32,9 +32,9 @@ inline void preVisit(llvm::raw_ostream &ost, TreeNode<AbstractNode> &node) {
   ost << "\n";
   ost << "#endif";
   if (node->abstract())
-    frmts(ost, "\n#define ABSTRACT_{}", macro);
-  defineMacro(ost, frmt("VISIT_{}", macro), frmt(" !(defined(ABSTRACT_{0}) && defined(NO_ABSTRACT))", macro));
-  frmts(ost, "#if VISIT_{0} != 0\n", macro);
+    formats(ost, "\n#define ABSTRACT_{0}", macro);
+  defineMacro(ost, format("VISIT_{0}", macro), format(" !(defined(ABSTRACT_{0}) && defined(NO_ABSTRACT))", macro));
+  formats(ost, "#if VISIT_{0} != 0\n", macro);
   if (node->hasBase()) {
     auto base = node->base();
     ost << macro << "(" << (*node)->getName() << ", " << base->getName()
@@ -43,8 +43,8 @@ inline void preVisit(llvm::raw_ostream &ost, TreeNode<AbstractNode> &node) {
     ost << macro << "(" << (*node)->getName() << ", NO_PARENT)\n";
   ost << "#endif";
   if (node->abstract())
-    frmts(ost, "\n#undef ABSTRACT_{}", macro);
-  undefineMacro(ost, frmt("VISIT_{}", macro));
+    formats(ost, "\n#undef ABSTRACT_{0}", macro);
+  undefineMacro(ost, format("VISIT_{0}", macro));
 }
 inline void postVisit(llvm::raw_ostream &ost, TreeNode<AbstractNode> &node) {
   std::string macro = toupper((*node)->getName().str());
