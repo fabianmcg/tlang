@@ -9,6 +9,10 @@ file ?= ./examples/main.tt
 .PHONY: all
 all:
 
+.PHONY: build
+build:
+	$(MAKE) -f Makefile.build
+
 .PHONY: lang
 lang: lexer ast parser
 
@@ -36,26 +40,6 @@ ifneq ($(file),)
 	$(TC) $(file) $(FLAGS) -n -d -S
 endif
 
-.PHONY: EP
-EP:
-	$(TC) ./examples/EP.tt -o EP.ll
-	$(LLVMOPT) $(OPTFLAGS) -S EP.ll -o EP_opt.ll
-	
-.PHONY: EP_PAR
-EP_PAR:
-	$(TC) ./examples/EP_parallel.tt -o EP.ll
-	$(LLVMOPT) $(OPTFLAGS) -S EP.ll -o EP_opt.ll
-
-.PHONY: CG
-CG:
-	$(TC) ./examples/CG.tt -o CG.ll
-	$(LLVMOPT) $(OPTFLAGS) -S CG.ll -o CG_opt.ll
-
-.PHONY: CG_PAR
-CG_PAR:
-	$(TC) ./examples/CG_parallel.tt -o CG.ll
-	$(LLVMOPT) $(OPTFLAGS) -S CG.ll -o CG_opt.ll
-
 .PHONY: emit
 emit:
 ifneq ($(file),)
@@ -70,4 +54,4 @@ endif
 
 .PHONY: clean
 clean:
-	rm -vf *.hh *.yy *.ll examples/*.ll
+	rm -vf *.hh *.yy *.ll examples/*.ll examples/*.rt.cpp examples/*devbin
