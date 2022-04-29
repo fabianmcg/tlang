@@ -1,7 +1,7 @@
 TLANG_VER ?= 0.42
 INSTALL_PATH ?= $(abspath ../tlangc)
 CLANG ?= clang
-CLANGXX ?= clang++
+CLANGXX ?= g++
 
 define MODULEFILE
 #%Module1.0#####################################################################
@@ -28,8 +28,9 @@ endef
 
 .PHONY: build
 build: tblgen lang module
+	@echo "${LD_LIBRARY_PATH}"
 	mkdir -pv build
-	cd build && cmake -DCMAKE_C_COMPILER=$(CLANG) -DCMAKE_CXX_COMPILER=$(CLANGXX) -DCMAKE_INSTALL_PREFIX=$(INSTALL_PATH) ../
+	cd build && cmake -DCMAKE_C_COMPILER=$(CLANG) -DCMAKE_CXX_COMPILER=$(CLANGXX) -DCMAKE_INSTALL_PREFIX:PATH=$(INSTALL_PATH) ../
 	cd build && $(MAKE) -j16
 	cd build && $(MAKE) install
 
