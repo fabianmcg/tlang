@@ -56,4 +56,4 @@ include(lib/Driver/Driver.cmake)
 add_exec(tlang lib/Driver/main.cxx #[[USE_LLVM]] ON "driver;ast;lex;parser;sema;parallel;passes;parallel;codegen;ast")
 install(TARGETS tlang DESTINATION bin)
 
-add_subdirectory(runtime/)
+#add_subdirectory(runtime/)
