@@ -39,10 +39,10 @@ build: tblgen lang module
 
 .PHONY: runtime
 runtime:
-	mkdir -pv build
-	cd build && cmake -DCMAKE_C_COMPILER=$(CLANG) -DCMAKE_CXX_COMPILER=$(CLANGXX) -DCMAKE_INSTALL_PREFIX:PATH=$(INSTALL_PATH) ../runtime
-	cd build && $(MAKE) -j16
-	cd build && $(MAKE) install
+	mkdir -pv build-runtime
+	cd build-runtime && cmake -DCMAKE_C_COMPILER=$(CLANG) -DCMAKE_CXX_COMPILER=$(CLANGXX) -DCMAKE_INSTALL_PREFIX:PATH=$(INSTALL_PATH) ../runtime
+	cd build-runtime && $(MAKE) -j16
+	cd build-runtime && $(MAKE) install
 
 .PHONY: module
 module: tlang-$(TLANG_VER)
@@ -76,4 +76,4 @@ parser:
 
 .PHONY: purge
 purge:
-	rm -vf ./build
+	rm -vf ./build ./build-runtime
