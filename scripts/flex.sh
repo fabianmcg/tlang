@@ -34,4 +34,7 @@ prepend-path    PATH                ${FLEX_PATH}/bin
 prepend-path    CPATH               ${FLEX_PATH}/include
 prepend-path    LIBRARY_PATH        ${FLEX_PATH}/lib
 prepend-path    LD_LIBRARY_PATH     ${FLEX_PATH}/lib
+prepend-path    FLEX_ROOT           ${FLEX_PATH}
+prepend-path    FLEX_LIB            ${FLEX_PATH}/lib
+prepend-path    FLEX_INC            ${FLEX_PATH}/include
 EOF
