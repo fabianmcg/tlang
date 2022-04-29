@@ -1,5 +1,9 @@
+C_COMPILER ?= cc
+CXX_COMPILER ?= c++
+
 CLANG ?= clang-13
 CLANGXX ?= clang++-13
+
 LLVMOPT ?= opt-13
 OPTFLAGS ?= -O3
 TC ?= ./build/Debug/tlang
@@ -11,7 +15,7 @@ all:
 
 .PHONY: build
 build:
-	$(MAKE) -f Makefile.build CLANG=$(CLANG) CLANGXX=$(CLANGXX)
+	$(MAKE) -f Makefile.build CLANG=$(CLANG) CLANGXX=$(CLANGXX) C_COMPILER=$(C_COMPILER) CXX_COMPILER=$(CXX_COMPILER)
 
 .PHONY: lang
 lang: lexer ast parser
