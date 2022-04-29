@@ -155,6 +155,8 @@ IRType_t<ReturnStmt> GenericEmitter::emitReturnStmt(ReturnStmt *stmt) {
   return builder.CreateRet(ret);
 }
 IRType_t<SyncStmt> GenericEmitter::emitSyncStmt(SyncStmt *stmt) {
-  return builder.CreateIntrinsic(llvm::Intrinsic::nvvm_barrier0, llvm::ArrayRef<llvm::Type*> { }, llvm::ArrayRef<llvm::Value*> { });
+  if (auto fn = module.getFunction("__tlang_host_sync"))
+    return builder.CreateCall(fn, { });
+  return nullptr;
 }
 }

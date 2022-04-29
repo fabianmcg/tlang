@@ -36,8 +36,7 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       assert(fd);
       auto &parameters = fd->getParameters();
       if (parameters.size() != cexpr->getArgs().size()) {
-        std::cerr << *fd  <<std::endl;
-        std::cerr << *cexpr  <<std::endl;
+//        assert(false);
       }
       for (auto [i, expr] : tlang::enumerate(cexpr->getArgs())) {
         if (i < parameters.size())

@@ -1,5 +1,5 @@
-#ifndef __TLANG_PARALLEL_RUNTIME_H__
-#define __TLANG_PARALLEL_RUNTIME_H__
+#ifndef TLANG_PARALLEL_RUNTIME_H
+#define TLANG_PARALLEL_RUNTIME_H
 
 #ifdef __cplusplus
 #include <cstdint>

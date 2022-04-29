@@ -17,13 +17,16 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
     generateLaunchCalls(*constructs);
     Sema { CI }.resolveSymbolTables(&decl);
     duplicateFunctionCalls();
-    Sema { CI }.resolveSymbolTables(deviceUnit);
+    if (deviceUnit)
+      Sema { CI }.resolveSymbolTables(deviceUnit);
     Sema { CI }.resolveNames(&decl);
-    Sema { CI }.resolveNames(deviceUnit);
+    if (deviceUnit)
+      Sema { CI }.resolveNames(deviceUnit);
     print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green), "Finished transforming parallel constructs\n");
   }
   return true;
 }
+
 std::string GenerateConstructs::makeRegionLabel(FunctorDecl *fn, const std::string &suffix) {
   return frmt("{}{}_{}", fn->getIdentifier(), suffix, labels[fn]);
 }
@@ -32,6 +35,8 @@ void GenerateConstructs::addAPI(ParallelConstructDatabase &constructs) {
   if (!APIModule) {
     APIModule = CI.getContext().make<ModuleDecl>(NamedDecl("tlang.api.functions"), DeclContext());
     CI.getContext().addModule(unit, APIModule);
+    if (constructs.hostQ())
+      addHostAPI();
   }
 }
 
@@ -74,7 +79,7 @@ List<ParameterDecl*> GenerateConstructs::generateLaunchParameters(ConstructData<
     parameters.push_back(builder.CreateParameter("my", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)));
     parameters.push_back(builder.CreateParameter("mz", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)));
   } else
-    parameters.push_back(builder.CreateParameter("tnum", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)));
+    parameters.push_back(builder.CreateParameter("num_threads", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)));
   generateRegionParameters(region, ContextStmt::Host, parameters);
   return parameters;
 }
@@ -132,7 +137,7 @@ void GenerateConstructs::generateParallelRegions(ParallelConstructDatabase &cons
   if (constructs.hostQ()) {
     hostModule = CI.getContext().make<ModuleDecl>(NamedDecl("tlang.host.functions"), DeclContext());
     CI.getContext().addModule(unit, hostModule);
-    cxxModule->add(builder.CreateCXX("#include <tlang-host.h>"));
+    cxxModule->add(builder.CreateCXX("#include <tlang-host.h>\n"));
   }
   if (constructs.deviceQ()) {
     auto target = CI.getOptions().langOpts.deviceTarget;
@@ -198,10 +203,12 @@ struct CallExprVisitor: ASTVisitor<CallExprVisitor, VisitorPattern::preOrder> {
   std::set<FunctorDecl*> &callsInDeviceCode;
 };
 }
+
 void GenerateConstructs::collectDeviceCalls(ParallelConstructDatabase &constructs) {
   for (auto construct : constructs.deviceRegions)
     CallExprVisitor { callsInDeviceCode }.dynamicTraverse(construct.construct.node->getStmt());
 }
+
 void GenerateConstructs::duplicateFunctionCalls() {
   ASTApi builder { CI.getContext() };
   for (auto fd : callsInDeviceCode) {

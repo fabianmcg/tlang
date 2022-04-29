@@ -91,7 +91,7 @@ struct __tlang_nvptx_kernel_args<0> {
   }
 };
 template <typename ...Args>
-__tlang_nvptx_kernel_args<sizeof...(Args)> __tlang_nvptx_argument_list(Args &...args) {
+__tlang_nvptx_kernel_args<sizeof...(Args)> __tlang_device_argument_list(Args &...args) {
   return __tlang_nvptx_kernel_args<sizeof...(Args)> { &args... };
 }
 #endif

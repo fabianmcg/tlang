@@ -245,6 +245,8 @@ IRType_t<DeclRefExpr> GenericEmitter::emitDeclRefExpr(DeclRefExpr *expr) {
   if (auto vd = dyn_cast<VariableDecl>(decl)) {
     auto alloca = get(vd);
     assert(alloca);
+    if (vd->getType().isReference())
+      return builder.CreateLoad(emitQualType(vd->getType()), alloca);
     return alloca;
   }
   return nullptr;
@@ -312,9 +314,13 @@ IRType_t<TernaryOperator> GenericEmitter::emitTernaryOperator(TernaryOperator *e
   return builder.CreateSelect(condition, tval, fval);
 }
 IRType_t<DimExpr> GenericEmitter::emitDimExpr(DimExpr *expr) {
+  if (auto fn = module.getFunction("__tlang_host_dim"))
+    return builder.CreateCall(fn, { });
   return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 1));
 }
 IRType_t<IdExpr> GenericEmitter::emitIdExpr(IdExpr *expr) {
+  if (auto fn = module.getFunction("__tlang_host_tid"))
+    return builder.CreateCall(fn, { });
   return makeIntegerLiteral(ASTApi { ast_context }.CreateLiteral((int64_t) 0));
 }
 }
