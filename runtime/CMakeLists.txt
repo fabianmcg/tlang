@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(tlang-runtime VERSION 0.42 LANGUAGES CXX)
 
-#set(CMAKE_C_COMPILER "clang-13")
-#set(CMAKE_CXX_COMPILER "clang++-13")
+set(CMAKE_C_COMPILER "clang-13")
+set(CMAKE_CXX_COMPILER "clang++-13")
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
