@@ -17,6 +17,10 @@ all:
 build:
 	$(MAKE) -f Makefile.build CLANG=$(CLANG) CLANGXX=$(CLANGXX) C_COMPILER=$(C_COMPILER) CXX_COMPILER=$(CXX_COMPILER)
 
+.PHONY: runtime
+runtime:
+	$(MAKE) -f Makefile.build CLANG=$(CLANG) CLANGXX=$(CLANGXX) C_COMPILER=$(C_COMPILER) CXX_COMPILER=$(CXX_COMPILER) runtime
+
 .PHONY: lang
 lang: lexer ast parser
 
@@ -59,3 +63,8 @@ endif
 .PHONY: clean
 clean:
 	rm -vf *.hh *.yy *.ll examples/*.ll examples/*.rt.cpp examples/*devbin
+
+.PHONY: purge
+purge:
+	rm -vf *.hh *.yy *.ll examples/*.ll examples/*.rt.cpp examples/*devbin
+	$(MAKE) -f Makefile.build purge
