@@ -113,6 +113,24 @@ public:
     }
     return iterator { };
   }
+  iterator erase(symbol_type symbol) {
+    if (symbol) {
+      auto prev = symbol.prev;
+      auto next = symbol.next;
+      if (prev)
+        prev->next = next;
+      else
+        first_symbol = next;
+      if (next) {
+        next->prev = prev;
+        return iterator { *next };
+      } else
+        last_symbol = prev;
+      if (prev)
+        return iterator { *prev };
+    }
+    return iterator { };
+  }
   inline bool& visit() {
     return visitContext;
   }

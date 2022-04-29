@@ -35,6 +35,10 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       auto fd = dyn_cast<FunctorDecl>(re->getDecl().data());
       assert(fd);
       auto &parameters = fd->getParameters();
+      if (parameters.size() != cexpr->getArgs().size()) {
+        std::cerr << *fd  <<std::endl;
+        std::cerr << *cexpr  <<std::endl;
+      }
       for (auto [i, expr] : tlang::enumerate(cexpr->getArgs())) {
         if (i < parameters.size())
           if (expr->getType().isReference() && !parameters[i]->getType().isReference())
@@ -64,6 +68,13 @@ struct AddImplicitExpr: public PassBase<AddImplicitExpr>, public ASTContextRefer
       if (decl->getInit()) {
         if (!decl->getType().isReference() && decl->getInit()->getType().isReference())
           decl->getInit() = builder.CreateImplicitCast(decl->getInit(), decl->getInit()->getType().modQuals());
+      }
+      return visit;
+    }
+    visit_t visitCastExpr(CastExpr *expr) {
+      if (expr->kind == CastExpr::kind) {
+        if (expr->getExpr()->getType().isReference())
+          expr->getExpr() = builder.CreateImplicitCast(expr->getExpr(), expr->getExpr()->getType().modQuals());
       }
       return visit;
     }
