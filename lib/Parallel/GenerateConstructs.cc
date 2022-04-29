@@ -10,11 +10,13 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
   if (constructs) {
     print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Transforming parallel constructs\n");
     addAPI(*constructs);
+    collectDeviceCalls(*constructs);
     generateParallelRegions(*constructs);
     generateContexts(*constructs);
     Sema { CI }.resolveSymbolTables(&decl);
     generateLaunchCalls(*constructs);
     Sema { CI }.resolveSymbolTables(&decl);
+    duplicateFunctionCalls();
     Sema { CI }.resolveSymbolTables(deviceUnit);
     Sema { CI }.resolveNames(&decl);
     Sema { CI }.resolveNames(deviceUnit);
@@ -22,7 +24,6 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
   }
   return true;
 }
-
 std::string GenerateConstructs::makeRegionLabel(FunctorDecl *fn, const std::string &suffix) {
   return frmt("{}{}_{}", fn->getIdentifier(), suffix, labels[fn]);
 }
@@ -169,5 +170,55 @@ void GenerateConstructs::generateLaunchCalls(ParallelConstructDatabase &construc
     generateDeviceLaunch(region);
   for (auto &region : constructs.hostRegions)
     generateHostLaunch(region);
+}
+
+namespace {
+struct CallExprVisitor: ASTVisitor<CallExprVisitor, VisitorPattern::preOrder> {
+  CallExprVisitor(std::set<FunctorDecl*> &callsInDeviceCode) :
+      callsInDeviceCode(callsInDeviceCode) {
+  }
+  visit_t visitCallExpr(CallExpr *expr) {
+    if (auto re = dyn_cast<DeclRefExpr>(expr->getCallee())) {
+      if (auto fd = dyn_cast<FunctorDecl>(re->getDecl().data())) {
+        callsInDeviceCode.insert(fd);
+        if (isa<FunctionDecl>(fd))
+          if (auto dc = dynamic_cast<DeclContext*>(fd->getDeclContext().data())) {
+            if (auto symbol = dc->find(fd->getIdentifier()))
+              dc->erase(symbol);
+            else
+              assert(false);
+          } else
+            assert(false);
+      } else
+        assert(false);
+    } else
+      assert(false);
+    return visit;
+  }
+  std::set<FunctorDecl*> &callsInDeviceCode;
+};
+}
+void GenerateConstructs::collectDeviceCalls(ParallelConstructDatabase &constructs) {
+  for (auto construct : constructs.deviceRegions)
+    CallExprVisitor { callsInDeviceCode }.dynamicTraverse(construct.construct.node->getStmt());
+}
+void GenerateConstructs::duplicateFunctionCalls() {
+  ASTApi builder { CI.getContext() };
+  for (auto fd : callsInDeviceCode) {
+    if (fd) {
+      if (isa<FunctionDecl>(fd))
+        builder.AddToContext(deviceModule, fd);
+      else {
+        ExternFunctionDecl *cpy = CI.getContext().make<ExternFunctionDecl>();
+        cpy->getIdentifier() = fd->getIdentifier();
+        cpy->getReturnType() = fd->getReturnType();
+        cpy->getType() = fd->getType();
+        cpy->getParameters() = fd->getParameters();
+        cpy->addArgs(List<ParameterDecl*>(fd->getParameters()));
+//        std::cerr << *cpy << std::endl;
+        builder.AddToContext(deviceModule, cpy);
+      }
+    }
+  }
 }
 }

@@ -34,7 +34,10 @@ public:
     symbols.erase(key);
   }
   iterator erase(iterator it) {
-
+    if (it) {
+      UniversalSymbolTable<Key, NodeType>::erase(it.get());
+    }
+    return iterator{};
   }
   inline iterator find(const key_type &key) const {
     auto it = symbols.find(key);

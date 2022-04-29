@@ -48,7 +48,7 @@ IRType_t<IfStmt> GenericEmitter::emitIfStmt(IfStmt *stmt) {
   // Emit ThenStmt
   builder.SetInsertPoint(then_block);
   emitStmt(stmt->getThenStmt());
-  emitBranch(then_block, endIf_block);
+  emitBranch(endIf_block);
 
   // Emit ElseStmt
   if (else_block) {

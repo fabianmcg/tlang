@@ -27,6 +27,9 @@ public:
 
   void generateParallelRegions(ParallelConstructDatabase &constructs);
   void generateLaunchCalls(ParallelConstructDatabase &constructs);
+
+  void collectDeviceCalls(ParallelConstructDatabase &constructs);
+  void duplicateFunctionCalls();
 protected:
   UnitDecl *unit { };
   ModuleDecl *APIModule { };
@@ -40,6 +43,7 @@ protected:
   std::map<ImplicitContextStmt*, AnyASTNodeRef> implicitRefs;
   std::map<ContextStmt*, CompoundStmt*> contextCS;
   std::map<FunctorDecl*, int> labels;
+  std::set<FunctorDecl*> callsInDeviceCode;
   std::string makeRegionLabel(FunctorDecl *fn, const std::string &suffix = "");
   int incrementRegionLabel(FunctorDecl *fn) {
     return labels[fn]++;
