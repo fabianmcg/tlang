@@ -76,4 +76,4 @@ parser:
 
 .PHONY: purge
 purge:
-	rm -vf ./build ./build-runtime
+	rm -rf ./build ./build-runtime
