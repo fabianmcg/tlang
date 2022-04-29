@@ -11,7 +11,7 @@ all:
 
 .PHONY: build
 build:
-	$(MAKE) -f Makefile.build
+	$(MAKE) -f Makefile.build CLANG=$(CLANG) CLANGXX=$(CLANGXX)
 
 .PHONY: lang
 lang: lexer ast parser

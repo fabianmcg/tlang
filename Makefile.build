@@ -31,7 +31,7 @@ build: tblgen lang module
 	mkdir -pv build
 	cd build && cmake -DCMAKE_C_COMPILER=$(CLANG) -DCMAKE_CXX_COMPILER=$(CLANGXX) -DCMAKE_INSTALL_PREFIX=$(INSTALL_PATH) ../
 	cd build && $(MAKE) -j16
-	cd build && $(MAKE) install 
+	cd build && $(MAKE) install
 
 .PHONY: module
 module: tlang-$(TLANG_VER)
@@ -46,7 +46,7 @@ tlang-$(TLANG_VER):
 tblgen: tblgen/build
 
 tblgen/build:
-	$(MAKE) -C tblgen build
+	$(MAKE) -C tblgen build C_COMPILER=$(CLANG) CXX_COMPILER=$(CLANGXX)
 
 .PHONY: lang
 lang: lexer ast parser
