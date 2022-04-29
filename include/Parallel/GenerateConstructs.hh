@@ -8,6 +8,7 @@ class GenerateConstructs: public CompilerInvocationRef, public PassBase<Generate
 public:
   using CompilerInvocationRef::CompilerInvocationRef;
   bool run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results);
+  void addHostAPI();
   void addAPI(ParallelConstructDatabase &constructs);
 
   void generateDeviceContext(ConstructData<ContextStmt> context);
