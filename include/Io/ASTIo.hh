@@ -53,17 +53,17 @@ struct DumpType: public StringEmitterVisitor<DumpType> {
     return "...";
   }
   std::string emitUnresolvedType(UnresolvedType *node) {
-    return frmt("#{}#", node->getIdentifier());
+    return frmt("#{0}#", node->getIdentifier());
   }
   std::string emitDefinedType(DefinedType *node) {
     assert(node->getDecl());
-    return frmt("D! {}({})#", node->getDecl()->getIdentifier(), static_cast<void*>(node->getDecl().data()));
+    return frmt("D! {0}({1})#", node->getDecl()->getIdentifier(), static_cast<void*>(node->getDecl().data()));
   }
   std::string emitPtrType(PtrType *type) {
-    return frmt("{}*", emitType(type->getUnderlying()));
+    return frmt("{0}*", emitType(type->getUnderlying()));
   }
   std::string emitFunctionType(FunctionType *node) {
-    std::string value = frmt("F! {}(", emitQualType(node->getReturnType()));
+    std::string value = frmt("F! {0}(", emitQualType(node->getReturnType()));
     auto &args = node->getParemeters();
     for (auto [i, arg] : tlang::enumerate(args)) {
       value += emitQualType(arg);
@@ -73,15 +73,15 @@ struct DumpType: public StringEmitterVisitor<DumpType> {
     return value + ")";
   }
   std::string visitArrayType(ArrayType *node) {
-    return frmt("{}[]", emitType(node->getUnderlying()));
+    return frmt("{0}[]", emitType(node->getUnderlying()));
   }
   std::string emitQualType(QualType node) {
     auto qualifiers = node.getQualifiers();
     auto preQual = (qualifiers & QualType::Const) == QualType::Const ? "const " : "";
     auto type = node.getType() ? emitType(node.getType()) : "void";
     auto postQual = (qualifiers & QualType::Reference) == QualType::Reference ? "&" : "";
-    auto extraInfo = node.getAddressSpace() ? frmt(" <{}>", node.getAddressSpace()) : std::string();
-    return frmt("{}{}{}{}", preQual, type, postQual, extraInfo);
+    auto extraInfo = node.getAddressSpace() ? frmt(" <{0}>", node.getAddressSpace()) : std::string();
+    return frmt("{0}{1}{2}{3}", preQual, type, postQual, extraInfo);
   }
 };
 }

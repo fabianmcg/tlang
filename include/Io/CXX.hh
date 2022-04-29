@@ -139,39 +139,39 @@ struct CXXIOVisitor: public CXXIOVisitorBase<CXXIOVisitor> {
     }
   }
   std::string emitPtrType(PtrType *type) {
-    return frmt("{}*", emitType(type->getUnderlying()));
+    return frmt("{0}*", emitType(type->getUnderlying()));
   }
   std::string emitQualType(QualType type) {
     auto base = type.getType() ? emitType(type.getType()) : "void";
-    return type.isReference() ? frmt("{}*", base) : base;
+    return type.isReference() ? frmt("{0}*", base) : base;
   }
   std::string emitFunctionType(FunctionType *type) {
     std::string args = "";
     auto sz = type->getParemeters().size();
     for (auto [i, arg] : tlang::enumerate(type->getParemeters())) {
-      args += (i + 1 < sz) ? frmt("{}, ", emitQualType(arg)) : emitQualType(arg);
+      args += (i + 1 < sz) ? frmt("{0}, ", emitQualType(arg)) : emitQualType(arg);
     }
-    return frmt("\n{} (*)({})", emitQualType(type->getReturnType()), args);
+    return frmt("\n{0} (*)({1})", emitQualType(type->getReturnType()), args);
   }
   std::string emitParameterDecl(ParameterDecl *decl) {
-    return frmt("{} {}", emitQualType(decl->getType()), decl->getIdentifier());
+    return frmt("{0} {1}", emitQualType(decl->getType()), decl->getIdentifier());
   }
   std::string emitExternFunctionDecl(ExternFunctionDecl *function) {
     std::string args = "";
     auto sz = function->getParameters().size();
     for (auto [i, arg] : tlang::enumerate(function->getParameters())) {
-      args += (i + 1 < sz) ? frmt("{}, ", emitParameterDecl(arg)) : emitParameterDecl(arg);
+      args += (i + 1 < sz) ? frmt("{0}, ", emitParameterDecl(arg)) : emitParameterDecl(arg);
     }
-    std::string fn = frmt("extern \"C\"\n{} {}({})", emitQualType(function->getReturnType()), function->getIdentifier(), args);
+    std::string fn = frmt("extern \"C\"\n{0} {1}({2})", emitQualType(function->getReturnType()), function->getIdentifier(), args);
     return fn;
   }
   std::string emitExternFunctorDecl(FunctorDecl *function) {
     std::string args = "";
     auto sz = function->getParameters().size();
     for (auto [i, arg] : tlang::enumerate(function->getParameters())) {
-      args += (i + 1 < sz) ? frmt("{}, ", emitParameterDecl(arg)) : emitParameterDecl(arg);
+      args += (i + 1 < sz) ? frmt("{0}, ", emitParameterDecl(arg)) : emitParameterDecl(arg);
     }
-    std::string fn = frmt("extern \"C\"\n{} {}({})", emitQualType(function->getReturnType()), function->getIdentifier(), args);
+    std::string fn = frmt("extern \"C\"\n{0} {1}({2})", emitQualType(function->getReturnType()), function->getIdentifier(), args);
     return fn;
   }
 };

@@ -33,19 +33,19 @@ private:
     auto &parents = node.parents();
     auto &children = node.children();
     centeredComment(ost, "Class Information");
-    frmts(ost, "using {} = {};\n", C::base_type_v, node.base().name());
-    frmts(ost, "using {} = {}<{}>;\n", C::parents_v, C::parent_class_v, join(parents, [](auto &ost, auto &element) {
+    formats(ost, "using {0} = {1};\n", C::base_type_v, node.base().name());
+    formats(ost, "using {0} = {1}<{2}>;\n", C::parents_v, C::parent_class_v, join(parents, [](auto &ost, auto &element) {
       ost << name(element);
     }));
-    frmts(ost, "static constexpr {0} kind = {0}::{1};\n", C::kind_v, node.name());
+    formats(ost, "static constexpr {0} kind = {0}::{1};\n", C::kind_v, node.name());
     if (children.empty()) {
-      frmts(ost, "enum {} {{ {} }};", C::offsets_v, C::offset("End"));
-      frmts(ost, "using {} = {}<>;\n", C::children_list_v, C::children_class_v);
+      formats(ost, "enum {0} {{ {1} };", C::offsets_v, C::offset("End"));
+      formats(ost, "using {0} = {1}<>;\n", C::children_list_v, C::children_class_v);
     } else {
-      frmts(ost, "enum {} {{ {}, {} }};", C::offsets_v, join(children, [](auto &ost, auto &element) {
+      formats(ost, "enum {0} {{ {1}, {2} };", C::offsets_v, join(children, [](auto &ost, auto &element) {
         ost << C::offset(element.name.str());
       }), C::offset("End"));
-      frmts(ost, "using {} = {}<{}>;\n", C::children_list_v, C::children_class_v, join(children, [](auto &ost, auto &element) {
+      formats(ost, "using {0} = {1}<{2}>;\n", C::children_list_v, C::children_class_v, join(children, [](auto &ost, auto &element) {
         ost << element.typeStr();
         return true;
       }));
@@ -61,7 +61,7 @@ private:
     auto &variables = node.members();
     centeredComment(ost, "Constructors");
     emitVisibility(Visibility::Protected);
-    frmts(ost, "{}(int) {{AbstractNode::set(kind);}}\n", node.name(), C::base_type_v);
+    formats(ost, "{0}(int) {{AbstractNode::set(kind);}\n", node.name(), C::base_type_v);
     emitConstructor(true, false);
     if (variables.size())
       emitConstructor(true, true);

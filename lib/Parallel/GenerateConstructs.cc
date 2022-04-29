@@ -8,7 +8,7 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
   unit = &decl;
   auto constructs = results.getResult<ParallelConstructDatabase>(CreateConstructDatabase::ID(), &decl);
   if (constructs) {
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Transforming parallel constructs\n");
+    print(std::cerr, "Transforming parallel constructs\n");
     addAPI(*constructs);
     collectDeviceCalls(*constructs);
     generateParallelRegions(*constructs);
@@ -22,13 +22,13 @@ bool GenerateConstructs::run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &r
     Sema { CI }.resolveNames(&decl);
     if (deviceUnit)
       Sema { CI }.resolveNames(deviceUnit);
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green), "Finished transforming parallel constructs\n");
+    print(std::cerr, "Finished transforming parallel constructs\n");
   }
   return true;
 }
 
 std::string GenerateConstructs::makeRegionLabel(FunctorDecl *fn, const std::string &suffix) {
-  return frmt("{}{}_{}", fn->getIdentifier(), suffix, labels[fn]);
+  return frmt("{0}{1}_{2}", fn->getIdentifier(), suffix, labels[fn]);
 }
 
 void GenerateConstructs::addAPI(ParallelConstructDatabase &constructs) {

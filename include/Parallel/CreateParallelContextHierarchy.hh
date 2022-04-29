@@ -85,9 +85,9 @@ struct CreateParallelContextHierarchy: public CompilerInvocationRef, PassBase<Cr
     std::deque<ParallelConstruct*> constructStack;
   };
   bool run(UnitDecl &universe, AnyASTNodeRef ref, ResultManager &results) {
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Resolving parallel contexts\n");
+    print(std::cerr, "Resolving parallel contexts\n");
     Visitor { this->CI }.traverseUnitDecl(&universe, ref);
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green), "Finished resolving parallel contexts\n");
+    print(std::cerr, "Finished resolving parallel contexts\n");
     return true;
   }
 };

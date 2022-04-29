@@ -48,7 +48,7 @@ struct CreateConstructDatabase: PassBase<CreateConstructDatabase> {
     std::deque<FunctorDecl*> functionStack;
   };
   bool run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results) {
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::yellow_green), "Collecting parallel contexts\n");
+    print(std::cerr, "Collecting parallel contexts\n");
     ParallelConstructDatabase contexts;
     Visitor { contexts }.traverseUnitDecl(&decl, ref);
     size_t nc = contexts.contexts.size();
@@ -57,8 +57,7 @@ struct CreateConstructDatabase: PassBase<CreateConstructDatabase> {
     size_t ndc = contexts.deviceRegions.size();
     if (!contexts.empty())
       results.addResult(ID(), &decl, new ParallelConstructDatabase(std::move(contexts)));
-    print(std::cerr, fmt::emphasis::bold | fmt::fg(fmt::color::lime_green),
-        "Finished collecting parallel contexts, there are: [C: {}, S: {}, H: {}, D: {}] contexts.\n", nc, nsc, nhc, ndc);
+    print(std::cerr, "Finished collecting parallel contexts, there are: [C: {0}, S: {1}, H: {2}, D: {3}] contexts.\n", nc, nsc, nhc, ndc);
     return true;
   }
   static PassID* ID() {

@@ -29,7 +29,7 @@ private:
     ost
         << CXXFunction::function(CXXFunction::def, node.name() + "::" + std::string(C::clasoff_v), CXXType("bool"),
             std::array<CXXVariable, 1> { CXXVariable { CXXType { std::string(C::kind_v) }, "kind" } },
-            frmt("return ASTTraits<{}>::is(kind);", node.name())) << "\n";
+            format("return ASTTraits<{0}>::is(kind);", node.name())) << "\n";
   }
   void emitChildrenMethods() {
     auto &children = node.children();
@@ -118,7 +118,6 @@ public:
 }
 
 void NodesEmitter::emitSource(llvm::raw_ostream &ost) {
-  frmt("");
   std::filesystem::path path = std::filesystem::path(records.getInputFilename());
   std::string fn = path.stem().string();
   auto nodes = sortDefinitions(records, "", true);

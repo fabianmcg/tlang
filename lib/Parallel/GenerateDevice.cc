@@ -46,14 +46,14 @@ void GenerateConstructs::generateDeviceLaunch(ConstructData<ParallelStmt> region
   FunctionDecl *rfn = regions[region.construct.node];
   auto cxxFn = CXXIOVisitor { }.emitExternFunctionDecl(lfn);
   {
-    std::string args = frmt("id, Vec3(tx, ty, tz), Vec3(mx, my, mz)");
+    std::string args = "id, Vec3(tx, ty, tz), Vec3(mx, my, mz)";
     auto sz = lfn->getParameters().size();
     for (auto [i, arg] : tlang::enumerate(lfn->getParameters())) {
       if (i > 6)
-        args += frmt(", {}", arg->getIdentifier());
+        args += frmt(", {0}", arg->getIdentifier());
     }
     cxxFn = frmt(
-        "{} {{\n  static void* __kernel = __tlang_device_load_function(\"{}\");\n  __tlang_device_run_kernel_rt(__kernel, {});\n}}\n",
+        "{0} {{\n  static void* __kernel = __tlang_device_load_function(\"{1}\");\n  __tlang_device_run_kernel_rt(__kernel, {2});\n}\n",
         cxxFn, rfn->getIdentifier(), args);
   }
   cxxModule->add(builder.CreateCXX(cxxFn));
