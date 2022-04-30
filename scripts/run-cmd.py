@@ -87,7 +87,7 @@ class Run:
         return conf
 
     @staticmethod
-    def run(configuration: RunConfiguration):
+    def run(configuration: RunConfiguration, print_level: int):
         runs = []
         successful = True
         command = configuration.command()
@@ -104,11 +104,13 @@ class Run:
                     int(retcode.returncode),
                 )
             )
-            print("Iteration: {}".format(i))
-            print("  {:<20}{}".format("Elapsed:", (stop - start) * (1e-9)))
-            print("  {:<20}{}".format("Status:", retcode.returncode))
-            print("  {:<20}{}".format("Stdout:", retcode.stdout))
-            print("  {:<20}{}".format("Stderr:", retcode.stderr))
+            if print_level > 0:
+                print("Iteration: {}".format(i))
+                print("  {:<20}{}".format("Elapsed:", (stop - start) * (1e-9)))
+                print("  {:<20}{}".format("Status:", retcode.returncode))
+                if print_level > 1:
+                    print("  {:<20}{}".format("Stdout:", retcode.stdout))
+                    print("  {:<20}{}".format("Stderr:", retcode.stderr))
             if retcode.returncode != 0:
                 successful = False
                 break
@@ -184,6 +186,14 @@ def parseArgs():
         default="",
         help="extra info to record",
     )
+    parser.add_argument(
+        "-L",
+        "--print-level",
+        metavar="<print level>",
+        type=int,
+        default=0,
+        help="print level",
+    )
     args = parser.parse_args()
     if args.P == "":
         args.P = str(pathlib.Path(args.p).absolute())
@@ -194,14 +204,14 @@ def parseArgs():
     conf = RunConfiguration(args.i, args.m, args.c, args.p, args.P, args.a, args.I, args.E)
     if args.o == "-":
         args.o = "{}.json".format(conf.name())
-    return args.o, conf
+    return args.o, args.print_level, conf
 
 
 def main():
-    output_name, configuration = parseArgs()
+    output_name, print_level, configuration = parseArgs()
     print("Running:\n", configuration, sep="")
     start = time.perf_counter_ns()
-    successful, results = Run.run(configuration)
+    successful, results = Run.run(configuration, print_level)
     stop = time.perf_counter_ns()
     output = {
         "configuration": configuration.to_dict(),
@@ -217,6 +227,7 @@ def main():
     print("  {:<20}{}".format("Average time:", ((stop - start) / len(results)) * (1e-9)))
     print("  {:<20}{}".format("Status:", successful))
     print("  {:<20}{}".format("Iterations:", len(results)))
+
 
 if __name__ == "__main__":
     main()
