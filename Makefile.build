@@ -33,7 +33,7 @@ endef
 .PHONY: build
 build: tblgen lang module
 	mkdir -pv build
-	cd build && cmake -DCMAKE_C_COMPILER=$(C_COMPILER) -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) -DCMAKE_INSTALL_PREFIX:PATH=$(INSTALL_PATH) ../
+	cd build && cmake -DFL_LIBRARY=${FLEX_LIB} -DCMAKE_C_COMPILER=$(C_COMPILER) -DCMAKE_CXX_COMPILER=$(CXX_COMPILER) -DCMAKE_INSTALL_PREFIX:PATH=$(INSTALL_PATH) ../
 	cd build && $(MAKE) -j16
 	cd build && $(MAKE) install
 
