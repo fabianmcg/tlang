@@ -5,4 +5,4 @@ add_library(lex STATIC
     ${FLEX_lexer_OUTPUTS}
 )
 target_include_directories(lex PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(lex ${FLEX_LIBRARIES})
+#target_link_libraries(lex ${FLEX_LIBRARIES})

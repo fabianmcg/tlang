@@ -69,30 +69,30 @@ public:
     }
     return false;
   }
-  template <typename T>
-  bool dynAssign(T *node) {
-    assert(this->node);
-    switch (kind) {
-#define AST_MACRO(BASE, PARENT)                                                                                        \
-  case ASTKind::BASE:                                                                                                  \
-    if (fromPtr) {                                                                                                 \
-      if (isa<BASE>(node)) {                                                                                           \
-        *reinterpret_cast<BASE **>(this->node) = node;                                                                 \
-        return true;                                                                                                   \
-      }                                                                                                                \
-      return false;                                                                                                    \
-    } else {                                                                                                           \
-      if (ASTKind::BASE == node->classof()) {                                                                          \
-        *reinterpret_cast<BASE *>(this->node) = *static_cast<BASE *>(node);                                            \
-        return true;                                                                                                   \
-      }                                                                                                                \
-      return false;                                                                                                    \
-    }
-#include <AST/Nodes.inc>
-    default:
-      return false;
-    }
-  }
+//  template <typename T>
+//  bool dynAssign(T *node) {
+//    assert(this->node);
+//    switch (kind) {
+//#define AST_MACRO(BASE, PARENT)                                                                                        \
+//  case ASTKind::BASE:                                                                                                  \
+//    if (fromPtr) {                                                                                                 \
+//      if (isa<BASE>(node)) {                                                                                           \
+//        *reinterpret_cast<BASE **>(this->node) = node;                                                                 \
+//        return true;                                                                                                   \
+//      }                                                                                                                \
+//      return false;                                                                                                    \
+//    } else {                                                                                                           \
+//      if (ASTKind::BASE == node->classof()) {                                                                          \
+//        *reinterpret_cast<BASE *>(this->node) = *static_cast<BASE *>(node);                                            \
+//        return true;                                                                                                   \
+//      }                                                                                                                \
+//      return false;                                                                                                    \
+//    }
+//#include <AST/Nodes.inc>
+//    default:
+//      return false;
+//    }
+//  }
   ASTKind classof() const {
     return kind;
   }

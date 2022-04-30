@@ -17,7 +17,7 @@ public:
   using const_iterator = SymbolIterator<symbol_type, true>;
   using reverse_iterator = SymbolIterator<symbol_type, false, true>;
   using const_reverse_iterator = SymbolIterator<symbol_type, true, true>;
-  using universal_symbol_table::UniversalSymbolTable;
+  using UniversalSymbolTable<Key, NodeType>::UniversalSymbolTable;
   using universal_symbol_table::find;
   inline iterator begin() {
     if (this->first_symbol)
