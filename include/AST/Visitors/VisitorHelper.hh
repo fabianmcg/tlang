@@ -19,7 +19,7 @@ struct AddChildren {
     NodeInfo &node_info;
     template <int it, typename NodeContainer>
     void execute(NodeContainer &&value) {
-      using child_info = typename NodeInfo::node_type::children_list::children_t<it>;
+      using child_info = typename NodeInfo::node_type::children_list::template children_t<it>;
       if constexpr (child_info::isList()) {
         if constexpr (child_info::isDynamicList()) {
           for (auto child : make_reverse(value))
@@ -66,7 +66,7 @@ struct AddChildren {
     template <int it>
     inline void execute() {
       if constexpr (parent_list::size) {
-        using parent_type = typename parent_list::parent_t<it>;
+        using parent_type = typename parent_list::template parent_t<it>;
         auto asParent = static_cast<parent_type*>(*node_info);
         visit(asParent);
         if constexpr (isValidNode_v<parent_type>)

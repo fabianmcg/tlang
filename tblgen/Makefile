@@ -2,8 +2,8 @@ TG ?= ./build/tlang-tblgen
 FLAGS ?= "-I td/ -I nodes/"
 OUTPUT_DIR ?= tmp
 
-C_COMPILER ?= cc
-CXX_COMPILER ?= c++
+C_COMPILER ?= clang
+CXX_COMPILER ?= clang++
 
 .PHONY: build
 build:

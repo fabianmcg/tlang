@@ -94,7 +94,7 @@ protected:
 
 template <typename PassNode, typename PassManager, typename Pass>
 PassManagerAdaptor<PassNode, Pass, PassManager> makePassAdaptor(Pass &&pass) {
-  using PassModelT = typename PassManagerTraits<PassManager>::model<Pass>;
+  using PassModelT = typename PassManagerTraits<PassManager>::template model<Pass>;
   return PassManagerAdaptor<PassNode, Pass, PassManager>(std::move(pass));
 }
 }
