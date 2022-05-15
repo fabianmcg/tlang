@@ -262,7 +262,7 @@ IRType_t<MemberExpr> GenericEmitter::emitMemberExpr(MemberExpr *expr) {
   return builder.CreateGEP(emitQualType(expr->getOwner()->getType().modQuals()), ptr, index);
 }
 IRType_t<CallExpr> GenericEmitter::emitCallExpr(CallExpr *expr) {
-  if (auto callee = dynamic_cast<DeclRefExpr*>(expr->getCallee())) {
+  if (auto callee = dyn_cast<DeclRefExpr>(expr->getCallee())) {
     llvm::Function *function = module.getFunction(callee->getIdentifier());
     std::vector<llvm::Value*> arguments(expr->getArgs().size());
     for (auto [i, arg] : tlang::enumerate(expr->getArgs())) {

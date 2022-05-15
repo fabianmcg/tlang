@@ -1,6 +1,4 @@
 #include <Driver/Driver.hh>
-#include <Driver/Arguments.hh>
-#include <Support/UniqueStream.hh>
 #include <Sema/Sema.hh>
 #include <CodeGen/CodeGen.hh>
 #include <Io/ASTIo.hh>

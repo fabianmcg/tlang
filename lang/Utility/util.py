@@ -12,13 +12,13 @@ from jinja2 import Template
 
 
 def format(filename):
-    lc = ["clang-format-13", "-i", r'-style="{BasedOnStyle: llvm, ColumnLimit: 120}"', str(filename)]
+    lc = ["clang-format", "-i", r'-style="{BasedOnStyle: llvm, ColumnLimit: 120}"', str(filename)]
     retcode = run(" ".join(lc), shell=True)
     return retcode
 
 
 def formatStr(src):
-    lc = ["clang-format-13", r'-style="{BasedOnStyle: llvm, ColumnLimit: 120}"']
+    lc = ["clang-format", r'-style="{BasedOnStyle: llvm, ColumnLimit: 120}"']
     retcode = run(" ".join(lc), capture_output=True, text=True, shell=True, input=src)
     return retcode.stdout
 

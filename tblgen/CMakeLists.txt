@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(tlang-tblgen VERSION 0.42 LANGUAGES CXX)
+project(tlang-tblgen VERSION 0.42 LANGUAGES C CXX)
 
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_COLOR_MAKEFILE ON)
