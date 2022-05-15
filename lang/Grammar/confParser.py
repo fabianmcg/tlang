@@ -130,7 +130,7 @@ class Parser:
         return pp.OneOrMore(self.createProduction() | self.createImport())
 
     def parse(self, filename):
-        pp._enable_all_warnings()
+        #pp._enable_all_warnings()
         return self.createProductionList().ignore(pp.cStyleComment).parseFile(filename, parseAll=True)
 
 

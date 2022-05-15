@@ -126,7 +126,7 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
         if (type->getLayout().size() != node->getIndex().size())
           throw(std::runtime_error("Invalid index for array"));
         node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), 0, type->getUnderlying());
-      } else if (auto type = dynamic_cast<PtrType*>(qualType.getType())) {
+      } else if (auto type = dyn_cast<PtrType>(qualType.getType())) {
         if (node->getIndex().size() != 1)
           throw(std::runtime_error("Invalid index for array"));
         node->getType() = QualType((QualType::cvr_qualifiers) (QualType::Reference | qualType.getQualifiers()), 0, type->getUnderlying());

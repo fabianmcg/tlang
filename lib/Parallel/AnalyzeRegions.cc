@@ -20,7 +20,7 @@ struct VariableDeclAnalysis: ASTVisitor<VariableDeclAnalysis, VisitorPattern::pr
 struct VariableReferenceAnalysis: ASTVisitor<VariableReferenceAnalysis, VisitorPattern::preOrder> {
   visit_t visitDeclRefExpr(DeclRefExpr *node) {
     if (auto decl = node->getDecl().data())
-      if (auto varDecl = dynamic_cast<VariableDecl*>(decl))
+      if (auto varDecl = dyn_cast<VariableDecl>(decl))
         referenced->insert(varDecl);
     return visit;
   }
@@ -38,7 +38,7 @@ struct AnalysisVisitor: public ASTVisitor<AnalysisVisitor, VisitorPattern::prePo
   }
   void addExpr(Expr *expr, std::set<VariableDecl*> &variables) {
     if (auto re = dyn_cast<DeclRefExpr>(expr))
-      if (auto varDecl = dynamic_cast<VariableDecl*>(re->getDecl().data()))
+      if (auto varDecl = dyn_cast<VariableDecl>(re->getDecl().data()))
         variables.insert(varDecl);
   }
   void addVariables(List<Expr*> &exprs, std::set<VariableDecl*> &variables) {

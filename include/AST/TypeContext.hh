@@ -1,6 +1,7 @@
 #ifndef AST_TYPECONTEXT_HH
 #define AST_TYPECONTEXT_HH
 
+#include <array>
 #include <cstdint>
 #include <map>
 #include <memory>

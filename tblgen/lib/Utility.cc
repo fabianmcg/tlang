@@ -9,7 +9,7 @@
 
 void formatFile(const std::filesystem::path &path) {
   if (std::filesystem::exists(path)) {
-    std::string command = "clang-format-13 -i " + path.string()
+    std::string command = "clang-format -i " + path.string()
         + " -style=\"{BasedOnStyle: llvm, ColumnLimit: 120, AllowShortFunctionsOnASingleLine: None, BreakConstructorInitializers: AfterColon}\"";
     int r = std::system(command.c_str());
   }

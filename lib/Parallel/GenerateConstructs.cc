@@ -187,7 +187,7 @@ struct CallExprVisitor: ASTVisitor<CallExprVisitor, VisitorPattern::preOrder> {
       if (auto fd = dyn_cast<FunctorDecl>(re->getDecl().data())) {
         callsInDeviceCode.insert(fd);
         if (isa<FunctionDecl>(fd))
-          if (auto dc = dynamic_cast<DeclContext*>(fd->getDeclContext().data())) {
+          if (auto dc = static_cast<DeclContext*>(fd->getDeclContext().data())) {
             if (auto symbol = dc->find(fd->getIdentifier()))
               dc->erase(symbol);
             else

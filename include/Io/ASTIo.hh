@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <stack>
+#include "AST/Traits.hh"
 #include "AST/Attr.hh"
 #include "AST/Decl.hh"
 #include "AST/Expr.hh"
@@ -228,7 +229,7 @@ public:
     if (ProtoType::classof(T::kind))
       return visit_t::skip;
     if (kind == preVisit) {
-      if (auto expr = dynamic_cast<Expr*>(node))
+      if (auto expr = dyn_cast<Expr>(node))
         dumpType(&(expr->getType()));
       ost << std::endl;
     }

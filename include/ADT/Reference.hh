@@ -31,12 +31,12 @@ struct reference {
   }
   template <typename V>
   inline reference& operator=(V &value) {
-    __data = dynamic_cast<type*>(&value);
+    __data = static_cast<type*>(&value);
     return *this;
   }
   template <typename V>
   inline reference& operator=(V *value) {
-    __data = dynamic_cast<type*>(value);
+    __data = static_cast<type*>(value);
     return *this;
   }
   inline operator bool() const {

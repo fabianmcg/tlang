@@ -1,5 +1,5 @@
 #include "AST/DeclContext.hh"
-#include "AST/Decl.hh"
+#include <AST/Decl.hh>
 #include <AST/Traits.hh>
 
 void tlang::UniverseContext::add(UnitDecl *decl) {
@@ -37,21 +37,21 @@ tlang::UnitContext::symbol_type tlang::UnitContext::search(const key_type &key) 
 }
 
 void tlang::DeclContext::add(Decl *decl) {
-  if (auto nd = dynamic_cast<NamedDecl*>(decl))
+  if (auto nd = dyn_cast<NamedDecl>(decl))
     parent_type::add(nd->getIdentifier(), std::forward<Decl*>(decl));
   else
     parent_type::add("", std::forward<Decl*>(decl));
 }
 
 void tlang::NoVisitDeclContext::add(Decl *decl) {
-  if (auto nd = dynamic_cast<NamedDecl*>(decl))
+  if (auto nd = dyn_cast<NamedDecl>(decl))
     parent_type::add(nd->getIdentifier(), std::forward<Decl*>(decl));
   else
     parent_type::add("", std::forward<Decl*>(decl));
 }
 
 void tlang::VariableContext::add(Decl *decl) {
-  if (auto nd = dynamic_cast<NamedDecl*>(decl))
+  if (auto nd = dyn_cast<NamedDecl>(decl))
     parent_type::add(nd->getIdentifier(), std::forward<Decl*>(decl));
   else
     parent_type::add("", std::forward<Decl*>(decl));
