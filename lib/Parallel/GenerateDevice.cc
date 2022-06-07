@@ -4,6 +4,22 @@
 #include <Io/CXX.hh>
 
 namespace tlang {
+void GenerateConstructs::addDeviceAPI() {
+  ASTApi builder { CI.getContext() };
+  if (!APIModule->find("__tlang_device_map")) {
+    builder.AddToContext(APIModule,
+        builder.CreateExternFunction("__tlang_device_map", builder.CreateType<AddressType>(),
+            builder.CreateParameter("kind", builder.CreateType<IntType>(IntType::P_32, IntType::Signed)),
+            builder.CreateParameter("address", builder.CreateType<AddressType>()),
+            builder.CreateParameter("size", builder.CreateType<IntType>(IntType::P_64, IntType::Signed))));
+  }
+  if (!APIModule->find("__tlang_device_sync")) {
+    builder.AddToContext(APIModule,
+        builder.CreateExternFunction("__tlang_device_sync", builder.CreateVoid(),
+            builder.CreateParameter("kind", builder.CreateType<IntType>(IntType::P_32, IntType::Signed))));
+  }
+}
+
 void GenerateConstructs::generateDeviceRegion(ConstructData<ParallelStmt> region) {
   ASTApi builder { CI.getContext() };
   auto fn = generateRegion(region, ContextStmt::Device);
@@ -14,12 +30,8 @@ void GenerateConstructs::generateDeviceRegion(ConstructData<ParallelStmt> region
   incrementRegionLabel(region.functor);
 }
 
-void GenerateConstructs::generateDeviceLaunch(ConstructData<ParallelStmt> region) {
-  ASTApi builder { CI.getContext() };
-  List<Expr*> arguments;
-  arguments.push_back(builder.CreateLiteral((int64_t) 0, IntType::P_32));
-  auto cs = contextCS[dyn_cast<ContextStmt>(region.construct.node->getContext().data())];
-  assert(cs);
+namespace {
+void addLaunchParameters(List<Expr*> &arguments, ConstructData<ParallelStmt> region, ASTApi builder) {
   for (auto te : region.construct.node->getLaunchParameters()) {
     size_t i = 0;
     for (auto ex : te->getElements()) {
@@ -30,6 +42,16 @@ void GenerateConstructs::generateDeviceLaunch(ConstructData<ParallelStmt> region
       for (; i < 3; ++i)
         arguments.push_back(builder.CreateLiteral((int64_t) 0, IntType::P_32));
   }
+}
+}
+
+void GenerateConstructs::generateDeviceLaunch(ConstructData<ParallelStmt> region) {
+  ASTApi builder { CI.getContext() };
+  List<Expr*> arguments;
+  arguments.push_back(builder.CreateLiteral((int64_t) 0, IntType::P_32));
+  auto cs = contextCS[dyn_cast<ContextStmt>(region.construct.node->getContext().data())];
+  assert(cs);
+  addLaunchParameters(arguments, region, builder);
   if (auto opts = region.construct.node->getParallelOptions()) {
     for (auto &expr : opts->getFirstPrivateVariables()) {
       auto re = dyn_cast<DeclRefExpr>(expr);
