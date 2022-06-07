@@ -9,13 +9,14 @@ public:
   using CompilerInvocationRef::CompilerInvocationRef;
   bool run(UnitDecl &decl, AnyASTNodeRef ref, ResultManager &results);
   void addHostAPI();
+  void addDeviceAPI();
   void addAPI(ParallelConstructDatabase &constructs);
 
   void generateDeviceContext(ConstructData<ContextStmt> context);
   void generateContext(ConstructData<ContextStmt> context);
   void generateContexts(ParallelConstructDatabase &constructs);
 
-  void generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind, List<ParameterDecl*>& parameters);
+  void generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind, List<ParameterDecl*> &parameters);
   List<ParameterDecl*> generateLaunchParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
   List<ParameterDecl*> generateRegionParameters(ConstructData<ParallelStmt> region, ContextStmt::Kind kind);
 
@@ -31,6 +32,8 @@ public:
 
   void collectDeviceCalls(ParallelConstructDatabase &constructs);
   void duplicateFunctionCalls();
+
+  void addMappings(CompoundStmt *stmt, ContextStmt *context, int pass);
 protected:
   UnitDecl *unit { };
   ModuleDecl *APIModule { };

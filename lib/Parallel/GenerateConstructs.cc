@@ -37,6 +37,8 @@ void GenerateConstructs::addAPI(ParallelConstructDatabase &constructs) {
     CI.getContext().addModule(unit, APIModule);
     if (constructs.hostQ())
       addHostAPI();
+    if (constructs.deviceQ())
+      addDeviceAPI();
   }
 }
 
@@ -154,6 +156,50 @@ void GenerateConstructs::generateParallelRegions(ParallelConstructDatabase &cons
     generateHostRegion(region);
 }
 
+void GenerateConstructs::addMappings(CompoundStmt *stmt, ContextStmt *context, int pass) {
+  ASTApi builder { CI.getContext() };
+  auto &mapped = context->getMappedExprs();
+  if (mapped.size()) {
+    auto mapfn = APIModule->find("__tlang_device_map").get().get<ExternFunctionDecl>();
+    assert(mapfn);
+    for (auto mstmt : mapped) {
+      auto mk = mstmt->getMapKind();
+      auto &me = mstmt->getMappedExprs();
+      for (auto expr : me) {
+        Expr *address { }, *size { }, *map_expr { };
+        if (auto dre = dyn_cast<DeclRefExpr>(expr)) {
+          address = builder.CreateUnOp(UnaryOperator::Address, dre);
+          size = builder.CreateLiteral(dre->getType().getType()->getSizeOf(), IntType::P_64);
+        } else if (auto ae = dyn_cast<ArrayExpr>(expr)) {
+          address = ae->getArray();
+          size = builder.CreateBinOp(BinaryOperator::Multiply, builder.CreateLiteral(ae->getType().getType()->getSizeOf(), IntType::P_64),
+              ae->getIndex()[0]);
+        }
+        assert(address);
+        assert(size);
+        if ((mk & MapStmt::to) == MapStmt::to && pass == 0) {
+          map_expr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapfn), builder.CreateLiteral((int64_t) MapStmt::to, IntType::P_32),
+              address, size);
+        } else if ((mk & MapStmt::from) == MapStmt::from && pass == 1) {
+          map_expr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapfn), builder.CreateLiteral((int64_t) MapStmt::from, IntType::P_32),
+              address, size);
+        } else if (mk == MapStmt::present && pass == 0) {
+          map_expr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapfn), builder.CreateLiteral((int64_t) mk, IntType::P_32), address,
+              size);
+        } else if (mk == MapStmt::create && pass == 0) {
+          map_expr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapfn), builder.CreateLiteral((int64_t) mk, IntType::P_32), address,
+              size);
+        } else if (mk == MapStmt::destroy && pass == 0) {
+          map_expr = builder.CreateCallExpr(builder.CreateDeclRefExpr(mapfn), builder.CreateLiteral((int64_t) mk, IntType::P_32), address,
+              size);
+        }
+        if (map_expr)
+          stmt->addStmt(map_expr);
+      }
+    }
+  }
+}
+
 void GenerateConstructs::generateContext(ConstructData<ContextStmt> context) {
   auto context_construct = context.construct.node;
   if (auto ic = dyn_cast<ImplicitContextStmt>(context_construct))
@@ -162,7 +208,9 @@ void GenerateConstructs::generateContext(ConstructData<ContextStmt> context) {
   auto cs = builder.CreateCompoundStmt();
   contextCS[context_construct] = cs;
   context.construct.reference.assign<Stmt>(cs);
+  addMappings(cs, context_construct, 0);
   cs->addStmt(context_construct->getStmt());
+  addMappings(cs, context_construct, 1);
 }
 
 void GenerateConstructs::generateContexts(ParallelConstructDatabase &constructs) {
