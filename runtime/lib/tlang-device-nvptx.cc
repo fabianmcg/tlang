@@ -101,6 +101,7 @@ struct TlangDeviceRuntime {
   TlangDeviceRuntime() :
       mapping(512), context() {
     CUDA_CHECK(cudaStreamCreate(&stream))
+    run_stream = stream;
   }
   ~TlangDeviceRuntime() {
     for (auto [adress, mapped] : mapping)
@@ -150,13 +151,14 @@ struct TlangDeviceRuntime {
     CUDA_CHECK(cudaStreamSynchronize(stream))
   }
   inline void launch(const void *fn, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
-    context.launch(static_cast<CUfunction>(const_cast<void*>(fn)), tensor_dim, matrix_dim, args, stream);
-//    CUDA_CHECK(
-//        cudaLaunchKernel(fn, dim3(tensor_dim.x, tensor_dim.y, tensor_dim.z), dim3(matrix_dim.x, matrix_dim.y, matrix_dim.z), args, 0,
-//            stream))
+    context.launch(static_cast<CUfunction>(const_cast<void*>(fn)), tensor_dim, matrix_dim, args, run_stream);
+  }
+  inline void set_stream(cudaStream_t stream) {
+    run_stream = stream;
   }
   std::unordered_map<address_type, address_type> mapping;
   cudaStream_t stream { };
+  cudaStream_t run_stream { };
   CUDAContext context { };
 };
 std::unique_ptr<TlangDeviceRuntime> runtime { };
@@ -168,11 +170,18 @@ inline TlangDeviceRuntime& getRuntime() {
 }
 
 extern "C" {
+int __tlang_device_init() {
+  getRuntime();
+  return 0;
+}
 address_type __tlang_device_map(int kind, address_type address, uint64_t size) {
   return getRuntime().map(static_cast<TlangDeviceRuntime::MapKind>(kind), address, size);
 }
 void __tlang_device_sync(int id) {
   getRuntime().sync();
+}
+void __tlang_device_set_stream(void *stream) {
+  getRuntime().set_stream((cudaStream_t) stream);
 }
 void __tlang_device_run_kernel(const void *fn, int id, Vec3 tensor_dim, Vec3 matrix_dim, void **args) {
   getRuntime().launch(fn, tensor_dim, matrix_dim, args);

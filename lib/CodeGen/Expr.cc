@@ -70,6 +70,10 @@ llvm::Value* GenericEmitter::makeDivOp(QualType type, llvm::Value *lhs, llvm::Va
 }
 llvm::Value* GenericEmitter::makeLogic(BinaryOperator::Operator kind, llvm::Value *lhs, llvm::Value *rhs) {
   switch (kind) {
+  case BinaryOperator::LShift:
+    return builder.CreateShl(lhs, rhs);
+  case BinaryOperator::RShift:
+    return builder.CreateLShr(lhs, rhs);
   case BinaryOperator::Or:
     return builder.CreateOr(lhs, rhs);
   case BinaryOperator::And:
@@ -230,6 +234,8 @@ IRType_t<BinaryOperator> GenericEmitter::emitBinaryOperator(BinaryOperator *expr
   case BinaryOperator::LEQ:
   case BinaryOperator::GEQ:
     return makeCmp(expr->getLhs()->getType(), op, lhs, rhs);
+  case BinaryOperator::LShift:
+  case BinaryOperator::RShift:
   case BinaryOperator::And:
   case BinaryOperator::Or:
     return makeLogic(op, lhs, rhs);
@@ -281,14 +287,15 @@ IRType_t<ArrayExpr> GenericEmitter::emitArrayExpr(ArrayExpr *expr) {
   else
     type = emitQualType(expr->getType().modQuals());
   auto array = emitExpr(expr->getArray());
-  auto index = emitExpr(expr->getIndex()[0]);
 
   if (isa<ArrayType>(expr->getArray()->getType().getType())) {
     std::vector<llvm::Value*> indxs;
     indxs.push_back(llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0, true));
-    indxs.push_back(index);
+    for (auto indx : expr->getIndex())
+      indxs.push_back(emitExpr(indx));
     return builder.CreateGEP(type, array, indxs);
   }
+  auto index = emitExpr(expr->getIndex()[0]);
   return builder.CreateGEP(type, array, index);
 }
 IRType_t<CastExpr> GenericEmitter::emitCastExpr(CastExpr *expr) {

@@ -14,9 +14,11 @@ struct Vec3 {
 };
 using address_type = void*;
 extern "C" {
+int __tlang_device_init();
 address_type __tlang_device_map(int kind, address_type address, uint64_t size);
 void __tlang_device_sync(int id);
 void __tlang_device_run_kernel(const void *fn, int id, Vec3 tensor_dim, Vec3 matrix_dim, void **args);
+void __tlang_device_set_stream(void *stream);
 int __tlang_device_load_module(const std::string &filename);
 void* __tlang_device_load_function(const std::string &functionname);
 }

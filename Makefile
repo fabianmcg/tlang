@@ -45,7 +45,7 @@ endif
 .PHONY: dump
 dump:
 ifneq ($(file),)
-	$(TC) $(file) $(FLAGS) -n -d -S
+	$(TC) $(file) $(FLAGS) -n -d
 endif
 
 .PHONY: emit

@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(tlang VERSION 0.42 LANGUAGES C CXX)
 
-#set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_C_COMPILER "clang")
-set(CMAKE_CXX_COMPILER "clang++")
+set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_C_COMPILER "clang")
+#set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -16,8 +16,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 execute_process(COMMAND llvm-config --libs OUTPUT_VARIABLE LLVM_CONFIG_LIBS)
 string(STRIP ${LLVM_CONFIG_LIBS} LLVM_CONFIG_LIBS)
 
-add_definitions(-w)
-
+#add_definitions(-w)
+add_compile_options(-g3 -w -O0)
 function(add_lib TARGET_LIB SOURCES_LIST USE_LLVM EXTRA_LIBS)
     set(TARGET_INC_DIRS "")
     set(TARGET_LIB_DIRS "")
