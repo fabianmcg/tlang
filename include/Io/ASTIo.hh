@@ -73,7 +73,7 @@ struct DumpType: public StringEmitterVisitor<DumpType> {
     }
     return value + ")";
   }
-  std::string visitArrayType(ArrayType *node) {
+  std::string emitArrayType(ArrayType *node) {
     return frmt("{0}[]", emitType(node->getUnderlying()));
   }
   std::string emitQualType(QualType node) {
@@ -102,10 +102,11 @@ public:
       if (!ProtoType::classof(classof)) {
         cst() << std::string(indent, '-') + "+" << to_string(classof) << " ";
         push_color(Color::Default());
-//        cst() << node << ":" << node->parent() << " ";
         cst() << node << " ";
         extentInfo(node);
         pop_color();
+        if (auto expr = dyn_cast<Expr>(node))
+          dumpType(&(expr->getType()));
         cst() << " ";
         indent++;
       }

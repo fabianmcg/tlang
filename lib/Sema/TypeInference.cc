@@ -198,6 +198,8 @@ struct TypeInferenceAST: ASTVisitor<TypeInferenceAST, VisitorPattern::prePostOrd
         case BinaryOperator::Or:
           node->getType() = QualType(BoolType::get(&context.types()));
           break;
+        case BinaryOperator::LShift:
+        case BinaryOperator::RShift:
         case BinaryOperator::Plus:
         case BinaryOperator::Minus:
         case BinaryOperator::Multiply:

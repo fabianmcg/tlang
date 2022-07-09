@@ -126,6 +126,23 @@ IRType_t<DeclStmt> GenericEmitter::emitDeclStmt(DeclStmt *stmt) {
   return nullptr;
 }
 IRType_t<WhileStmt> GenericEmitter::emitWhileStmt(WhileStmt *stmt) {
+  llvm::Function *function = builder.GetInsertBlock()->getParent();
+  llvm::BasicBlock *while_preamble = llvm::BasicBlock::Create(context, makeLabel(ASTKind::WhileStmt, "WhileStmt"), function);
+  llvm::BasicBlock *while_body = llvm::BasicBlock::Create(context, makeLabel(ASTKind::WhileStmt, "WhileBody"), function);
+  llvm::BasicBlock *while_end = llvm::BasicBlock::Create(context, makeLabel(ASTKind::WhileStmt, "EndWhileStmt"));
+  incrementLabel(ASTKind::WhileStmt);
+  // Emit preamble
+  emitBranch(while_preamble);
+  builder.SetInsertPoint(while_preamble);
+  llvm::Value *condition = emitStmt(stmt->getCondition());
+  builder.CreateCondBr(condition, while_body, while_end);
+  // Emit For body
+  builder.SetInsertPoint(while_body);
+  emitStmt(stmt->getBody());
+  emitBranch(while_preamble);
+  // Emit EndFor
+  function->getBasicBlockList().push_back(while_end);
+  builder.SetInsertPoint(while_end);
   return nullptr;
 }
 IRType_t<BreakStmt> GenericEmitter::emitBreakStmt(BreakStmt *stmt) {

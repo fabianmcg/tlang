@@ -1,9 +1,21 @@
-
 fn add(alpha: f64, x: f64*, y: f64*, n: i32) {
   let blockSize: i32 = 128;
+  let xx: i32[32];
   parallel [private(alpha, x, y, n, blockSize)] {
     let i: i32;
+  let xy: i32[32, 32];
+  let [shared] yy: i32[32, 32];
+    i = yy[2, 3];
     i = tid<v:s>.x;
+    if (i < n)
+      x[i] = alpha * x[i] + y[i];
+      else if (n == i) {
+      }
+      else {
+      }
+  }
+  context [map(to: x[n], alpha)  map(to_from: y[n])]
+  loop(let i: i32 in 0 : n) {
     if (i < n)
       x[i] = alpha * x[i] + y[i];
   }
